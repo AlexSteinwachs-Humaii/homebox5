@@ -175,3 +175,43 @@ func TestUserRepo_GetSuperusers(t *testing.T) {
 	err = tRepos.Users.DeleteAll(ctx)
 	require.NoError(t, err)
 }
+
+func TestUserRepo_NewAccountTheme(t *testing.T) {
+	ctx := context.Background()
+	for _, oidc := range []bool{false, true} {
+		t.Run(map[bool]string{false: "local", true: "oidc"}[oidc], func(t *testing.T) {
+			input := userFactory()
+			var created UserOut
+			var err error
+			if oidc {
+				input.Password = nil
+				created, err = tRepos.Users.CreateWithOIDC(ctx, input, "https://issuer.example", uuid.NewString())
+			} else {
+				created, err = tRepos.Users.Create(ctx, input)
+			}
+			require.NoError(t, err)
+			t.Cleanup(func() { _ = tRepos.Users.Delete(ctx, created.ID) })
+			settings, err := tRepos.Users.GetSettings(ctx, created.ID)
+			require.NoError(t, err)
+			assert.Equal(t, map[string]interface{}{"theme": "cinematic"}, settings)
+		})
+	}
+}
+
+func TestUserRepo_OIDCLinkPreservesSettings(t *testing.T) {
+	ctx := context.Background()
+	for _, settings := range []map[string]interface{}{nil, {}, {"theme": "light", "showDetails": false}} {
+		created, err := tRepos.Users.Create(ctx, userFactory())
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = tRepos.Users.Delete(ctx, created.ID) })
+		require.NoError(t, tRepos.Users.SetSettings(ctx, created.ID, settings))
+		subject := uuid.NewString()
+		require.NoError(t, tRepos.Users.SetOIDCIdentity(ctx, created.ID, "https://issuer.example", subject))
+		found, err := tRepos.Users.GetOneOIDC(ctx, "https://issuer.example", subject)
+		require.NoError(t, err)
+		assert.Equal(t, created.ID, found.ID)
+		actual, err := tRepos.Users.GetSettings(ctx, found.ID)
+		require.NoError(t, err)
+		assert.Equal(t, settings, actual)
+	}
+}

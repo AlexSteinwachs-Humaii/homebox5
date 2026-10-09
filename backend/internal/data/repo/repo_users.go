@@ -217,7 +217,10 @@ func (r *UserRepository) createUserWithMembership(
 		SetName(usr.Name).
 		SetEmail(normalizeEmail(usr.Email)).
 		SetIsSuperuser(usr.IsSuperuser).
-		SetDefaultGroupID(usr.DefaultGroupID)
+		SetDefaultGroupID(usr.DefaultGroupID).
+		// Account creation is the only place the new theme default is written.
+		// Existing accounts with no theme setting retain the frontend HomeBox fallback.
+		SetSettings(map[string]interface{}{"theme": "cinematic"})
 
 	if usr.Password != nil {
 		q = q.SetPassword(*usr.Password)

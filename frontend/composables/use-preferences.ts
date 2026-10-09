@@ -34,7 +34,10 @@ export type LocationViewPreferences = {
   };
 };
 export type PreferenceSyncConfig = Partial<Record<keyof LocationViewPreferences, boolean>>;
-type PreferenceChange = true | Record<string, PreferenceChange>;
+interface NestedPreferenceChanges {
+  [key: string]: PreferenceChange;
+}
+type PreferenceChange = true | NestedPreferenceChanges;
 type PreferenceChanges = Partial<Record<keyof LocationViewPreferences, PreferenceChange>>;
 
 const DEFAULT_PREFERENCES: LocationViewPreferences = {
@@ -132,7 +135,12 @@ function mergeSyncedSettings(
   preferences: LocationViewPreferences,
   localChanges: PreferenceChanges = {}
 ): LocationViewPreferences {
+  // An absent server theme means the legacy HomeBox default, not whichever
+  // account last used this browser. Preserve deliberate edits made during fetch.
   const nextPreferences = { ...preferences };
+  if (syncConfig.theme !== false && !Object.hasOwn(settings, "theme") && localChanges.theme === undefined) {
+    nextPreferences.theme = DEFAULT_PREFERENCES.theme;
+  }
 
   forEachSyncedPreference(key => {
     if (key in settings) {
@@ -206,11 +214,12 @@ async function fetchViewPreferencesFromServer(): Promise<Record<string, unknown>
 
   const api = useUserApi();
   const { data, error } = await api.user.getSettings();
-  if (error || !data?.item) {
+  if (error || !data) {
     return null;
   }
 
-  return data.item;
+  // Older accounts may have a NULL settings column, rather than an empty object.
+  return data.item ?? {};
 }
 export function useViewPreferencesSync() {
   if (syncInitialized || !import.meta.client) {
@@ -226,6 +235,7 @@ export function useViewPreferencesSync() {
   let saveInFlight = false;
   let refreshInFlight = false;
   let refreshRequested = false;
+  let sessionRevision = 0;
   let localRevision = 0;
   let syncedRevision = 0;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -257,6 +267,7 @@ export function useViewPreferencesSync() {
     try {
       while (syncedRevision < localRevision && !pauseServerSaves && auth.isAuthorized()) {
         const targetRevision = localRevision;
+        const saveSession = sessionRevision;
         let error = false;
         try {
           ({ error } = await api.user.setSettings(buildSyncedSettings(preferences.value)));
@@ -270,6 +281,9 @@ export function useViewPreferencesSync() {
           return;
         }
 
+        if (sessionRevision !== saveSession) {
+          return;
+        }
         syncedRevision = targetRevision;
       }
     } finally {
@@ -295,13 +309,14 @@ export function useViewPreferencesSync() {
     try {
       while (refreshRequested) {
         refreshRequested = false;
+        const refreshSession = sessionRevision;
         const refreshRevision = localRevision;
         const refreshSettings = cloneSyncedSettings(buildSyncedSettings(preferences.value));
 
         pauseServerSaves = true;
         try {
           const settings = await fetchViewPreferencesFromServer();
-          if (settings) {
+          if (settings && sessionRevision === refreshSession) {
             const localChanges =
               localRevision === refreshRevision ? {} : getChangedPreferences(refreshSettings, preferences.value);
             applyingServerSnapshot = true;
@@ -309,7 +324,7 @@ export function useViewPreferencesSync() {
           }
         } finally {
           applyingServerSnapshot = false;
-          pauseServerSaves = false;
+          pauseServerSaves = !auth.isAuthorized() || sessionRevision !== refreshSession;
         }
 
         if (syncedRevision < localRevision) {
@@ -336,15 +351,22 @@ export function useViewPreferencesSync() {
   watch(
     () => auth.token,
     token => {
+      sessionRevision += 1;
+      // Discard pending changes from the previous account/session before loading
+      // this account's snapshot. Never carry its theme into another account.
+      pauseServerSaves = true;
+      syncedRevision = localRevision;
+      if (retryTimer !== null) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
       if (!token) {
-        pauseServerSaves = true;
-        syncedRevision = localRevision;
         return;
       }
 
       void refreshFromServer();
     },
-    { immediate: true }
+    { immediate: true, flush: "sync" }
   );
 
   onServerEvent(ServerEvent.UserMutation, () => {
