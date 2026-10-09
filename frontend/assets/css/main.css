@@ -3,7 +3,14 @@
 @tailwind utilities;
 
 @layer base {
-  :root,.homebox {
+  :root {
+    --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-editorial: Georgia, "Times New Roman", serif;
+    --page-gutter: clamp(1rem, 3vw, 2rem);
+    --section-gap: 1.5rem;
+  }
+
+  :root,.homebox,.theme-homebox {
     --background: 0 0% 100%;
     --background-accent: 0 0% 81%;
     --foreground: 0 0% 20%;
@@ -51,6 +58,41 @@
   */
 
   
+  /* Revision-3 cinematic hierarchy. Only this theme owns the dark palette.
+     Input/focus colors are brighter than decorative borders for WCAG AA. */
+  .theme-cinematic {
+    color-scheme: dark;
+    --background: 140 21% 5%;
+    --background-accent: 137 16% 14%;
+    --foreground: 60 20% 92%;
+    --card: 137 16% 11%;
+    --card-foreground: 60 20% 92%;
+    --popover: 137 16% 11%;
+    --popover-foreground: 60 20% 92%;
+    --primary: 137 52% 80%;
+    --primary-foreground: 140 30% 12%;
+    --secondary: 137 16% 18%;
+    --secondary-foreground: 60 20% 92%;
+    --accent: 137 20% 18%;
+    --accent-foreground: 137 52% 85%;
+    --muted: 137 16% 14%;
+    --muted-foreground: 80 10% 72%;
+    --border: 137 12% 23%;
+    --input: 137 9% 47%;
+    --ring: 137 52% 80%;
+    --destructive: 0 75% 74%;
+    --destructive-foreground: 0 40% 12%;
+    --sidebar-background: 137 20% 8%;
+    --sidebar-foreground: 80 10% 72%;
+    --sidebar-primary: 137 52% 80%;
+    --sidebar-primary-foreground: 140 30% 12%;
+    --sidebar-accent: 137 20% 18%;
+    --sidebar-accent-foreground: 137 52% 85%;
+    --sidebar-border: 137 12% 23%;
+    --sidebar-ring: 137 52% 80%;
+    --radius: 0.75rem;
+  }
+
   .theme-aqua {
     --background: 219 53% 43%;
     --background-accent: 219 53% 35%;
@@ -958,7 +1000,7 @@
     @apply border-border;
   }
   html, body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
     width: 100%;
     overflow-x: hidden;
   }
@@ -966,6 +1008,25 @@
 
 .text-no-transform {
     text-transform: none !important;
+}
+
+/* Shared geometry and typography intentionally use the active theme's tokens. */
+@layer components {
+  .hb-panel {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+  .hb-section-title {
+    @apply text-lg font-medium leading-snug tracking-tight;
+  }
+  .hb-display {
+    @apply font-editorial text-4xl font-normal leading-tight tracking-tight sm:text-6xl;
+  }
+  .hb-eyebrow {
+    @apply text-xs font-medium uppercase tracking-widest text-muted-foreground;
+  }
+  .hb-focus {
+    @apply rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
 }
 
 /* transparent subtle scrollbar */
