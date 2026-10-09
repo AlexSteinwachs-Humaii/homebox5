@@ -9,23 +9,19 @@
       />
     </div>
     <NuxtLink :to="`/item/${item.id}`">
-      <div class="relative h-[200px]">
-        <img
-          v-if="imageUrl && objectContain"
-          class="absolute h-[200px] w-full object-cover blur-md"
-          loading="lazy"
-          :src="imageUrl"
-          alt=""
-        />
+      <div class="relative bg-muted" :class="compact ? 'h-24' : 'h-[200px]'">
         <img
           v-if="imageUrl"
-          class="absolute h-[200px] w-full shadow-md"
+          class="absolute size-full"
           :class="objectContain ? 'object-contain' : 'object-cover'"
           loading="lazy"
           :src="imageUrl"
           :alt="item.name"
         />
-        <div class="absolute inset-x-1 bottom-1">
+        <div v-else class="flex h-full items-center justify-center text-muted-foreground" aria-hidden="true">
+          <MdiImageOffOutline class="size-8" />
+        </div>
+        <div v-if="item.parent" class="absolute inset-x-1 bottom-1">
           <Badge class="text-wrap bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:underline">
             <NuxtLink v-if="item.parent" :to="`/location/${item.parent.id}`">
               {{ locationString }}
@@ -34,7 +30,7 @@
         </div>
       </div>
       <div class="col-span-4 flex grow flex-col gap-y-1 p-4 pt-2">
-        <h2 class="line-clamp-2 text-ellipsis text-wrap text-lg font-bold">{{ item.name }}</h2>
+        <h2 class="text-wrap break-words text-lg font-bold">{{ item.name }}</h2>
         <Separator class="mb-1" />
         <TooltipProvider :delay-duration="0">
           <div class="flex items-center gap-2">
@@ -67,7 +63,23 @@
             </Tooltip>
           </div>
         </TooltipProvider>
-        <Markdown class="mb-2 line-clamp-3 text-ellipsis" :source="item.description" />
+        <dl v-if="compact" class="grid grid-cols-2 gap-2 text-sm">
+          <div class="min-w-0">
+            <dt class="break-words text-muted-foreground">
+              {{ $t("items.insured") }}
+            </dt>
+            <dd>{{ $t(item.insured ? "global.yes" : "global.no") }}</dd>
+          </div>
+          <div class="min-w-0">
+            <dt class="break-words text-muted-foreground">
+              {{ $t("items.purchase_price") }}
+            </dt>
+            <dd class="break-words">
+              <Currency :amount="item.purchasePrice" />
+            </dd>
+          </div>
+        </dl>
+        <Markdown v-if="!compact" class="mb-2 line-clamp-3 text-ellipsis" :source="item.description" />
         <div class="-mr-1 mt-auto flex flex-wrap justify-end gap-2">
           <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
         </div>
@@ -79,6 +91,8 @@
 <script setup lang="ts">
   import type { EntityOut, EntitySummary } from "~~/lib/api/types/data-contracts";
   import MdiShieldCheck from "~icons/mdi/shield-check";
+  import Currency from "@/components/global/Currency.vue";
+  import MdiImageOffOutline from "~icons/mdi/image-off-outline";
   import MdiArchive from "~icons/mdi/archive";
   import { Badge } from "@/components/ui/badge";
   import { Card } from "@/components/ui/card";
@@ -94,7 +108,7 @@
 
   const imageUrl = computed(() => {
     if (!props.item.imageId) {
-      return "/no-image.jpg";
+      return null;
     }
     if (props.item.thumbnailId) {
       return api.authURL(`/entities/${props.item.id}/attachments/${props.item.thumbnailId}`);
@@ -112,6 +126,10 @@
       type: Object as () => EntityOut | EntitySummary,
       required: true,
     },
+    compact: {
+      type: Boolean,
+      default: false,
+    },
     locationFlatTree: {
       type: Array as () => FlatTreeItem[],
       required: false,
@@ -124,7 +142,7 @@
     },
   });
 
-  const objectContain = computed(() => imageUrl.value !== "/no-image.jpg" && !preferences.value.legacyImageFit);
+  const objectContain = computed(() => !preferences.value.legacyImageFit);
 
   const locationString = computed(
     () => props.locationFlatTree.find(l => l.id === props.item.parent?.id)?.treeString || props.item.parent?.name

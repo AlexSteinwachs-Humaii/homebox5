@@ -42,7 +42,7 @@
       <DashboardHero />
       <section>
         <Subtitle> {{ $t("home.quick_statistics") }} </Subtitle>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-6">
+        <div class="grid grid-cols-2 gap-2 md:gap-4 lg:grid-cols-4">
           <StatCard v-for="(stat, i) in stats" :key="i" :title="stat.label" :value="stat.value" :type="stat.type" />
         </div>
       </section>
@@ -50,28 +50,34 @@
       <section>
         <Subtitle> {{ $t("home.recently_added") }} </Subtitle>
 
-        <p v-if="itemTable.items.length === 0" class="ml-2 text-sm">{{ $t("items.no_results") }}</p>
+        <p v-if="itemTable.items.length === 0" class="ml-2 text-sm">
+          {{ $t("items.no_results") }}
+        </p>
         <BaseCard v-else-if="breakpoints.lg">
           <Table :items="itemTable.items" />
         </BaseCard>
         <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <ItemCard v-for="item in itemTable.items" :key="item.id" :item="item" />
+          <ItemCard v-for="item in itemTable.items" :key="item.id" :item="item" compact />
         </div>
       </section>
 
       <section>
         <Subtitle> {{ $t("home.storage_locations") }} </Subtitle>
-        <p v-if="locations.length === 0" class="ml-2 text-sm">{{ $t("locations.no_results") }}</p>
-        <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <p v-if="locations.length === 0" class="ml-2 text-sm">
+          {{ $t("locations.no_results") }}
+        </p>
+        <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <LocationCard v-for="location in locations" :key="location.id" :location="location" />
         </div>
       </section>
 
       <section>
         <Subtitle> {{ $t("home.tags") }} </Subtitle>
-        <p v-if="tags.length === 0" class="ml-2 text-sm">{{ $t("tags.no_results") }}</p>
+        <p v-if="tags.length === 0" class="ml-2 text-sm">
+          {{ $t("tags.no_results") }}
+        </p>
         <div v-else class="flex flex-wrap gap-4">
-          <TagChip v-for="tag in tags" :key="tag.id" size="lg" :tag="tag" class="shadow-md" />
+          <TagChip v-for="tag in tags" :key="tag.id" size="lg" :tag="tag" />
         </div>
       </section>
     </BaseContainer>

@@ -8,7 +8,7 @@
         }"
       >
         <h2 class="flex items-center justify-between gap-2">
-          <div class="relative size-6">
+          <div class="relative size-6 shrink-0">
             <div
               class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover/location-card:-rotate-90"
             >
@@ -16,10 +16,10 @@
               <MdiArrowUp class="hidden size-6 group-hover/location-card:block" />
             </div>
           </div>
-          <span class="mx-auto">
+          <span class="min-w-0 grow break-words">
             {{ location.name }}
           </span>
-          <Badge :class="{ 'opacity-0': !hasCount }">
+          <Badge class="shrink-0" :class="{ 'opacity-0': !hasCount }">
             {{ count }}
           </Badge>
         </h2>
@@ -47,7 +47,7 @@
   });
 
   const hasCount = computed(() => {
-    return !!(props.location as EntitySummary).itemCount;
+    return (props.location as EntitySummary).itemCount != null;
   });
 
   const count = computed(() => {
