@@ -15,7 +15,13 @@
 
   export type QuickMenuAction =
     | { text: string; href: string; type: "navigate" }
-    | { text: string; dialogId: DialogID; shortcut: string; type: "create"; id?: number };
+    | {
+        text: string;
+        dialogId: DialogID;
+        shortcut: string;
+        type: "create";
+        id?: number;
+      };
 
   const props = defineProps({
     actions: {
@@ -29,26 +35,27 @@
   const { closeDialog, openDialog } = useDialog();
 
   useDialogHotkey(DialogID.QuickMenu, { code: "Backquote", ctrl: true });
+
+  function selectCreate(action: Extract<QuickMenuAction, { type: "create" }>) {
+    if (action.dialogId === DialogID.CreateEntity) {
+      openDialog(DialogID.CreateEntity, { params: { baseType: action.id === 1 ? "location" : "item" } });
+    } else {
+      openDialog(action.dialogId as NoParamDialogIDs);
+    }
+  }
 </script>
 
 <template>
-  <CommandDialog :dialog-id="DialogID.QuickMenu">
+  <CommandDialog :dialog-id="DialogID.QuickMenu" :title="t('components.quick_menu.shortcut_hint')">
     <CommandInput
       :placeholder="t('components.quick_menu.shortcut_hint')"
+      :aria-label="t('global.search')"
       @keydown="
         (e: KeyboardEvent) => {
           const item = props.actions.filter(item => 'shortcut' in item).find(item => item.shortcut === e.key);
           if (item) {
             e.preventDefault();
-            if (item.dialogId === DialogID.CreateEntity) {
-              if (item.id === 0) {
-                openDialog(DialogID.CreateEntity, { params: { baseType: 'item' } });
-              } else if (item.id === 1) {
-                openDialog(DialogID.CreateEntity, { params: { baseType: 'location' } });
-              }
-            } else {
-              openDialog(item.dialogId as NoParamDialogIDs);
-            }
+            if (item.type === 'create') selectCreate(item);
           }
           // if esc is pressed, close the dialog
           if (e.key === 'Escape') {
@@ -69,7 +76,7 @@
           @select="
             e => {
               e.preventDefault();
-              openDialog(create.dialogId as NoParamDialogIDs);
+              selectCreate(create);
             }
           "
         >

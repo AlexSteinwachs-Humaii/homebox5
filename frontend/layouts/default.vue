@@ -18,12 +18,19 @@
     <CollectionInviteCreateModal />
     <SidebarProvider :default-open="sidebarState">
       <Sidebar collapsible="icon">
-        <SidebarHeader class="items-center">
-          <SidebarGroupLabel class="text-base group-data-[collapsible=icon]:hidden">{{
-            $t("global.welcome", { username: username })
-          }}</SidebarGroupLabel>
-          <NuxtLink class="group-data-[collapsible=icon]:hidden" to="/home">
-            <div class="flex size-24 items-center justify-center rounded-full bg-background-accent p-4">
+        <SidebarHeader class="items-center gap-4 px-4 py-5 group-data-[collapsible=icon]:px-2">
+          <SidebarGroupLabel
+            class="h-auto text-center text-sm text-sidebar-foreground group-data-[collapsible=icon]:hidden"
+            >{{ $t("global.welcome", { username: username }) }}</SidebarGroupLabel
+          >
+          <NuxtLink
+            class="rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:hidden"
+            :aria-label="$t('menu.home')"
+            to="/home"
+          >
+            <div
+              class="flex size-20 items-center justify-center rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-4"
+            >
               <AppLogo />
             </div>
           </NuxtLink>
@@ -33,7 +40,7 @@
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <SidebarMenuButton
-                class="flex justify-center bg-primary text-primary-foreground drop-shadow-md hover:bg-primary/90 active:bg-primary/90 active:text-primary-foreground group-data-[collapsible=icon]:justify-start"
+                class="flex justify-center bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground group-data-[collapsible=icon]:justify-start"
                 :tooltip="$t('global.create')"
                 hotkey="Shortcut: Ctrl+`"
               >
@@ -43,20 +50,24 @@
                 </span>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent class="z-40 min-w-[var(--reka-dropdown-menu-trigger-width)]">
+            <DropdownMenuContent class="z-40 min-w-[var(--reka-dropdown-menu-trigger-width)] max-w-[calc(100vw-2rem)]">
               <DropdownMenuItem
                 v-for="btn in dropdown"
                 :key="btn.id"
-                class="group cursor-pointer text-lg"
+                class="group cursor-pointer gap-2 whitespace-normal break-words text-sm"
                 @click="
                   () => {
                     if (btn.dialogId === DialogID.CreateEntity) {
                       if (btn.id == 0)
                         // create item
-                        openDialog(btn.dialogId, { params: { baseType: 'item' } });
+                        openDialog(btn.dialogId, {
+                          params: { baseType: 'item' },
+                        });
                       else if (btn.id == 1)
                         // create location
-                        openDialog(btn.dialogId, { params: { baseType: 'location' } });
+                        openDialog(btn.dialogId, {
+                          params: { baseType: 'location' },
+                        });
                     } else {
                       openDialog(btn.dialogId as NoParamDialogIDs);
                     }
@@ -75,12 +86,14 @@
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
+          <SidebarGroup class="px-4 group-data-[collapsible=icon]:px-2">
             <SidebarMenu>
               <template v-for="n in nav" :key="n.id">
                 <SidebarMenuItem v-if="!n.collapsible" :key="n.id">
                   <SidebarMenuLink
                     :href="n.to"
+                    :is-active="n.active?.value"
+                    :aria-current="n.active?.value ? 'page' : undefined"
                     :class="{
                       'bg-accent text-accent-foreground': n.active?.value,
                       'text-nowrap': typeof locale === 'string' && locale.startsWith('zh-'),
@@ -97,6 +110,8 @@
                     <SidebarMenuItem class="flex gap-1">
                       <SidebarMenuLink
                         :href="n.to"
+                        :is-active="n.active?.value"
+                        :aria-current="n.active?.value ? 'page' : undefined"
                         :class="{
                           'bg-accent text-accent-foreground': n.active?.value,
                           'text-nowrap': typeof locale === 'string' && locale.startsWith('zh-'),
@@ -107,7 +122,10 @@
                         <span>{{ n.name.value }}</span>
                       </SidebarMenuLink>
                       <CollapsibleTrigger as-child>
-                        <SidebarMenuButton class="flex size-12 items-center justify-center">
+                        <SidebarMenuButton
+                          class="flex size-9 shrink-0 items-center justify-center"
+                          :aria-label="n.name.value"
+                        >
                           <MdiChevronRight
                             class="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
                           />
@@ -119,6 +137,8 @@
                         <SidebarMenuSubItem v-for="c in n.collapsible" :key="c.id">
                           <SidebarMenuLink
                             :href="c.to"
+                            :is-active="c.active?.value"
+                            :aria-current="c.active?.value ? 'page' : undefined"
                             :class="{
                               'bg-accent text-accent-foreground': c.active?.value,
                               'text-nowrap': typeof locale === 'string' && locale.startsWith('zh-'),
@@ -152,7 +172,7 @@
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter class="mx-4 border-t border-sidebar-border px-0 py-4 group-data-[collapsible=icon]:mx-2">
           <SidebarMenuButton
             class="flex justify-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:bg-destructive group-data-[collapsible=icon]:text-destructive-foreground group-data-[collapsible=icon]:shadow-sm group-data-[collapsible=icon]:hover:bg-destructive/90"
             :tooltip="$t('global.sign_out')"
@@ -168,7 +188,7 @@
 
         <SidebarRail />
       </Sidebar>
-      <SidebarInset class="min-h-dvh max-w-full overflow-hidden bg-background-accent">
+      <SidebarInset class="min-h-dvh min-w-0 max-w-full overflow-hidden bg-background">
         <div class="relative flex h-full flex-col justify-center">
           <div v-if="preferences.displayLegacyHeader">
             <AppHeaderDecor class="-mt-10 hidden lg:block" />
@@ -176,14 +196,18 @@
           </div>
           <!-- IMPORTANT: if you change the height of this div, alter the top value in the item edit page-->
           <div
-            class="sticky top-0 z-20 flex h-[var(--header-height-mobile)] translate-y-[-0.5px] flex-col bg-secondary p-2 shadow-md sm:h-[var(--header-height)] sm:flex-row"
+            class="sticky top-0 z-20 flex h-[var(--header-height-mobile)] translate-y-[-0.5px] flex-col border-b border-border bg-background p-2 sm:h-[var(--header-height)] sm:flex-row sm:px-page-gutter"
             :class="{
               'lg:hidden': preferences.displayLegacyHeader,
             }"
           >
             <div class="flex h-1/2 items-center gap-2 sm:h-auto">
-              <SidebarTrigger variant="default" />
-              <NuxtLink to="/home">
+              <SidebarTrigger variant="outline" />
+              <NuxtLink
+                to="/home"
+                :aria-label="$t('menu.home')"
+                class="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <AppHeaderText class="h-6" />
               </NuxtLink>
             </div>
@@ -191,18 +215,19 @@
             <div class="flex h-1/2 grow items-center justify-end gap-2 sm:h-auto">
               <Input
                 v-model:model-value="search"
-                class="h-9 grow sm:max-w-sm"
+                class="h-9 min-w-0 grow sm:max-w-sm"
+                :aria-label="$t('global.search')"
                 :placeholder="$t('global.search')"
                 type="search"
                 @keyup.enter="triggerSearch"
               />
               <div>
-                <Button size="icon" @click="triggerSearch">
+                <Button variant="outline" size="icon" :aria-label="$t('global.search')" @click="triggerSearch">
                   <MdiMagnify />
                 </Button>
               </div>
               <div>
-                <Button size="icon" @click="openScanner">
+                <Button variant="outline" size="icon" :aria-label="$t('menu.scanner')" @click="openScanner">
                   <MdiQrcodeScan />
                 </Button>
               </div>

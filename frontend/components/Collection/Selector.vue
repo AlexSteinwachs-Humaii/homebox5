@@ -5,17 +5,21 @@
         variant="outline"
         role="combobox"
         :aria-expanded="open"
-        :size="sidebar.state.value === 'collapsed' ? 'icon' : undefined"
-        :class="sidebar.state.value === 'collapsed' ? 'size-10' : 'w-full justify-between drop-shadow-md'"
+        :size="sidebar.state.value === 'collapsed' && !sidebar.isMobile.value ? 'icon' : undefined"
+        :class="
+          sidebar.state.value === 'collapsed' && !sidebar.isMobile.value
+            ? 'size-10'
+            : 'h-auto min-h-11 w-full justify-between bg-sidebar-accent/30 text-sidebar-foreground'
+        "
         :aria-label="t('components.collection.selector.select_collection')"
         :title="t('components.collection.selector.select_collection')"
       >
-        <template v-if="sidebar.state.value === 'collapsed'">
+        <template v-if="sidebar.state.value === 'collapsed' && !sidebar.isMobile.value">
           <MdiHomeGroup class="size-5" />
         </template>
         <template v-else>
-          <span class="flex items-center truncate">
-            <span class="truncate">
+          <span class="flex min-w-0 items-center text-left">
+            <span class="whitespace-normal break-words">
               {{
                 selectedCollection && selectedCollection.name
                   ? selectedCollection.name
@@ -29,7 +33,12 @@
       </Button>
     </PopoverTrigger>
     <PopoverContent
-      :class="[sidebar.state.value === 'collapsed' ? 'min-w-48 p-0' : 'w-[--reka-popper-anchor-width] p-0']"
+      class="max-w-[calc(100vw-2rem)]"
+      :class="[
+        sidebar.state.value === 'collapsed' && !sidebar.isMobile.value
+          ? 'min-w-48 p-0'
+          : 'w-[--reka-popper-anchor-width] p-0',
+      ]"
     >
       <Command :ignore-filter="true">
         <CommandGroup>
@@ -42,7 +51,8 @@
               }
             "
           >
-            <Plus class="mr-2 size-4" /> {{ t("components.collection.selector.create_collection") }}
+            <Plus class="mr-2 size-4" />
+            {{ t("components.collection.selector.create_collection") }}
           </CommandItem>
           <CommandItem
             value="join-collection"
@@ -53,7 +63,8 @@
               }
             "
           >
-            <UserPlus class="mr-2 size-4" /> {{ t("components.collection.selector.join_collection") }}
+            <UserPlus class="mr-2 size-4" />
+            {{ t("components.collection.selector.join_collection") }}
           </CommandItem>
           <CommandItem as-child value="collection-settings">
             <NuxtLink to="/collection/members" class="flex w-full items-center" @click="open = false">
@@ -79,9 +90,8 @@
               <Check
                 :class="cn('mr-2 h-4 w-4', selectedCollection?.id === collection.id ? 'opacity-100' : 'opacity-0')"
               />
-              <div class="flex w-full items-center justify-between gap-2">
+              <div class="min-w-0 whitespace-normal break-words">
                 {{ collection.name }}
-                <div class="flex items-center gap-2"></div>
               </div>
             </CommandItem>
           </CommandGroup>

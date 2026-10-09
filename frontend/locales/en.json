@@ -443,6 +443,7 @@
         "build": "Build: { build }",
         "cancel": "Cancel",
         "close": "Close",
+        "toggle_sidebar": "Toggle sidebar",
         "confirm": "Confirm",
         "create": "Create",
         "create_and_add": "Create and Add Another",

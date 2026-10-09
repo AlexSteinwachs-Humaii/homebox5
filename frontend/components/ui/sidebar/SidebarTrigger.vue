@@ -7,15 +7,21 @@
 
   const props = defineProps<{
     class?: HTMLAttributes["class"];
-    variant?: "ghost" | "default";
+    variant?: "ghost" | "default" | "outline";
   }>();
 
   const { toggleSidebar } = useSidebar();
 </script>
 
 <template>
-  <Button data-sidebar="trigger" :variant="props.variant ?? 'ghost'" size="icon" :class="cn('size-9 [&_svg]:size-6', props.class)" @click="toggleSidebar">
-    <MdiMenu class="text-primary-foreground" />
-    <span class="sr-only">Toggle Sidebar</span>
+  <Button
+    data-sidebar="trigger"
+    :variant="props.variant ?? 'ghost'"
+    size="icon"
+    :class="cn('size-9 [&_svg]:size-6', props.class)"
+    @click="toggleSidebar"
+  >
+    <MdiMenu />
+    <span class="sr-only">{{ $t("global.toggle_sidebar") }}</span>
   </Button>
 </template>

@@ -2,7 +2,7 @@
   <Dialog v-if="isDesktop" :dialog-id="dialogId">
     <DialogScrollContent>
       <DialogHeader>
-        <div class="mr-4 flex place-items-center justify-between">
+        <div class="mr-6 flex min-w-0 flex-wrap items-center justify-between gap-2">
           <DialogTitle>
             <slot name="title">
               {{ title }}
@@ -18,7 +18,7 @@
         <i18n-t
           keypath="components.app.create_modal.createAndAddAnother"
           tag="span"
-          class="flex items-center gap-1 text-sm"
+          class="flex flex-wrap items-center gap-1 text-sm"
         >
           <template #shiftKey>
             <Shortcut size="sm" :keys="[$t('components.app.create_modal.shift')]" />
@@ -44,7 +44,7 @@
         <slot name="header-actions" />
       </div>
 
-      <div class="m-2 overflow-y-auto p-2">
+      <div class="m-2 min-h-0 overflow-y-auto p-2">
         <slot />
       </div>
     </DrawerContent>
