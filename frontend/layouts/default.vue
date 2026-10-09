@@ -40,6 +40,7 @@
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <SidebarMenuButton
+                id="shell-create-trigger"
                 class="flex justify-center bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground group-data-[collapsible=icon]:justify-start"
                 :tooltip="$t('global.create')"
                 hotkey="Shortcut: Ctrl+`"
@@ -50,29 +51,15 @@
                 </span>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent class="z-40 min-w-[var(--reka-dropdown-menu-trigger-width)] max-w-[calc(100vw-2rem)]">
+            <DropdownMenuContent
+              class="z-40 min-w-[var(--reka-dropdown-menu-trigger-width)] max-w-[calc(100vw-2rem)]"
+              @close-auto-focus="onCreateMenuClose"
+            >
               <DropdownMenuItem
                 v-for="btn in dropdown"
                 :key="btn.id"
                 class="group cursor-pointer gap-2 whitespace-normal break-words text-sm"
-                @click="
-                  () => {
-                    if (btn.dialogId === DialogID.CreateEntity) {
-                      if (btn.id == 0)
-                        // create item
-                        openDialog(btn.dialogId, {
-                          params: { baseType: 'item' },
-                        });
-                      else if (btn.id == 1)
-                        // create location
-                        openDialog(btn.dialogId, {
-                          params: { baseType: 'location' },
-                        });
-                    } else {
-                      openDialog(btn.dialogId as NoParamDialogIDs);
-                    }
-                  }
-                "
+                @select="pendingCreate = btn"
               >
                 {{ btn.name.value }}
                 <Shortcut
@@ -406,6 +393,24 @@
       dialogId: DialogID.CreateTag,
     },
   ];
+
+  let pendingCreate: DropdownItem | undefined;
+  function onCreateMenuClose(event: Event) {
+    if (!pendingCreate) return;
+    const action = pendingCreate;
+    pendingCreate = undefined;
+    // Restore a durable focus target before the menu item is removed. Reka's
+    // dialog focus scope can then return to Create in every browser engine.
+    event.preventDefault();
+    document.getElementById("shell-create-trigger")?.focus();
+    nextTick(() => {
+      if (action.dialogId === DialogID.CreateEntity) {
+        openDialog(action.dialogId, { params: { baseType: action.id === 0 ? "item" : "location" } });
+      } else {
+        openDialog(action.dialogId as NoParamDialogIDs);
+      }
+    });
+  }
 
   const route = useRoute();
   const router = useRouter();

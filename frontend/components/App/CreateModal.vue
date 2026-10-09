@@ -1,6 +1,6 @@
 <template>
   <Dialog v-if="isDesktop" :dialog-id="dialogId">
-    <DialogScrollContent>
+    <DialogScrollContent @keydown.esc.capture="onEscape">
       <DialogHeader>
         <div class="mr-6 flex min-w-0 flex-wrap items-center justify-between gap-2">
           <DialogTitle>
@@ -57,12 +57,23 @@
   import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
   import { Dialog, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle } from "@/components/ui/dialog";
   import { Shortcut } from "@/components/ui/shortcut";
+  import { useDialog } from "~/components/ui/dialog-provider";
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  defineProps<{
+  const props = defineProps<{
     dialogId: DialogID;
     title?: string;
     hideFooter?: boolean;
   }>();
+  const { closeDialog } = useDialog();
+  function onEscape(event: KeyboardEvent) {
+    const content = event.currentTarget as HTMLElement;
+    // Leave Escape to an expanded nested selector; otherwise close the global
+    // dialog even if an unmounted menu/selector retains Reka's layer priority.
+    if (content.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeDialog(props.dialogId);
+  }
 </script>

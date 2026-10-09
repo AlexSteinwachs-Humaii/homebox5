@@ -76,6 +76,7 @@
         <CommandInput
           v-model="search"
           :placeholder="t('components.collection.selector.search_collections')"
+          :aria-label="t('components.collection.selector.search_collections')"
           :display-value="_ => ''"
         />
         <CommandEmpty>{{ t("components.collection.selector.no_collection_found") }}</CommandEmpty>

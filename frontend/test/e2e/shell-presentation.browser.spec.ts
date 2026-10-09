@@ -13,6 +13,8 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({ response, json: body });
   });
   await page.goto("/");
+  // Demo credentials are initialized on mount; wait before replacing them.
+  await page.waitForLoadState("networkidle");
   await page.fill("input[type='text']", "demo@example.com");
   await page.fill("input[type='password']", "demodemo");
   await page.click("button[type='submit']");
@@ -95,7 +97,9 @@ test("legacy light header preserves scanner, shortcuts and sign-out", async ({ p
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "homebox");
   await expect(page.getByRole("searchbox")).toBeHidden();
-  await page.getByRole("button", { name: "Scanner", exact: true }).click();
+  // Target the legacy sidebar control, not the modern header's hidden button
+  // while the saved settings snapshot is still being applied.
+  await page.locator("[data-sidebar='sidebar']").getByRole("button", { name: "Scanner", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();

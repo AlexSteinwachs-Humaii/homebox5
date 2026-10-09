@@ -14,6 +14,7 @@
 
   const props = defineProps<DialogContentProps & { class?: HTMLAttributes["class"] }>();
   const emits = defineEmits<DialogContentEmits>();
+  defineOptions({ inheritAttrs: false });
 
   const delegatedProps = computed(() => {
     const { class: _, ...delegated } = props;
@@ -36,7 +37,7 @@
             props.class
           )
         "
-        v-bind="forwarded"
+        v-bind="{ ...forwarded, ...$attrs }"
         @pointer-down-outside="
           (event: CustomEvent<{ originalEvent: PointerEvent }>) => {
             const originalEvent = event.detail.originalEvent;
