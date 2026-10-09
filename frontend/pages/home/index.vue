@@ -12,6 +12,7 @@
   import LocationCard from "~/components/Location/Card.vue";
   import TagChip from "~/components/Tag/Chip.vue";
   import Table from "~/components/Item/View/Table.vue";
+  import DashboardHero from "~/components/App/DashboardHero.vue";
 
   const { t } = useI18n();
 
@@ -37,7 +38,8 @@
 
 <template>
   <div>
-    <BaseContainer class="flex flex-col gap-4">
+    <BaseContainer class="flex flex-col gap-6">
+      <DashboardHero />
       <section>
         <Subtitle> {{ $t("home.quick_statistics") }} </Subtitle>
         <div class="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-6">

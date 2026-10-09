@@ -498,6 +498,12 @@
         "entity_type": "Entity Type"
     },
     "home": {
+        "hero": {
+            "eyebrow": "Your collection / Overview",
+            "title": "A place for {everything}.",
+            "everything": "everything",
+            "description": "Your belongings, organized. Your home, at a glance."
+        },
         "quick_statistics": "Quick Statistics",
         "recently_added": "Recently Added",
         "storage_locations": "Storage Locations",
