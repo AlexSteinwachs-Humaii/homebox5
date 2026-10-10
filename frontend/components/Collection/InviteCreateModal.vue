@@ -1,12 +1,19 @@
 <template>
-  <BaseModal :dialog-id="DialogID.CreateGroupInvite" :title="$t('collection.create_invite')" :hide-footer="true">
+  <BaseModal
+    keyboard-focus
+    :dialog-id="DialogID.CreateGroupInvite"
+    :title="$t('collection.create_invite')"
+    :hide-footer="true"
+  >
     <form class="flex min-w-0 flex-col gap-4" @submit.prevent="create">
       <FormTextField v-model="form.uses" :label="$t('collection.uses')" type="number" :required="true" />
 
       <div class="flex w-full flex-col gap-1.5">
-        <Label class="cursor-pointer">{{ $t("collection.expires_at") }}</Label>
+        <Label for="dp-input-collection-invite-expiry" class="break-words">{{ $t("collection.expires_at") }}</Label>
         <VueDatePicker
           v-model="form.expiresAt"
+          uid="collection-invite-expiry"
+          :aria-labels="{ input: $t('collection.expires_at') }"
           :enable-time-picker="true"
           clearable
           :dark="isDark"
@@ -14,13 +21,16 @@
         />
       </div>
 
-      <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit">
+      <div class="mt-4 flex min-w-0 flex-wrap justify-end gap-2 border-t pt-4">
+        <div class="flex min-w-0 flex-wrap justify-end gap-2">
+          <Button :disabled="loading" class="h-auto min-h-10 max-w-full whitespace-normal" type="submit">
             {{ $t("global.create") }}
           </Button>
-        </ButtonGroup>
+        </div>
       </div>
+      <p v-if="errorMessage" role="alert" class="break-words text-sm text-destructive">
+        {{ errorMessage }}
+      </p>
     </form>
   </BaseModal>
 </template>
@@ -33,7 +43,7 @@
   import { useDialog } from "~/components/ui/dialog-provider";
   import BaseModal from "@/components/App/CreateModal.vue";
   import FormTextField from "~/components/Form/TextField.vue";
-  import { Button, ButtonGroup } from "~/components/ui/button";
+  import { Button } from "~/components/ui/button";
   import { Label } from "~/components/ui/label";
   import { toast } from "@/components/ui/sonner";
   import { useUserApi } from "~/composables/use-api";
@@ -44,6 +54,12 @@
   const api = useUserApi();
 
   const loading = ref(false);
+  const errorMessage = ref("");
+
+  function reportError(message: string) {
+    errorMessage.value = message;
+    toast.error(message);
+  }
   const form = reactive<{ uses: number; expiresAt: Date | null }>({
     uses: 1,
     expiresAt: defaultExpiry(),
@@ -63,6 +79,7 @@
       if (active && active === DialogID.CreateGroupInvite) {
         form.uses = 1;
         form.expiresAt = defaultExpiry();
+        errorMessage.value = "";
         loading.value = false;
       }
     }
@@ -75,25 +92,26 @@
 
     const parsedUses = Number(form.uses ?? 0);
     if (!Number.isFinite(parsedUses) || parsedUses < 1 || parsedUses > 100) {
-      toast.error(t("components.collection.invite_create_modal.toast.invalid_uses"));
+      reportError(t("components.collection.invite_create_modal.toast.invalid_uses"));
       return;
     }
     const uses = parsedUses;
 
     if (!form.expiresAt) {
-      toast.error(t("components.collection.invite_create_modal.toast.invalid_expiry_missing"));
+      reportError(t("components.collection.invite_create_modal.toast.invalid_expiry_missing"));
       return;
     }
 
     const now = new Date();
     const exp = new Date(form.expiresAt);
     if (exp.getTime() <= now.getTime()) {
-      toast.error(t("components.collection.invite_create_modal.toast.invalid_expiry_past"));
+      reportError(t("components.collection.invite_create_modal.toast.invalid_expiry_past"));
       return;
     }
 
     const expiresAtToSend: Date = exp;
 
+    errorMessage.value = "";
     loading.value = true;
 
     try {
@@ -104,7 +122,7 @@
 
       if (res.error) {
         const msg = t("errors.api_failure") + String(res.error);
-        toast.error(msg);
+        reportError(msg);
         loading.value = false;
         return;
       }
@@ -113,7 +131,7 @@
       closeDialog(DialogID.CreateGroupInvite, data);
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
-      toast.error(msg);
+      reportError(msg);
     } finally {
       loading.value = false;
     }

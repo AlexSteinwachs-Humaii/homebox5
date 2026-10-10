@@ -32,7 +32,12 @@
   </Dialog>
 
   <Drawer v-else :dialog-id="dialogId">
-    <DrawerContent class="max-h-[90%]">
+    <DrawerContent
+      class="max-h-[90%]"
+      :trap-focus="keyboardFocus || undefined"
+      @open-auto-focus="onDrawerOpen"
+      @keydown.esc.capture="keyboardFocus && onEscape($event)"
+    >
       <DrawerHeader>
         <DrawerTitle>
           <slot name="title">
@@ -65,8 +70,17 @@
     dialogId: DialogID;
     title?: string;
     hideFooter?: boolean;
+    keyboardFocus?: boolean;
   }>();
   const { closeDialog } = useDialog();
+  function onDrawerOpen(event: Event) {
+    if (!props.keyboardFocus) return;
+    const content = event.target as HTMLElement;
+    void nextTick(() => {
+      content.querySelector<HTMLElement>("input:not([disabled]), button:not([disabled])")?.focus();
+    });
+  }
+
   function onEscape(event: KeyboardEvent) {
     const content = event.currentTarget as HTMLElement;
     // Leave Escape to an expanded nested selector; otherwise close the global

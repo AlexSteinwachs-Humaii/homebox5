@@ -2,7 +2,7 @@
   import { useI18n } from "vue-i18n";
   import BaseContainer from "@/components/Base/Container.vue";
   import { Card } from "@/components/ui/card";
-  import { Button, ButtonGroup } from "@/components/ui/button";
+  import { Button } from "@/components/ui/button";
   import { toast } from "@/components/ui/sonner";
 
   import MdiAccountMultiple from "~icons/mdi/account-multiple";
@@ -23,12 +23,12 @@
 
   useHead({ title: `HomeBox | ${t("menu.collection")}` });
 
-  const route = useRoute();
+  const router = useRouter();
   const api = useUserApi();
   const auth = useAuthContext();
   const confirm = useConfirm();
 
-  const currentPath = computed(() => route.path);
+  const currentPath = computed(() => router.currentRoute.value.path.replace(/\/$/, ""));
 
   const tabs = computed(() => [
     {
@@ -70,6 +70,12 @@
   ]);
 
   const { selectedCollection, load: reloadCollections } = useCollections();
+
+  // On mobile the selector is not mounted until the sidebar opens. Collection
+  // pages still need their scope on a direct visit; load() deduplicates callers.
+  onMounted(() => {
+    void reloadCollections();
+  });
 
   const members = ref<Array<UserSummary>>([]);
   const membersLoading = ref(false);
@@ -202,14 +208,14 @@
 
 <template>
   <BaseContainer>
-    <Title>{{ t("menu.collection_options") }}</Title>
+    <Title>{{ t("components.collection.selector.collection_options") }}</Title>
 
     <section>
-      <Card class="p-3">
+      <Card class="hb-panel min-w-0 p-4 sm:p-6">
         <header>
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h1 class="text-2xl">
+            <div class="min-w-0">
+              <h1 class="hb-section-title break-words [overflow-wrap:anywhere]">
                 {{
                   selectedCollection?.name
                     ? t("collection.manage_collection") + " - " + selectedCollection.name
@@ -221,8 +227,11 @@
         </header>
       </Card>
 
-      <div class="my-3 flex flex-wrap items-center justify-between gap-2">
-        <ButtonGroup>
+      <div class="my-section-gap flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <nav
+          :aria-label="t('components.collection.selector.collection_options')"
+          class="flex min-w-0 flex-1 flex-wrap gap-2"
+        >
           <Button
             v-for="tab in tabs"
             :key="tab.id"
@@ -230,18 +239,23 @@
             :variant="tab.to === currentPath ? 'default' : 'outline'"
             size="sm"
           >
-            <NuxtLink :to="tab.to" class="flex items-center gap-2">
-              <component :is="tab.icon" v-if="tab.icon" class="size-4" />
-              <span class="hidden sm:block">{{ t(tab.label) }}</span>
+            <NuxtLink
+              :to="tab.to"
+              class="flex h-auto min-h-10 min-w-0 max-w-full items-center gap-2 whitespace-normal text-start"
+              :aria-current="tab.to === currentPath ? 'page' : undefined"
+              :aria-label="t(tab.label)"
+            >
+              <component :is="tab.icon" v-if="tab.icon" class="size-4 shrink-0" aria-hidden="true" />
+              <span class="hidden min-w-0 break-words sm:block">{{ t(tab.label) }}</span>
             </NuxtLink>
           </Button>
-        </ButtonGroup>
+        </nav>
 
-        <div id="collection-header-actions" class="ml-auto flex items-center gap-1">
+        <div id="collection-header-actions" class="ml-auto flex shrink-0 items-center gap-1">
           <Button
             variant="outline"
             size="icon"
-            class="size-8"
+            class="size-10"
             :aria-label="$t(isOnlyMember ? 'collection.delete_collection' : 'collection.leave_collection')"
             :disabled="isActionDisabled"
             @click="handleCollectionPrimaryAction"

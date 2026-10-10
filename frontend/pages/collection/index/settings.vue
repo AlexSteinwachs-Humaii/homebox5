@@ -128,40 +128,42 @@
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div v-if="loading" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+  <div class="min-w-0 space-y-4">
+    <div v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
       {{ $t("global.loading") }}
     </div>
 
     <div v-else>
-      <div v-if="!selectedCollection" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+      <div v-if="!selectedCollection" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
         {{ $t("components.collection.selector.select_collection") }}
       </div>
 
-      <div v-else class="space-y-4 rounded-md border bg-card p-4">
+      <div v-else class="hb-panel min-w-0 space-y-6 p-4 sm:p-6">
         <FormTextField v-model="name" :label="$t('global.name')" />
 
         <div>
           <Label for="currency"> {{ $t("profile.currency_format") }} </Label>
-          <Select
-            id="currency"
-            :model-value="currencyCode"
-            @update:model-value="val => (currencyCode = String(val || ''))"
-          >
-            <SelectTrigger>
+          <Select :model-value="currencyCode" @update:model-value="val => (currencyCode = String(val || ''))">
+            <SelectTrigger id="currency" class="h-auto min-h-10 [&>span]:whitespace-normal [&>span]:break-words">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="c in currencies" :key="c.code" :value="c.code">
+              <SelectItem v-for="c in currencies" :key="c.code" :value="c.code" class="break-words">
                 {{ c.name }}
               </SelectItem>
             </SelectContent>
           </Select>
-          <p class="m-2 text-sm">{{ $t("profile.example") }}: {{ currencyExample }}</p>
+          <p class="mt-2 break-words text-sm text-muted-foreground">
+            {{ $t("profile.example") }}: {{ currencyExample }}
+          </p>
         </div>
 
-        <div class="mt-4">
-          <Button variant="secondary" size="sm" :disabled="saving" @click="save">
+        <p v-if="error" role="alert" class="break-words text-sm text-destructive">
+          {{ error }}
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <Button class="h-auto min-h-10 whitespace-normal text-start" :disabled="saving" @click="save">
             <MdiLoading v-if="saving" class="mr-2 inline-block animate-spin" />
             <span>{{ $t("profile.update_group") }}</span>
           </Button>
