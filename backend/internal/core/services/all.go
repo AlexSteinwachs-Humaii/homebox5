@@ -16,6 +16,7 @@ type AllServices struct {
 	Entities          *EntityService
 	BackgroundService *BackgroundService
 	Exports           *ExportService
+	CSVExports        *CSVExportService
 	Currencies        *currencies.CurrencyRegistry
 }
 
@@ -106,9 +107,11 @@ func New(repos *repo.AllRepos, opts ...OptionsFunc) *AllServices {
 		opt(options)
 	}
 
+	csv := &CSVExportService{repos: repos, store: csvBlobStore{repos: repos}}
 	return &AllServices{
-		User:  &UserService{repos: repos, mailer: options.mailer},
-		Group: &GroupService{repos},
+		CSVExports: csv,
+		User:       &UserService{repos: repos, mailer: options.mailer, csv: csv},
+		Group:      &GroupService{repos: repos, csv: csv},
 		Entities: &EntityService{
 			repo:                 repos,
 			autoIncrementAssetID: options.autoIncrementAssetID,

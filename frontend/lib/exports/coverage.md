@@ -111,3 +111,22 @@ Asset-route exports use `asset-results`, not the item-only EntityQuery source: Q
 - SQLite repository snapshot tests exercised all registered adapters, populated hierarchy/all-results and private no-collection metadata. PostgreSQL was not exercised against a live database in S2.
 
 Ent's `Client.Sql()` cannot be called on a transaction client. Location item counts now use the equivalent Ent GroupBy/SUM query so shared list filtering and CSV snapshot reads work on the same driver. Source reads fail rather than retry outside the transaction if serializable isolation is unavailable; worker retry policy belongs to S3.
+
+## S3 lifecycle handoff
+
+`AllServices.CSVExports` now provides generation, current-source-authorized status/history/download/delete and failed-job retry. Authenticated `/api/v1/group/csv-exports` and account-only `/api/v1/user/csv-exports` support POST/GET, `/{id}`, `/{id}/download`, `/{id}/retry`, DELETE `/{id}`, GET/PUT `/retention`. Private routes do not run tenant middleware; the API integration test exercises an account with zero memberships and no default collection while sending an unrelated X-Tenant. Generated `CsvRequest`/`CsvArtifact`/`CsvRetentionSettings` contracts remain unchanged. Full endpoint/recovery details: `backend/internal/core/services/csvexports/LIFECYCLE.md`.
+
+The database is the durable CSV queue. A separate five-second worker recovers abandoned running claims; generation has a five-minute deadline and a ten-minute abandoned-claim threshold. Failed jobs retain metadata/pointers and require explicit requester retry. Successful artifacts cannot regenerate; initial saves and later re-downloads use only the authorized canonical download. Storage keys are persisted before writes, exact-match validated and never exposed. Cleanup reloads the latest pointer after marking deleting, removes the blob before metadata, retries errors and treats missing blobs idempotently. User/group service deletion cleans CSV first with restrictive FKs as a concurrency safeguard. Completion-based captured-policy expiry is enforced before bytes independently of cleanup. ZIP tables/import/purge behavior is unchanged.
+
+Invitation-visible private snapshots now recover their originating collection through each stored invitation ID, rechecking current ownership, instead of requiring a transient tenant that private artifact metadata intentionally does not retain. Requester-member notifier exports cannot be read from another member's history. Both CSV route bases send no-store headers and bypass PWA API caching.
+
+### S3 verification
+
+- `cd backend && go test ./internal/core/services ./internal/data/repo ./app/api/handlers/v1 ./app/api`: passed.
+- `cd backend && go test -race ./internal/core/services ./internal/data/repo ./app/api -run 'TestCSV|TestCsv' -count=1`: passed.
+- `cd backend && go build ./app/api`: passed.
+- `cd frontend && pnpm exec eslint nuxt.config.ts`: passed.
+- `cd backend && go test ./...`: same unchanged validation failures recorded in S2 above: `expected no error but got: bogon/reserved network addresses are blocked` in the two `TestValidateNotifierURL` public-host cases. All changed package suites passed.
+- `cd frontend && pnpm run lint:ci`: fails on two unchanged prettier warnings, `locales/zh-TW.test.ts:12` and `pages/location/[id]/index/index.vue:239`: `ESLint found too many warnings (maximum: 1)`.
+- `cd frontend && pnpm run typecheck`: exit 2; existing errors include missing `ItemSummary`/`ItemOut`, EntitySummary.location, Vue Ref/template mismatches and `nuxt.config.ts:60` analytics script crossorigin (not the new caching rule). No controls or API-client UI integration are part of S3.
+- SQLite lifecycle tests cover canonical byte equality, pending/running/completed/failed/deleting, captured retention, exact expiry/no storage read, cross-scope/user/member access, requester-member history filtering, permission revocation before generation and download, storage/database completion failures, stale-pointer-safe deletion, abandoned job recovery, identity cleanup failures, no-collection routes and unchanged portable ZIP table selection. Live PostgreSQL and native save-picker/browser UI tests remain later verification work.

@@ -17,6 +17,7 @@ var ErrNotGroupOwner = errors.New("only the owner of this collection can perform
 
 type GroupService struct {
 	repos *repo.AllRepos
+	csv   *CSVExportService
 }
 
 // requireOwner asserts the acting user owns the collection identified by
@@ -81,6 +82,11 @@ func (svc *GroupService) DeleteGroup(ctx Context) error {
 		return err
 	}
 
+	if svc.csv != nil {
+		if err := svc.csv.PurgeIdentity(ctx.Context, nil, &ctx.GID); err != nil {
+			return err
+		}
+	}
 	return svc.repos.Groups.GroupDelete(ctx.Context, ctx.GID)
 }
 

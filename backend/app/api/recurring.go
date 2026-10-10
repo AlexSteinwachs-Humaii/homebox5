@@ -19,6 +19,23 @@ import (
 func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runner) {
 	runner.AddFunc("eventbus", app.bus.Run)
 
+	// CSV jobs are durable database rows, independent of ZIP pubsub topics.
+	// Sweep immediately at startup and regularly thereafter for crash recovery.
+	runner.AddFunc("csv-export-worker", func(ctx context.Context) error {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			if err := app.services.CSVExports.Sweep(ctx); err != nil && ctx.Err() == nil {
+				log.Err(err).Msg("CSV lifecycle sweep failed")
+			}
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-ticker.C:
+			}
+		}
+	})
+
 	runner.AddFunc("seed_database", func(ctx context.Context) error {
 		if cfg.Demo {
 			log.Info().Msg("Running in demo mode, creating demo data")

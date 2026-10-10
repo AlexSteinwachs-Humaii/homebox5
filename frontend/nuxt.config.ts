@@ -88,6 +88,11 @@ export default defineNuxtConfig({
       cleanupOutdatedCaches: true,
       runtimeCaching: [
         {
+          urlPattern: /\/api\/v1\/(?:user|group)\/csv-exports(?:\/|$)/,
+          handler: "NetworkOnly",
+          method: "GET",
+        },
+        {
           urlPattern: /^\/api/,
           handler: "NetworkFirst",
           method: "GET",

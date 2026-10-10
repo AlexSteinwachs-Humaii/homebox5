@@ -165,6 +165,26 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Delete("/groups/invitations/{id}", chain.ToHandlerFunc(v1Ctrl.HandleGroupInvitationsDelete(), ownerMW...))
 		r.Post("/groups/invitations/{id}", chain.ToHandlerFunc(v1Ctrl.HandleGroupInvitationsAccept(), userMW...))
 
+		// CSV is a separate retained lifecycle, not a ZIP backup/import.
+		accountMW := []errchain.Middleware{a.mwAuthToken, a.mwRoles(RoleModeOr, authroles.RoleUser.String())}
+		for _, scope := range []struct {
+			prefix  string
+			private bool
+			mw      []errchain.Middleware
+		}{
+			{"/user/csv-exports", true, accountMW},
+			{"/group/csv-exports", false, userMW},
+		} {
+			r.Get(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "retention"), scope.mw...))
+			r.Put(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "retention"), scope.mw...))
+			r.Get(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "list"), scope.mw...))
+			r.Post(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "list"), scope.mw...))
+			r.Get(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "get"), scope.mw...))
+			r.Delete(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "get"), scope.mw...))
+			r.Get(scope.prefix+"/{id}/download", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "download"), scope.mw...))
+			r.Post(scope.prefix+"/{id}/retry", chain.ToHandlerFunc(v1Ctrl.HandleCSVExports(scope.private, "retry"), scope.mw...))
+		}
+
 		// Collection export/import (group-scoped)
 		r.Post("/group/exports", chain.ToHandlerFunc(v1Ctrl.HandleExportsCreate(), userMW...))
 		r.Get("/group/exports", chain.ToHandlerFunc(v1Ctrl.HandleExportsList(), userMW...))

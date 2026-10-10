@@ -585,28 +585,23 @@ func (r csvSourceReader) read(ctx context.Context, req csvexports.Request) ([]cs
 		}
 		return rows, nil
 	case "invitation-visible":
-		if gid == uuid.Nil {
-			return nil, errors.New("trusted invitation collection required")
-		}
-		if err := r.owner(ctx, gid); err != nil {
-			return nil, err
-		}
-		values, err := NewGroupRepository(r.db, nil).InvitationGetAll(ctx, gid)
-		if err != nil {
-			return nil, err
-		}
-		byID := map[uuid.UUID]GroupInvitation{}
-		for _, v := range values {
-			byID[v.ID] = v
-		}
+		// Private rows have no retained tenant. Resolve each origin through its
+		// stored reference, never a client-supplied collection or token.
 		rows := []csvexports.Row{}
 		for _, snap := range req.Snapshot {
 			if snap.ID == nil {
 				return nil, errors.New("invitation reference required")
 			}
-			v, ok := byID[*snap.ID]
-			if !ok {
-				return nil, errors.New("invitation unavailable")
+			v, err := r.db.GroupInvitationToken.Get(ctx, *snap.ID)
+			if err != nil {
+				return nil, err
+			}
+			origin, err := v.QueryGroup().Only(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if err := r.owner(ctx, origin.ID); err != nil {
+				return nil, err
 			}
 			rows = append(rows, csvexports.Row{"id": v.ID.String(), "expiresAt": v.ExpiresAt, "remainingUses": v.Uses})
 		}

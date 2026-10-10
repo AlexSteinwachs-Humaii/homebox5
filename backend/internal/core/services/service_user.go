@@ -42,6 +42,7 @@ const PasswordMinLength = 6
 type UserService struct {
 	repos  *repo.AllRepos
 	mailer *mailer.Mailer
+	csv    *CSVExportService
 }
 
 type (
@@ -696,6 +697,11 @@ func (svc *UserService) DeleteSelf(ctx context.Context, id uuid.UUID) error {
 		trace.WithAttributes(attribute.String("user.id", id.String())))
 	defer span.End()
 
+	if svc.csv != nil {
+		if err := svc.csv.PurgeIdentity(ctx, &id, nil); err != nil {
+			return err
+		}
+	}
 	err := svc.repos.Users.Delete(ctx, id)
 	recordServiceSpanError(span, err)
 	return err

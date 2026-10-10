@@ -107,6 +107,9 @@ type tableSpec struct {
 // We do not currently rewrite UUIDs nested inside JSON columns, so that
 // reference is lost on import. Templates and tags both still come across
 // individually; only the template→tag default association is dropped.
+// CSV artifacts and user/group retention policies are intentionally absent:
+// portable ZIP import must not share private history or reset artifact expiry.
+// CSV cleanup runs independently of the existing seven-day ZIP cleanup.
 var exportTables = []tableSpec{
 	{
 		name:      "entity_types",
