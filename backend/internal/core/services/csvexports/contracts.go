@@ -1,4 +1,4 @@
-// Package csvexports defines CSV contracts only. Registry membership is not
+// Package csvexports defines CSV contracts, resolution and serialization. Registry membership is not
 // authorization: adapters must check current source access on every operation.
 package csvexports
 
@@ -73,8 +73,8 @@ type Boundary struct {
 }
 
 // Bounded displayed records for unsaved/private data, not arbitrary object maps.
-// Token is only accepted for a visible invitation owned by the current user;
-// adapters must revalidate its collection, never reconstruct plaintext hashes.
+// Invitation metadata is revalidated against the originating collection.
+// Tokens and other credentials are never accepted as displayed CSV data.
 type SnapshotRow struct {
 	Manufacturer     string     `json:"manufacturer,omitempty"`
 	ModelNumber      string     `json:"modelNumber,omitempty"`

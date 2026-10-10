@@ -217,7 +217,7 @@
   {
     "path": "pages/assets/[id].vue",
     "sources": [
-      "entities"
+      "asset-results"
     ],
     "integration": "pending; see coverage.md"
   },

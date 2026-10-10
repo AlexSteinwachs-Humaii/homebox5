@@ -16,6 +16,33 @@ export const csvSources = {
     "filters": [],
     "scope": "private"
   },
+  "asset-results": {
+    "access": "member",
+    "boundaries": [
+      "all",
+      "explicit"
+    ],
+    "columns": [
+      "id",
+      "assetId",
+      "name",
+      "description",
+      "quantity",
+      "insured",
+      "purchasePrice",
+      "location",
+      "archived",
+      "createdAt",
+      "updatedAt",
+      "parentId",
+      "path",
+      "tags"
+    ],
+    "filters": [
+      "assetId"
+    ],
+    "scope": "collection"
+  },
   "attachments": {
     "access": "member",
     "boundaries": [
@@ -215,7 +242,6 @@ export const csvSources = {
     ],
     "columns": [
       "id",
-      "token",
       "expiresAt",
       "remainingUses"
     ],

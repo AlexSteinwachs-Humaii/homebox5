@@ -434,7 +434,6 @@
     "access": "collection-owner",
     "columns": [
       "id",
-      "token",
       "expiresAt",
       "remainingUses"
     ],
@@ -455,6 +454,33 @@
     "filters": [],
     "boundaries": [
       "snapshot"
+    ]
+  },
+  "asset-results": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "assetId",
+      "name",
+      "description",
+      "quantity",
+      "insured",
+      "purchasePrice",
+      "location",
+      "archived",
+      "createdAt",
+      "updatedAt",
+      "parentId",
+      "path",
+      "tags"
+    ],
+    "filters": [
+      "assetId"
+    ],
+    "boundaries": [
+      "all",
+      "explicit"
     ]
   }
 }

@@ -755,6 +755,8 @@ func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q En
 		qb = qb.Order(ent.Asc(entity.FieldName))
 	}
 
+	// Stable ties keep full-source exports and list pagination deterministic.
+	qb = qb.Order(ent.Asc(entity.FieldID))
 	qb = qb.
 		WithTag().
 		WithParent().
@@ -827,47 +829,27 @@ func (r *EntityRepository) getChildItemCounts(ctx context.Context, gid uuid.UUID
 		return nil, nil
 	}
 
-	// Build placeholders for the IN clause
-	placeholders := make([]string, len(locationIDs))
-	args := make([]any, 0, len(locationIDs)+1)
-	args = append(args, gid)
-	for i, id := range locationIDs {
-		placeholders[i] = fmt.Sprintf("$%d", i+2)
-		args = append(args, id)
+	// Use Ent's driver so this query participates in a caller's transaction.
+	// Client.Sql() exposes a database handle and is not usable on tx.Client().
+	var counts []struct {
+		ParentID uuid.UUID `json:"entity_children"`
+		Sum      float64   `json:"sum"`
 	}
-
-	query := fmt.Sprintf(`
-		SELECT e.entity_children, COALESCE(SUM(e.quantity), 0)
-		FROM entities e
-		JOIN entity_types et ON et.id = e.entity_type_entities
-		WHERE e.group_entities = $1
-			AND et.is_location = false
-			AND e.archived = false
-			AND e.entity_children IN (%s)
-		GROUP BY e.entity_children
-	`, strings.Join(placeholders, ","))
-
-	rows, err := r.db.Sql().QueryContext(ctx, query, args...)
+	err := r.db.Entity.Query().Where(
+		entity.HasGroupWith(group.ID(gid)),
+		entity.HasEntityTypeWith(entitytype.IsLocation(false)),
+		entity.Archived(false),
+		entity.HasParentWith(entity.IDIn(locationIDs...)),
+	).GroupBy(entity.ParentColumn).Aggregate(ent.Sum(entity.FieldQuantity)).Scan(ctx, &counts)
 	if err != nil {
 		recordSpanError(span, err)
 		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
+	result := make(map[uuid.UUID]float64, len(counts))
+	for _, row := range counts {
+		result[row.ParentID] = row.Sum
+	}
 
-	result := make(map[uuid.UUID]float64)
-	for rows.Next() {
-		var parentID uuid.UUID
-		var count float64
-		if err := rows.Scan(&parentID, &count); err != nil {
-			recordSpanError(span, err)
-			return nil, err
-		}
-		result[parentID] = count
-	}
-	if err := rows.Err(); err != nil {
-		recordSpanError(span, err)
-		return result, err
-	}
 	span.SetAttributes(attribute.Int("results.count", len(result)))
 	return result, nil
 }
