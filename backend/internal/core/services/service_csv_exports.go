@@ -36,6 +36,7 @@ type CSVExportService struct {
 	now     func() time.Time
 	upload  func(context.Context, string, io.Reader) error
 	read    func(context.Context, string) ([]byte, error)
+	remove  func(context.Context, string) error
 }
 
 func NewCSVExportService(db *ent.Client, repos *repo.AllRepos, boundaries CSVBoundaryAuthority) *CSVExportService {
@@ -129,6 +130,9 @@ func csvReady() []csvexport.Status {
 func (s *CSVExportService) RunJob(ctx context.Context, id uuid.UUID) error {
 	now := s.now().UTC()
 	row, err := s.db.CSVExport.Get(ctx, id)
+	if ent.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -201,9 +205,13 @@ func (s *CSVExportService) RunJob(ctx context.Context, id uuid.UUID) error {
 	if err == nil {
 		err = repo.ValidateCSVRetentionDays(days)
 	}
+	var expires time.Time
+	if err == nil {
+		expires, err = csvExpiry(completed, days)
+	}
 	if err == nil {
 		_, err = tx.CSVExport.UpdateOneID(id).SetStatus(csvexport.StatusCompleted).SetCompletedAt(completed).
-			SetExpiresAt(completed.Add(time.Duration(days) * 24 * time.Hour)).SetSizeBytes(size).ClearRetryAt().ClearFailureCode().ClearFailureDetail().Save(ctx)
+			SetExpiresAt(expires).SetSizeBytes(size).ClearRetryAt().ClearFailureCode().ClearFailureDetail().Save(ctx)
 	}
 	if err != nil {
 		_ = tx.Rollback()

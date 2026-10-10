@@ -38,6 +38,14 @@ func TestCSVAPIIndependentPrivateWorkflow(t *testing.T) {
 		handler := ctrl.HandleCSV(true, op.name)
 		router.MethodFunc(op.method, op.path, func(w http.ResponseWriter, r *http.Request) { require.NoError(t, handler(w, r)) })
 	}
+	for _, update := range []bool{false, true} {
+		method := "GET"
+		if update {
+			method = "PUT"
+		}
+		handler := ctrl.HandleCSVRetention(true, update)
+		router.MethodFunc(method, "/csv/retention", func(w http.ResponseWriter, r *http.Request) { require.NoError(t, handler(w, r)) })
+	}
 	call := func(method, path, body string, uid uuid.UUID) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(method, path, strings.NewReader(body))
 		// Supplied tenant does not affect private scope, even without membership.
@@ -49,6 +57,12 @@ func TestCSVAPIIndependentPrivateWorkflow(t *testing.T) {
 		require.Empty(t, w.Header().Get("Location"))
 		return w
 	}
+	require.JSONEq(t, `{"days":30}`, call("GET", "/csv/retention", "", user.ID).Body.String())
+	for _, invalid := range []string{`{"days":0}`, `{"days":-1}`, `{"days":1.5}`, `{"days":106752}`, `{"days":1e100}`, `{"days":"2"}`, `{"days":null}`, `{"days":1,"days":2}`, `{"days":1,"userId":"other"}`, `{"days":1} {"days":2}`, `null`, `{}`} {
+		require.Equal(t, 400, call("PUT", "/csv/retention", invalid, user.ID).Code, invalid)
+	}
+	require.JSONEq(t, `{"days":2}`, call("PUT", "/csv/retention", `{"days":2}`, user.ID).Body.String())
+	require.JSONEq(t, `{"days":2}`, call("GET", "/csv/retention", "", user.ID).Body.String())
 	body := `{"source":"account-api-keys","scope":"account-private","columns":["name"]}`
 	for _, tampered := range []string{
 		strings.TrimSuffix(body, "}") + `,"blobKey":"other/path"}`,
@@ -93,6 +107,15 @@ func TestCSVAPIIndependentPrivateWorkflow(t *testing.T) {
 	require.Equal(t, 202, call("DELETE", "/csv/"+row.ID.String(), "", user.ID).Code)
 	require.Equal(t, 202, call("DELETE", "/csv/"+row.ID.String(), "", user.ID).Code)
 	require.Equal(t, 409, call("GET", "/csv/"+row.ID.String()+"/download", "", user.ID).Code)
+	require.NoError(t, svc.Cleanup(ctx))
+	require.NoError(t, svc.Cleanup(ctx))
+	require.Equal(t, 404, call("GET", "/csv/"+row.ID.String(), "", user.ID).Code)
+	// Delete a queued artifact that never uploaded: real missing-blob deletion is idempotent.
+	queued := call("POST", "/csv", body, user.ID)
+	require.NoError(t, json.Unmarshal(queued.Body.Bytes(), &row))
+	require.Equal(t, 202, call("DELETE", "/csv/"+row.ID.String(), "", user.ID).Code)
+	require.NoError(t, svc.Cleanup(ctx))
+	require.NoError(t, svc.Cleanup(ctx))
 }
 
 var errCSVDisconnected = errors.New("client disconnected")

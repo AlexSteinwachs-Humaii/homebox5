@@ -35,6 +35,22 @@ func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runne
 		}
 	})
 
+	// CSV retention is independent of ZIP/import's seven-day sweep.
+	runner.AddFunc("csv-cleanup", func(ctx context.Context) error {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			if err := app.services.CSVExports.Cleanup(ctx); err != nil && ctx.Err() == nil {
+				log.Error().Err(err).Msg("CSV cleanup failed; durable intents retained")
+			}
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-ticker.C:
+			}
+		}
+	})
+
 	runner.AddFunc("seed_database", func(ctx context.Context) error {
 		if cfg.Demo {
 			log.Info().Msg("Running in demo mode, creating demo data")

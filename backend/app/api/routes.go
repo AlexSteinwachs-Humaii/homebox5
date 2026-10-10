@@ -142,6 +142,8 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			{"/group/csv-exports", false, userMW},
 			{"/users/self/csv-exports", true, csvPrivateMW},
 		} {
+			r.Get(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetention(scope.private, false), scope.middleware...))
+			r.Put(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetention(scope.private, true), scope.middleware...))
 			r.Post(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "create"), scope.middleware...))
 			r.Get(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "history"), scope.middleware...))
 			r.Get(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "status"), scope.middleware...))

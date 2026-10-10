@@ -241,7 +241,8 @@ func (s *CSVExportService) Delete(ctx context.Context, uid uuid.UUID, gid *uuid.
 	if row.Status == csvexport.StatusCleanupPending {
 		return nil
 	}
-	return s.db.CSVExport.UpdateOneID(id).SetStatus(csvexport.StatusCleanupPending).ClearRetryAt().ClearFailureCode().ClearFailureDetail().Exec(ctx)
+	_, err = s.db.CSVExport.Update().Where(csvexport.IDEQ(id), csvexport.StatusNEQ(csvexport.StatusCleanupPending)).SetStatus(csvexport.StatusCleanupPending).ClearRetryAt().ClearFailureCode().ClearFailureDetail().Save(ctx)
+	return err
 }
 
 func (s *CSVExportService) RetryArtifact(ctx context.Context, uid uuid.UUID, gid *uuid.UUID, id uuid.UUID) error {

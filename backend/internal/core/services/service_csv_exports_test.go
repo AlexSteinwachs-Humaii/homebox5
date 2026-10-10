@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,12 +19,15 @@ import (
 )
 
 type csvFakeSource struct {
+	mu    sync.Mutex
 	data  CSVInventoryRows
 	err   error
 	calls int
 }
 
 func (f *csvFakeSource) Load(context.Context, uuid.UUID, CSVCaptureRequest) (CSVInventoryRows, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.calls++
 	return f.data, f.err
 }
