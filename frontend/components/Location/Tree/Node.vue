@@ -8,11 +8,13 @@
 
   type Props = {
     treeId: string;
+    depth?: number;
     item: TreeItem;
     showItems?: boolean;
   };
   const props = withDefaults(defineProps<Props>(), {
     showItems: true,
+    depth: 0,
   });
 
   const link = computed(() => {
@@ -57,39 +59,35 @@
 <template>
   <div>
     <div
-      class="flex items-center gap-1 rounded p-1"
-      :class="{
-        'cursor-pointer hover:bg-accent hover:text-accent-foreground': hasChildren,
-      }"
-      @click="openRef = !openRef"
+      class="hb-tree-row"
+      :style="{ paddingLeft: `${Math.min(props.depth ?? 0, 4) * 0.75 + 0.5}rem` }"
+      @click="hasChildren && (openRef = !openRef)"
     >
-      <div
-        class="mr-1 flex items-center justify-center rounded p-0.5"
-        :class="{
-          'hover:bg-accent hover:text-accent-foreground': hasChildren,
-        }"
+      <button
+        v-if="hasChildren"
+        type="button"
+        class="hb-focus flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-accent"
+        :aria-expanded="openRef"
+        :aria-label="`${$t(openRef ? 'locations.collapse_tree' : 'locations.expand_tree')}: ${item.name}`"
+        @click.stop="openRef = !openRef"
       >
-        <div v-if="!hasChildren" class="size-6" />
-        <div v-else class="group/node relative size-6" :data-swap="openRef">
-          <div
-            class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-data-[swap=true]/node:rotate-90"
-          >
-            <MdiChevronRight class="size-6" />
-          </div>
-        </div>
-      </div>
-      <MdiMapMarker v-if="item.type === 'location'" class="size-4" />
-      <MdiPackageVariant v-else class="size-4" />
-      <NuxtLink class="text-lg hover:underline" :to="link" @click.stop>{{ item.name }} </NuxtLink>
+        <MdiChevronRight class="size-5" :class="{ 'rotate-90': openRef }" />
+      </button>
+      <span v-else class="size-8 shrink-0" />
+
+      <MdiMapMarker v-if="item.type === 'location'" class="size-4 shrink-0 text-muted-foreground" />
+      <MdiPackageVariant v-else class="size-4 shrink-0 text-muted-foreground" />
+      <NuxtLink
+        class="hb-focus min-w-0 flex-1 break-words text-sm font-medium leading-relaxed [overflow-wrap:anywhere] hover:underline"
+        :to="link"
+        @click.stop
+        >{{ item.name }}
+      </NuxtLink>
     </div>
-    <div v-if="openRef" class="ml-4">
-      <LocationTreeNode
-        v-for="child in sortedChildren"
-        :key="child.id"
-        :item="child"
-        :tree-id="treeId"
-        :show-items="showItems"
-      />
-    </div>
+    <ul v-if="openRef" class="space-y-1">
+      <li v-for="child in sortedChildren" :key="child.id">
+        <LocationTreeNode :depth="(props.depth ?? 0) + 1" :item="child" :tree-id="treeId" :show-items="showItems" />
+      </li>
+    </ul>
   </div>
 </template>

@@ -27,11 +27,14 @@
 
   const api = useUserApi();
 
+  const loadFailed = ref(false);
+
   const { data: tree } = useAsyncData(async () => {
     const { data, error } = await api.items.getTree({
       withItems: true,
     });
 
+    loadFailed.value = !!error;
     if (error) {
       return [];
     }
@@ -112,14 +115,20 @@
 
 <template>
   <BaseContainer>
-    <div class="mb-2 flex justify-between">
-      <BaseSectionHeader> {{ $t("menu.locations") }} </BaseSectionHeader>
+    <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <BaseSectionHeader :id="locationTreeId"> {{ $t("menu.locations") }} </BaseSectionHeader>
       <div>
         <TooltipProvider :delay-duration="0">
           <ButtonGroup>
             <Tooltip>
-              <TooltipTrigger>
-                <Button size="icon" variant="outline" data-pos="start" @click="openAll">
+              <TooltipTrigger as-child>
+                <Button
+                  :aria-label="$t('locations.expand_tree')"
+                  size="icon"
+                  variant="outline"
+                  data-pos="start"
+                  @click="openAll"
+                >
                   <MdiExpandAllOutline />
                 </Button>
               </TooltipTrigger>
@@ -128,8 +137,14 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
-                <Button size="icon" variant="outline" data-pos="middle" @click="closeAll">
+              <TooltipTrigger as-child>
+                <Button
+                  :aria-label="$t('locations.collapse_tree')"
+                  size="icon"
+                  variant="outline"
+                  data-pos="middle"
+                  @click="closeAll"
+                >
                   <MdiCollapseAllOutline />
                 </Button>
               </TooltipTrigger>
@@ -138,8 +153,10 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger as-child>
                 <Button
+                  :aria-label="showItems ? $t('locations.hide_items') : $t('locations.show_items')"
+                  :aria-pressed="showItems"
                   size="icon"
                   :variant="showItems ? 'default' : 'outline'"
                   data-pos="end"
@@ -157,9 +174,12 @@
       </div>
     </div>
     <BaseCard>
-      <div class="p-2">
+      <div class="p-3 sm:p-5">
+        <p v-if="loadFailed" role="alert" class="py-6 text-center text-sm text-destructive">
+          {{ $t("organization.failed_load") }}
+        </p>
         <LocationTreeRoot
-          v-if="tree && Array.isArray(tree)"
+          v-if="!loadFailed && tree && Array.isArray(tree)"
           :locs="tree"
           :tree-id="locationTreeId"
           :show-items="showItems"

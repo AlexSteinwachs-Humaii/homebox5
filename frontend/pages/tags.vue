@@ -24,9 +24,12 @@
 
   const api = useUserApi();
 
+  const loadFailed = ref(false);
+
   const { data: allTags } = useAsyncData(async () => {
     const { data, error } = await api.tags.getAll();
 
+    loadFailed.value = !!error;
     if (error) {
       return [];
     }
@@ -126,14 +129,20 @@
 
 <template>
   <BaseContainer>
-    <div class="mb-2 flex justify-between">
-      <BaseSectionHeader>{{ $t("global.tags") }}</BaseSectionHeader>
+    <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <BaseSectionHeader :id="tagTreeId">{{ $t("global.tags") }}</BaseSectionHeader>
       <div>
         <TooltipProvider :delay-duration="0">
           <ButtonGroup>
             <Tooltip>
-              <TooltipTrigger>
-                <Button size="icon" variant="outline" data-pos="start" @click="openAll">
+              <TooltipTrigger as-child>
+                <Button
+                  :aria-label="$t('locations.expand_tree')"
+                  size="icon"
+                  variant="outline"
+                  data-pos="start"
+                  @click="openAll"
+                >
                   <MdiExpandAllOutline />
                 </Button>
               </TooltipTrigger>
@@ -142,8 +151,14 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
-                <Button size="icon" variant="outline" data-pos="end" @click="closeAll">
+              <TooltipTrigger as-child>
+                <Button
+                  :aria-label="$t('locations.collapse_tree')"
+                  size="icon"
+                  variant="outline"
+                  data-pos="end"
+                  @click="closeAll"
+                >
                   <MdiCollapseAllOutline />
                 </Button>
               </TooltipTrigger>
@@ -157,8 +172,11 @@
     </div>
 
     <BaseCard>
-      <div class="p-2">
-        <TagTreeRoot v-if="tree && Array.isArray(tree)" :tags="tree" :tree-id="tagTreeId" />
+      <div class="p-3 sm:p-5">
+        <p v-if="loadFailed" role="alert" class="py-6 text-center text-sm text-destructive">
+          {{ $t("organization.failed_load") }}
+        </p>
+        <TagTreeRoot v-if="!loadFailed && tree && Array.isArray(tree)" :tags="tree" :tree-id="tagTreeId" />
       </div>
     </BaseCard>
   </BaseContainer>

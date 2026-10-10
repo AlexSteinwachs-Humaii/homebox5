@@ -950,6 +950,9 @@
         "title": "AR Scanner",
         "unsupported": "AR scanning is not supported in this browser"
     },
+    "organization": {
+        "failed_load": "Unable to load this hierarchy. Please reload to try again."
+    },
     "tags": {
         "no_results": "No Tags Found",
         "tag_delete_confirm": "Are you sure you want to delete this tag? This action cannot be undone.",

@@ -1,64 +1,71 @@
 <template>
-  <div class="flex flex-col gap-1">
-    <Label :for="id" class="px-1">
+  <div class="flex min-w-0 flex-col gap-1">
+    <Label :for="id" class="break-words px-1">
       {{ props.name ?? $t("global.tags") }}
     </Label>
 
-    <Popover v-model:open="open">
-      <PopoverTrigger as-child>
-        <Button :id="id" variant="outline" role="combobox" :aria-expanded="open" class="w-full justify-between">
-          <span class="flex min-w-0 flex-auto items-center gap-2 truncate text-left">
-            <span
-              v-if="value?.color"
-              class="shrink-0 rounded-full"
-              :style="{ width: '1rem', height: '1rem', backgroundColor: value.color }"
-            />
-            <span class="truncate">
-              {{ value && value.name ? value.name : $t("components.tag.selector.select_tags") }}
+    <div class="flex min-w-0 items-center gap-2">
+      <Popover v-model:open="open">
+        <PopoverTrigger as-child>
+          <Button
+            :id="id"
+            variant="outline"
+            role="combobox"
+            :aria-expanded="open"
+            class="min-w-0 flex-1 justify-between"
+          >
+            <span class="flex min-w-0 flex-auto items-center gap-2 truncate text-left">
+              <span
+                v-if="value?.color"
+                class="shrink-0 rounded-full"
+                :style="{ width: '1rem', height: '1rem', backgroundColor: value.color }"
+              />
+              <span class="truncate">
+                {{ value && value.name ? value.name : $t("components.tag.selector.select_tags") }}
+              </span>
             </span>
-          </span>
 
-          <span class="ml-2 flex items-center">
-            <button
-              v-if="value"
-              type="button"
-              class="shrink-0 rounded p-1 hover:bg-primary/20"
-              :aria-label="$t('components.tag.selector.clear')"
-              @click.stop.prevent="clearSelection"
-            >
-              <X class="size-4" />
-            </button>
-
-            <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
-          </span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
-        <Command :ignore-filter="true">
-          <CommandInput
-            v-model="search"
-            :placeholder="$t('components.tag.selector.select_tags')"
-            :display-value="_ => ''"
-          />
-          <CommandEmpty>{{ $t("components.tag.selector.no_tags_found") }}</CommandEmpty>
-          <CommandList>
-            <CommandGroup>
-              <CommandItem v-for="tag in filteredTags" :key="tag.id" :value="tag.id" @select="selectTag(tag)">
-                <Check :class="cn('mr-2 h-4 w-4', value?.id === tag.id ? 'opacity-100' : 'opacity-0')" />
-                <span
-                  v-if="tag.color"
-                  class="mr-2 size-4 shrink-0 rounded-full"
-                  :style="{ backgroundColor: tag.color }"
-                />
-                <div>
-                  {{ tag.name }}
-                </div>
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+            <span class="ml-2 flex items-center">
+              <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
+          <Command :ignore-filter="true">
+            <CommandInput
+              v-model="search"
+              :placeholder="$t('components.tag.selector.select_tags')"
+              :display-value="_ => ''"
+            />
+            <CommandEmpty>{{ $t("components.tag.selector.no_tags_found") }}</CommandEmpty>
+            <CommandList>
+              <CommandGroup>
+                <CommandItem v-for="tag in filteredTags" :key="tag.id" :value="tag.id" @select="selectTag(tag)">
+                  <Check :class="cn('mr-2 h-4 w-4 shrink-0', value?.id === tag.id ? 'opacity-100' : 'opacity-0')" />
+                  <span
+                    v-if="tag.color"
+                    class="mr-2 size-4 shrink-0 rounded-full"
+                    :style="{ backgroundColor: tag.color }"
+                  />
+                  <div class="min-w-0 break-words [overflow-wrap:anywhere]">
+                    {{ tag.name }}
+                  </div>
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <button
+        v-if="value"
+        type="button"
+        class="hb-focus flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-accent"
+        :aria-label="$t('components.tag.selector.clear')"
+        @click.stop.prevent="clearSelection"
+      >
+        <X class="size-4" />
+      </button>
+    </div>
   </div>
 </template>
 

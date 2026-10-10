@@ -1012,6 +1012,9 @@
 
 /* Shared geometry and typography intentionally use the active theme's tokens. */
 @layer components {
+  .hb-tree-row {
+    @apply flex min-w-0 items-center gap-2 rounded-md py-2 pr-2 hover:bg-accent/50;
+  }
   .hb-panel {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
   }
