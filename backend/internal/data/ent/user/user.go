@@ -19,6 +19,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldCsvExportRetentionDays holds the string denoting the csv_export_retention_days field in the database.
+	FieldCsvExportRetentionDays = "csv_export_retention_days"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldEmail holds the string denoting the email field in the database.
@@ -39,6 +41,8 @@ const (
 	FieldDefaultGroupID = "default_group_id"
 	// FieldSettings holds the string denoting the settings field in the database.
 	FieldSettings = "settings"
+	// EdgeCsvExports holds the string denoting the csv_exports edge name in mutations.
+	EdgeCsvExports = "csv_exports"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
 	// EdgeAuthTokens holds the string denoting the auth_tokens edge name in mutations.
@@ -53,6 +57,13 @@ const (
 	EdgeUserGroups = "user_groups"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// CsvExportsTable is the table that holds the csv_exports relation/edge.
+	CsvExportsTable = "csv_exports"
+	// CsvExportsInverseTable is the table name for the CsvExport entity.
+	// It exists in this package in order to avoid circular dependency with the "csvexport" package.
+	CsvExportsInverseTable = "csv_exports"
+	// CsvExportsColumn is the table column denoting the csv_exports relation/edge.
+	CsvExportsColumn = "requester_id"
 	// GroupsTable is the table that holds the groups relation/edge. The primary key declared below.
 	GroupsTable = "user_groups"
 	// GroupsInverseTable is the table name for the Group entity.
@@ -100,6 +111,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldCsvExportRetentionDays,
 	FieldName,
 	FieldEmail,
 	FieldPassword,
@@ -135,6 +147,10 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultCsvExportRetentionDays holds the default value on creation for the "csv_export_retention_days" field.
+	DefaultCsvExportRetentionDays int
+	// CsvExportRetentionDaysValidator is a validator for the "csv_export_retention_days" field. It is called by the builders before save.
+	CsvExportRetentionDaysValidator func(int) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
@@ -165,6 +181,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCsvExportRetentionDays orders the results by the csv_export_retention_days field.
+func ByCsvExportRetentionDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCsvExportRetentionDays, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -210,6 +231,20 @@ func ByOidcSubject(opts ...sql.OrderTermOption) OrderOption {
 // ByDefaultGroupID orders the results by the default_group_id field.
 func ByDefaultGroupID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDefaultGroupID, opts...).ToFunc()
+}
+
+// ByCsvExportsCount orders the results by csv_exports count.
+func ByCsvExportsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCsvExportsStep(), opts...)
+	}
+}
+
+// ByCsvExports orders the results by csv_exports terms.
+func ByCsvExports(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCsvExportsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
 
 // ByGroupsCount orders the results by groups count.
@@ -294,6 +329,13 @@ func ByUserGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newUserGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newCsvExportsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CsvExportsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CsvExportsTable, CsvExportsColumn),
+	)
 }
 func newGroupsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

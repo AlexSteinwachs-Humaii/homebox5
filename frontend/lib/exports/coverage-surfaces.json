@@ -1,0 +1,384 @@
+[
+  {
+    "path": "components/App/LanguageSelector.vue",
+    "excludedReason": "Static locale choices."
+  },
+  {
+    "path": "components/App/QuickMenuModal.vue",
+    "excludedReason": "Static navigation and creation actions."
+  },
+  {
+    "path": "components/App/ScannerModal.vue",
+    "excludedReason": "Camera-device configuration, not detected records."
+  },
+  {
+    "path": "components/App/ThemePicker.vue",
+    "excludedReason": "Static theme choices."
+  },
+  {
+    "path": "components/Collection/Selector.vue",
+    "sources": [
+      "collections"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Entity/CreateModal.vue",
+    "sources": [
+      "entity-types",
+      "templates",
+      "locations",
+      "entities",
+      "tags",
+      "draft-fields"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Entity/Selector.vue",
+    "sources": [
+      "entity-types"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Form/IconSelector.vue",
+    "excludedReason": "Static icon choices."
+  },
+  {
+    "path": "components/Form/PhotoUploaderPreview.vue",
+    "sources": [
+      "draft-photos"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/AttachmentsList.vue",
+    "sources": [
+      "attachments"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/BarcodeModal.vue",
+    "sources": [
+      "product-results"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/Card.vue",
+    "sources": [
+      "entities",
+      "entity-tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/Selector.vue",
+    "sources": [
+      "entities"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/View/table/card-view.vue",
+    "sources": [
+      "entities"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/View/table/data-table-controls.vue",
+    "excludedReason": "Pagination controls; actual rows use parent descriptor."
+  },
+  {
+    "path": "components/Item/View/table/data-table-expanded-row.vue",
+    "sources": [
+      "entities",
+      "entity-tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/View/table/data-table.vue",
+    "sources": [
+      "entities"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Item/View/table/table-view.vue",
+    "sources": [
+      "entities"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Location/Selector.vue",
+    "sources": [
+      "locations"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Location/Tree/Node.vue",
+    "sources": [
+      "locations"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Location/Tree/Root.vue",
+    "sources": [
+      "locations"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Maintenance/ListView.vue",
+    "sources": [
+      "maintenance"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Scanner/AROverlayCard.vue",
+    "sources": [
+      "scanner-results"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Scanner/ARView.vue",
+    "sources": [
+      "scanner-results"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Search/Filter.vue",
+    "sources": [
+      "entity-fields"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Tag/Selector.vue",
+    "sources": [
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Tag/SingleSelector.vue",
+    "sources": [
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Tag/Tree/Node.vue",
+    "sources": [
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Tag/Tree/Root.vue",
+    "sources": [
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Template/CreateModal.vue",
+    "sources": [
+      "draft-fields",
+      "locations",
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/Template/Selector.vue",
+    "sources": [
+      "templates"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "components/global/DetailsSection/DetailsSection.vue",
+    "sources": [
+      "entity-fields"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/assets/[id].vue",
+    "sources": [
+      "entities"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index/entity-types.vue",
+    "sources": [
+      "entity-types",
+      "templates"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index/invites.vue",
+    "sources": [
+      "invitations",
+      "invitation-visible"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index/members.vue",
+    "sources": [
+      "members"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index/notifiers.vue",
+    "sources": [
+      "notifiers"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index/settings.vue",
+    "excludedReason": "Static currency choices; retention has no record list."
+  },
+  {
+    "path": "pages/collection/index/tools.vue",
+    "sources": [
+      "zip-history",
+      "collection-csv-history"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/collection/index.vue",
+    "excludedReason": "Static collection tabs; child pages accounted individually."
+  },
+  {
+    "path": "pages/home/index.vue",
+    "sources": [
+      "entities",
+      "locations",
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/item/[id]/index/edit.vue",
+    "sources": [
+      "entities",
+      "locations",
+      "tags",
+      "entity-types",
+      "draft-fields",
+      "attachments"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/item/[id]/index.vue",
+    "sources": [
+      "entities",
+      "attachments",
+      "entity-tags",
+      "entity-path"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/items.vue",
+    "sources": [
+      "entities",
+      "entity-fields"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/location/[id]/index/edit.vue",
+    "sources": [
+      "locations",
+      "tags",
+      "entity-types",
+      "draft-fields",
+      "attachments"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/location/[id]/index/index.vue",
+    "sources": [
+      "entities",
+      "locations",
+      "attachments",
+      "entity-tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/locations.vue",
+    "sources": [
+      "locations"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/profile.vue",
+    "sources": [
+      "api-keys",
+      "private-csv-history"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/reports/label-generator.vue",
+    "sources": [
+      "label-records"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/tag/[id].vue",
+    "sources": [
+      "entities",
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/tags.vue",
+    "sources": [
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/template/[id].vue",
+    "sources": [
+      "template-fields",
+      "draft-fields",
+      "locations",
+      "tags"
+    ],
+    "integration": "pending; see coverage.md"
+  },
+  {
+    "path": "pages/templates.vue",
+    "sources": [
+      "templates"
+    ],
+    "integration": "pending; see coverage.md"
+  }
+]

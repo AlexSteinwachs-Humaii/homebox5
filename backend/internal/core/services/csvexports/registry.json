@@ -1,0 +1,460 @@
+{
+  "entities": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "assetId",
+      "name",
+      "description",
+      "quantity",
+      "insured",
+      "purchasePrice",
+      "location",
+      "archived",
+      "createdAt",
+      "updatedAt",
+      "parentId",
+      "path",
+      "tags"
+    ],
+    "filters": [
+      "search",
+      "isLocation",
+      "parentIds",
+      "tagIds",
+      "parentItemIds",
+      "fields",
+      "assetId",
+      "negateTags",
+      "onlyWithoutPhoto",
+      "onlyWithPhoto",
+      "includeArchived",
+      "filterChildren",
+      "entityId"
+    ],
+    "boundaries": [
+      "all",
+      "recent",
+      "children",
+      "eligible",
+      "explicit"
+    ]
+  },
+  "locations": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "description",
+      "parentId",
+      "path",
+      "itemCount",
+      "assetId",
+      "quantity",
+      "location",
+      "tags"
+    ],
+    "filters": [
+      "search",
+      "entityId",
+      "showItems"
+    ],
+    "boundaries": [
+      "all",
+      "roots",
+      "children",
+      "hierarchy",
+      "eligible",
+      "explicit"
+    ]
+  },
+  "tags": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "description",
+      "parentId",
+      "path",
+      "itemCount",
+      "assetId",
+      "quantity",
+      "location",
+      "tags"
+    ],
+    "filters": [
+      "search",
+      "entityId",
+      "showItems"
+    ],
+    "boundaries": [
+      "all",
+      "roots",
+      "hierarchy",
+      "eligible",
+      "explicit"
+    ]
+  },
+  "templates": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "description"
+    ],
+    "filters": [
+      "search"
+    ],
+    "boundaries": [
+      "all",
+      "eligible",
+      "explicit"
+    ]
+  },
+  "template-fields": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "type",
+      "value"
+    ],
+    "filters": [
+      "templateId"
+    ],
+    "boundaries": [
+      "children"
+    ]
+  },
+  "maintenance": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "description",
+      "entityName",
+      "scheduledDate",
+      "completedDate",
+      "cost",
+      "status"
+    ],
+    "filters": [
+      "search",
+      "entityId",
+      "status"
+    ],
+    "boundaries": [
+      "all",
+      "children"
+    ]
+  },
+  "members": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "email"
+    ],
+    "filters": [],
+    "boundaries": [
+      "all"
+    ]
+  },
+  "invitations": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "expiresAt",
+      "remainingUses"
+    ],
+    "filters": [],
+    "boundaries": [
+      "all"
+    ]
+  },
+  "notifiers": {
+    "scope": "collection",
+    "access": "requester-member",
+    "columns": [
+      "id",
+      "name",
+      "isActive",
+      "createdAt"
+    ],
+    "filters": [],
+    "boundaries": [
+      "all"
+    ]
+  },
+  "entity-types": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "isLocation",
+      "defaultTemplate"
+    ],
+    "filters": [
+      "search",
+      "isLocation"
+    ],
+    "boundaries": [
+      "all",
+      "eligible",
+      "explicit"
+    ]
+  },
+  "attachments": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "title",
+      "type",
+      "mimeType",
+      "sizeBytes",
+      "createdAt"
+    ],
+    "filters": [
+      "entityId",
+      "attachmentType"
+    ],
+    "boundaries": [
+      "children",
+      "explicit"
+    ]
+  },
+  "entity-fields": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "type",
+      "value"
+    ],
+    "filters": [
+      "entityId",
+      "search",
+      "fieldName"
+    ],
+    "boundaries": [
+      "children",
+      "eligible"
+    ]
+  },
+  "entity-tags": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "parentId",
+      "path"
+    ],
+    "filters": [
+      "entityId"
+    ],
+    "boundaries": [
+      "children"
+    ]
+  },
+  "entity-path": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "name",
+      "parentId",
+      "path"
+    ],
+    "filters": [
+      "entityId"
+    ],
+    "boundaries": [
+      "children",
+      "explicit"
+    ]
+  },
+  "zip-history": {
+    "scope": "collection",
+    "access": "member",
+    "columns": [
+      "id",
+      "kind",
+      "status",
+      "createdAt",
+      "updatedAt",
+      "sizeBytes",
+      "error"
+    ],
+    "filters": [],
+    "boundaries": [
+      "all",
+      "explicit"
+    ]
+  },
+  "collection-csv-history": {
+    "scope": "collection",
+    "access": "source-access",
+    "columns": [
+      "id",
+      "source",
+      "status",
+      "createdAt",
+      "completedAt",
+      "expiresAt",
+      "sizeBytes"
+    ],
+    "filters": [],
+    "boundaries": [
+      "explicit"
+    ]
+  },
+  "private-csv-history": {
+    "scope": "private",
+    "access": "requester",
+    "columns": [
+      "id",
+      "source",
+      "status",
+      "createdAt",
+      "completedAt",
+      "expiresAt",
+      "sizeBytes"
+    ],
+    "filters": [],
+    "boundaries": [
+      "explicit"
+    ]
+  },
+  "api-keys": {
+    "scope": "private",
+    "access": "requester",
+    "columns": [
+      "id",
+      "name",
+      "createdAt",
+      "expiresAt",
+      "lastUsedAt"
+    ],
+    "filters": [],
+    "boundaries": [
+      "all"
+    ]
+  },
+  "collections": {
+    "scope": "private",
+    "access": "requester-membership",
+    "columns": [
+      "id",
+      "name",
+      "role"
+    ],
+    "filters": [
+      "search"
+    ],
+    "boundaries": [
+      "eligible",
+      "explicit"
+    ]
+  },
+  "draft-fields": {
+    "scope": "private",
+    "access": "requester",
+    "columns": [
+      "name",
+      "type",
+      "value"
+    ],
+    "filters": [],
+    "boundaries": [
+      "snapshot"
+    ]
+  },
+  "draft-photos": {
+    "scope": "private",
+    "access": "requester",
+    "columns": [
+      "name",
+      "mimeType",
+      "sizeBytes"
+    ],
+    "filters": [],
+    "boundaries": [
+      "snapshot"
+    ]
+  },
+  "scanner-results": {
+    "scope": "private",
+    "access": "referenced-entity-access",
+    "columns": [
+      "id",
+      "assetId",
+      "name",
+      "parentId",
+      "path",
+      "quantity",
+      "location",
+      "purchasePrice",
+      "childItemCount",
+      "locationChildCount",
+      "totalPrice"
+    ],
+    "filters": [],
+    "boundaries": [
+      "explicit"
+    ]
+  },
+  "label-records": {
+    "scope": "private",
+    "access": "referenced-entity-access",
+    "columns": [
+      "id",
+      "assetId",
+      "name",
+      "location"
+    ],
+    "filters": [],
+    "boundaries": [
+      "explicit"
+    ]
+  },
+  "invitation-visible": {
+    "scope": "private",
+    "access": "collection-owner",
+    "columns": [
+      "id",
+      "token",
+      "expiresAt",
+      "remainingUses"
+    ],
+    "filters": [],
+    "boundaries": [
+      "snapshot"
+    ]
+  },
+  "product-results": {
+    "scope": "private",
+    "access": "requester",
+    "columns": [
+      "name",
+      "manufacturer",
+      "modelNumber",
+      "searchEngineName"
+    ],
+    "filters": [],
+    "boundaries": [
+      "snapshot"
+    ]
+  }
+}

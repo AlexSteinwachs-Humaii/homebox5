@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/csvexports"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/schema/mixins"
 )
 
@@ -24,6 +25,7 @@ func (Group) Mixin() []ent.Mixin {
 // Fields of the Home.
 func (Group) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("csv_export_retention_days").Default(csvexports.DefaultRetentionDays).Min(1).Max(csvexports.MaxRetentionDays),
 		field.String("name").
 			MaxLen(255).
 			NotEmpty(),
@@ -42,6 +44,7 @@ func (Group) Edges() []ent.Edge {
 	}
 
 	return []ent.Edge{
+		edge.To("csv_exports", CsvExport.Type).Annotations(entsql.Annotation{OnDelete: entsql.Restrict}),
 		// M:M between users and groups; the user_groups join carries per-membership role.
 		edge.From("users", User.Type).
 			Ref("groups").

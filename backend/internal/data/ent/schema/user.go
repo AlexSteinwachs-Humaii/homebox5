@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/csvexports"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/schema/mixins"
 )
 
@@ -25,6 +26,7 @@ func (User) Mixin() []ent.Mixin {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("csv_export_retention_days").Default(csvexports.DefaultRetentionDays).Min(1).Max(csvexports.MaxRetentionDays),
 		field.String("name").
 			MaxLen(255).
 			NotEmpty(),
@@ -68,6 +70,7 @@ func (User) Indexes() []ent.Index {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.To("csv_exports", CsvExport.Type).Annotations(entsql.Annotation{OnDelete: entsql.Restrict}),
 		edge.To("groups", Group.Type).
 			Through("user_groups", UserGroup.Type),
 		edge.To("auth_tokens", AuthTokens.Type).

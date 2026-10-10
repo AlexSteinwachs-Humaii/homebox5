@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
@@ -57,6 +58,20 @@ func (_c *GroupCreate) SetNillableUpdatedAt(v *time.Time) *GroupCreate {
 	return _c
 }
 
+// SetCsvExportRetentionDays sets the "csv_export_retention_days" field.
+func (_c *GroupCreate) SetCsvExportRetentionDays(v int) *GroupCreate {
+	_c.mutation.SetCsvExportRetentionDays(v)
+	return _c
+}
+
+// SetNillableCsvExportRetentionDays sets the "csv_export_retention_days" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableCsvExportRetentionDays(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetCsvExportRetentionDays(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *GroupCreate) SetName(v string) *GroupCreate {
 	_c.mutation.SetName(v)
@@ -89,6 +104,21 @@ func (_c *GroupCreate) SetNillableID(v *uuid.UUID) *GroupCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// AddCsvExportIDs adds the "csv_exports" edge to the CsvExport entity by IDs.
+func (_c *GroupCreate) AddCsvExportIDs(ids ...uuid.UUID) *GroupCreate {
+	_c.mutation.AddCsvExportIDs(ids...)
+	return _c
+}
+
+// AddCsvExports adds the "csv_exports" edges to the CsvExport entity.
+func (_c *GroupCreate) AddCsvExports(v ...*CsvExport) *GroupCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCsvExportIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -254,6 +284,10 @@ func (_c *GroupCreate) defaults() {
 		v := group.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.CsvExportRetentionDays(); !ok {
+		v := group.DefaultCsvExportRetentionDays
+		_c.mutation.SetCsvExportRetentionDays(v)
+	}
 	if _, ok := _c.mutation.Currency(); !ok {
 		v := group.DefaultCurrency
 		_c.mutation.SetCurrency(v)
@@ -271,6 +305,14 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Group.updated_at"`)}
+	}
+	if _, ok := _c.mutation.CsvExportRetentionDays(); !ok {
+		return &ValidationError{Name: "csv_export_retention_days", err: errors.New(`ent: missing required field "Group.csv_export_retention_days"`)}
+	}
+	if v, ok := _c.mutation.CsvExportRetentionDays(); ok {
+		if err := group.CsvExportRetentionDaysValidator(v); err != nil {
+			return &ValidationError{Name: "csv_export_retention_days", err: fmt.Errorf(`ent: validator failed for field "Group.csv_export_retention_days": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Group.name"`)}
@@ -326,6 +368,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		_spec.SetField(group.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := _c.mutation.CsvExportRetentionDays(); ok {
+		_spec.SetField(group.FieldCsvExportRetentionDays, field.TypeInt, value)
+		_node.CsvExportRetentionDays = value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(group.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -333,6 +379,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Currency(); ok {
 		_spec.SetField(group.FieldCurrency, field.TypeString, value)
 		_node.Currency = value
+	}
+	if nodes := _c.mutation.CsvExportsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

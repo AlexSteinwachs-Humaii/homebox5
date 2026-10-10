@@ -9,6 +9,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/apikey"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
@@ -126,6 +127,67 @@ func init() {
 	authtokensDescID := authtokensMixinFields0[0].Descriptor()
 	// authtokens.DefaultID holds the default value on creation for the id field.
 	authtokens.DefaultID = authtokensDescID.Default.(func() uuid.UUID)
+	csvexportMixin := schema.CsvExport{}.Mixin()
+	csvexportMixinFields0 := csvexportMixin[0].Fields()
+	_ = csvexportMixinFields0
+	csvexportFields := schema.CsvExport{}.Fields()
+	_ = csvexportFields
+	// csvexportDescCreatedAt is the schema descriptor for created_at field.
+	csvexportDescCreatedAt := csvexportMixinFields0[1].Descriptor()
+	// csvexport.DefaultCreatedAt holds the default value on creation for the created_at field.
+	csvexport.DefaultCreatedAt = csvexportDescCreatedAt.Default.(func() time.Time)
+	// csvexportDescUpdatedAt is the schema descriptor for updated_at field.
+	csvexportDescUpdatedAt := csvexportMixinFields0[2].Descriptor()
+	// csvexport.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	csvexport.DefaultUpdatedAt = csvexportDescUpdatedAt.Default.(func() time.Time)
+	// csvexport.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	csvexport.UpdateDefaultUpdatedAt = csvexportDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// csvexportDescSource is the schema descriptor for source field.
+	csvexportDescSource := csvexportFields[3].Descriptor()
+	// csvexport.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	csvexport.SourceValidator = csvexportDescSource.Validators[0].(func(string) error)
+	// csvexportDescAccessRequirement is the schema descriptor for access_requirement field.
+	csvexportDescAccessRequirement := csvexportFields[4].Descriptor()
+	// csvexport.AccessRequirementValidator is a validator for the "access_requirement" field. It is called by the builders before save.
+	csvexport.AccessRequirementValidator = csvexportDescAccessRequirement.Validators[0].(func(string) error)
+	// csvexportDescRetentionDays is the schema descriptor for retention_days field.
+	csvexportDescRetentionDays := csvexportFields[6].Descriptor()
+	// csvexport.DefaultRetentionDays holds the default value on creation for the retention_days field.
+	csvexport.DefaultRetentionDays = csvexportDescRetentionDays.Default.(int)
+	// csvexport.RetentionDaysValidator is a validator for the "retention_days" field. It is called by the builders before save.
+	csvexport.RetentionDaysValidator = func() func(int) error {
+		validators := csvexportDescRetentionDays.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(retention_days int) error {
+			for _, fn := range fns {
+				if err := fn(retention_days); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// csvexportDescArtifactPath is the schema descriptor for artifact_path field.
+	csvexportDescArtifactPath := csvexportFields[10].Descriptor()
+	// csvexport.ArtifactPathValidator is a validator for the "artifact_path" field. It is called by the builders before save.
+	csvexport.ArtifactPathValidator = csvexportDescArtifactPath.Validators[0].(func(string) error)
+	// csvexportDescSizeBytes is the schema descriptor for size_bytes field.
+	csvexportDescSizeBytes := csvexportFields[11].Descriptor()
+	// csvexport.DefaultSizeBytes holds the default value on creation for the size_bytes field.
+	csvexport.DefaultSizeBytes = csvexportDescSizeBytes.Default.(int64)
+	// csvexport.SizeBytesValidator is a validator for the "size_bytes" field. It is called by the builders before save.
+	csvexport.SizeBytesValidator = csvexportDescSizeBytes.Validators[0].(func(int64) error)
+	// csvexportDescError is the schema descriptor for error field.
+	csvexportDescError := csvexportFields[12].Descriptor()
+	// csvexport.ErrorValidator is a validator for the "error" field. It is called by the builders before save.
+	csvexport.ErrorValidator = csvexportDescError.Validators[0].(func(string) error)
+	// csvexportDescID is the schema descriptor for id field.
+	csvexportDescID := csvexportMixinFields0[0].Descriptor()
+	// csvexport.DefaultID holds the default value on creation for the id field.
+	csvexport.DefaultID = csvexportDescID.Default.(func() uuid.UUID)
 	entityMixin := schema.Entity{}.Mixin()
 	entityMixinFields0 := entityMixin[0].Fields()
 	_ = entityMixinFields0
@@ -472,8 +534,28 @@ func init() {
 	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
 	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupDescCsvExportRetentionDays is the schema descriptor for csv_export_retention_days field.
+	groupDescCsvExportRetentionDays := groupFields[0].Descriptor()
+	// group.DefaultCsvExportRetentionDays holds the default value on creation for the csv_export_retention_days field.
+	group.DefaultCsvExportRetentionDays = groupDescCsvExportRetentionDays.Default.(int)
+	// group.CsvExportRetentionDaysValidator is a validator for the "csv_export_retention_days" field. It is called by the builders before save.
+	group.CsvExportRetentionDaysValidator = func() func(int) error {
+		validators := groupDescCsvExportRetentionDays.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(csv_export_retention_days int) error {
+			for _, fn := range fns {
+				if err := fn(csv_export_retention_days); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// groupDescName is the schema descriptor for name field.
-	groupDescName := groupFields[0].Descriptor()
+	groupDescName := groupFields[1].Descriptor()
 	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	group.NameValidator = func() func(string) error {
 		validators := groupDescName.Validators
@@ -491,7 +573,7 @@ func init() {
 		}
 	}()
 	// groupDescCurrency is the schema descriptor for currency field.
-	groupDescCurrency := groupFields[1].Descriptor()
+	groupDescCurrency := groupFields[2].Descriptor()
 	// group.DefaultCurrency holds the default value on creation for the currency field.
 	group.DefaultCurrency = groupDescCurrency.Default.(string)
 	// groupDescID is the schema descriptor for id field.
@@ -773,8 +855,28 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescCsvExportRetentionDays is the schema descriptor for csv_export_retention_days field.
+	userDescCsvExportRetentionDays := userFields[0].Descriptor()
+	// user.DefaultCsvExportRetentionDays holds the default value on creation for the csv_export_retention_days field.
+	user.DefaultCsvExportRetentionDays = userDescCsvExportRetentionDays.Default.(int)
+	// user.CsvExportRetentionDaysValidator is a validator for the "csv_export_retention_days" field. It is called by the builders before save.
+	user.CsvExportRetentionDaysValidator = func() func(int) error {
+		validators := userDescCsvExportRetentionDays.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(csv_export_retention_days int) error {
+			for _, fn := range fns {
+				if err := fn(csv_export_retention_days); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// userDescName is the schema descriptor for name field.
-	userDescName := userFields[0].Descriptor()
+	userDescName := userFields[1].Descriptor()
 	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	user.NameValidator = func() func(string) error {
 		validators := userDescName.Validators
@@ -792,7 +894,7 @@ func init() {
 		}
 	}()
 	// userDescEmail is the schema descriptor for email field.
-	userDescEmail := userFields[1].Descriptor()
+	userDescEmail := userFields[2].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = func() func(string) error {
 		validators := userDescEmail.Validators
@@ -810,15 +912,15 @@ func init() {
 		}
 	}()
 	// userDescPassword is the schema descriptor for password field.
-	userDescPassword := userFields[2].Descriptor()
+	userDescPassword := userFields[3].Descriptor()
 	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
 	// userDescIsSuperuser is the schema descriptor for is_superuser field.
-	userDescIsSuperuser := userFields[3].Descriptor()
+	userDescIsSuperuser := userFields[4].Descriptor()
 	// user.DefaultIsSuperuser holds the default value on creation for the is_superuser field.
 	user.DefaultIsSuperuser = userDescIsSuperuser.Default.(bool)
 	// userDescSuperuser is the schema descriptor for superuser field.
-	userDescSuperuser := userFields[4].Descriptor()
+	userDescSuperuser := userFields[5].Descriptor()
 	// user.DefaultSuperuser holds the default value on creation for the superuser field.
 	user.DefaultSuperuser = userDescSuperuser.Default.(bool)
 	// userDescID is the schema descriptor for id field.

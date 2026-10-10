@@ -22,6 +22,8 @@ type Group struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CsvExportRetentionDays holds the value of the "csv_export_retention_days" field.
+	CsvExportRetentionDays int `json:"csv_export_retention_days,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Currency holds the value of the "currency" field.
@@ -34,6 +36,8 @@ type Group struct {
 
 // GroupEdges holds the relations/edges for other nodes in the graph.
 type GroupEdges struct {
+	// CsvExports holds the value of the csv_exports edge.
+	CsvExports []*CsvExport `json:"csv_exports,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
 	// EntityTypes holds the value of the entity_types edge.
@@ -54,13 +58,22 @@ type GroupEdges struct {
 	UserGroups []*UserGroup `json:"user_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [10]bool
+}
+
+// CsvExportsOrErr returns the CsvExports value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) CsvExportsOrErr() ([]*CsvExport, error) {
+	if e.loadedTypes[0] {
+		return e.CsvExports, nil
+	}
+	return nil, &NotLoadedError{edge: "csv_exports"}
 }
 
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -69,7 +82,7 @@ func (e GroupEdges) UsersOrErr() ([]*User, error) {
 // EntityTypesOrErr returns the EntityTypes value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) EntityTypesOrErr() ([]*EntityType, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.EntityTypes, nil
 	}
 	return nil, &NotLoadedError{edge: "entity_types"}
@@ -78,7 +91,7 @@ func (e GroupEdges) EntityTypesOrErr() ([]*EntityType, error) {
 // EntitiesOrErr returns the Entities value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) EntitiesOrErr() ([]*Entity, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Entities, nil
 	}
 	return nil, &NotLoadedError{edge: "entities"}
@@ -87,7 +100,7 @@ func (e GroupEdges) EntitiesOrErr() ([]*Entity, error) {
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) TagsOrErr() ([]*Tag, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -96,7 +109,7 @@ func (e GroupEdges) TagsOrErr() ([]*Tag, error) {
 // InvitationTokensOrErr returns the InvitationTokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) InvitationTokensOrErr() ([]*GroupInvitationToken, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.InvitationTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "invitation_tokens"}
@@ -105,7 +118,7 @@ func (e GroupEdges) InvitationTokensOrErr() ([]*GroupInvitationToken, error) {
 // NotifiersOrErr returns the Notifiers value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) NotifiersOrErr() ([]*Notifier, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.Notifiers, nil
 	}
 	return nil, &NotLoadedError{edge: "notifiers"}
@@ -114,7 +127,7 @@ func (e GroupEdges) NotifiersOrErr() ([]*Notifier, error) {
 // EntityTemplatesOrErr returns the EntityTemplates value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) EntityTemplatesOrErr() ([]*EntityTemplate, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.EntityTemplates, nil
 	}
 	return nil, &NotLoadedError{edge: "entity_templates"}
@@ -123,7 +136,7 @@ func (e GroupEdges) EntityTemplatesOrErr() ([]*EntityTemplate, error) {
 // ExportsOrErr returns the Exports value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) ExportsOrErr() ([]*Export, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.Exports, nil
 	}
 	return nil, &NotLoadedError{edge: "exports"}
@@ -132,7 +145,7 @@ func (e GroupEdges) ExportsOrErr() ([]*Export, error) {
 // UserGroupsOrErr returns the UserGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UserGroupsOrErr() ([]*UserGroup, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[9] {
 		return e.UserGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_groups"}
@@ -143,6 +156,8 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case group.FieldCsvExportRetentionDays:
+			values[i] = new(sql.NullInt64)
 		case group.FieldName, group.FieldCurrency:
 			values[i] = new(sql.NullString)
 		case group.FieldCreatedAt, group.FieldUpdatedAt:
@@ -182,6 +197,12 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
 			}
+		case group.FieldCsvExportRetentionDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field csv_export_retention_days", values[i])
+			} else if value.Valid {
+				_m.CsvExportRetentionDays = int(value.Int64)
+			}
 		case group.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -205,6 +226,11 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Group) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryCsvExports queries the "csv_exports" edge of the Group entity.
+func (_m *Group) QueryCsvExports() *CsvExportQuery {
+	return NewGroupClient(_m.config).QueryCsvExports(_m)
 }
 
 // QueryUsers queries the "users" edge of the Group entity.
@@ -280,6 +306,9 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("csv_export_retention_days=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CsvExportRetentionDays))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

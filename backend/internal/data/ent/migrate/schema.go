@@ -129,6 +129,62 @@ var (
 			},
 		},
 	}
+	// CsvExportsColumns holds the columns for the "csv_exports" table.
+	CsvExportsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "scope", Type: field.TypeEnum, Enums: []string{"collection", "private"}},
+		{Name: "source", Type: field.TypeString},
+		{Name: "access_requirement", Type: field.TypeString},
+		{Name: "request_snapshot", Type: field.TypeJSON},
+		{Name: "retention_days", Type: field.TypeInt, Default: 30},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "running", "completed", "failed", "deleting"}, Default: "pending"},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "artifact_path", Type: field.TypeString, Nullable: true},
+		{Name: "size_bytes", Type: field.TypeInt64, Default: 0},
+		{Name: "error", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "group_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "requester_id", Type: field.TypeUUID},
+	}
+	// CsvExportsTable holds the schema information for the "csv_exports" table.
+	CsvExportsTable = &schema.Table{
+		Name:       "csv_exports",
+		Columns:    CsvExportsColumns,
+		PrimaryKey: []*schema.Column{CsvExportsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "csv_exports_groups_csv_exports",
+				Columns:    []*schema.Column{CsvExportsColumns[14]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.Restrict,
+			},
+			{
+				Symbol:     "csv_exports_users_csv_exports",
+				Columns:    []*schema.Column{CsvExportsColumns[15]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Restrict,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "csvexport_group_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{CsvExportsColumns[14], CsvExportsColumns[8]},
+			},
+			{
+				Name:    "csvexport_requester_id_scope",
+				Unique:  false,
+				Columns: []*schema.Column{CsvExportsColumns[15], CsvExportsColumns[3]},
+			},
+			{
+				Name:    "csvexport_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{CsvExportsColumns[10]},
+			},
+		},
+	}
 	// EntitiesColumns holds the columns for the "entities" table.
 	EntitiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -372,6 +428,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "csv_export_retention_days", Type: field.TypeInt, Default: 30},
 		{Name: "name", Type: field.TypeString, Size: 255},
 		{Name: "currency", Type: field.TypeString, Default: "usd"},
 	}
@@ -580,6 +637,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "csv_export_retention_days", Type: field.TypeInt, Default: 30},
 		{Name: "name", Type: field.TypeString, Size: 255},
 		{Name: "email", Type: field.TypeString, Unique: true, Size: 255},
 		{Name: "password", Type: field.TypeString, Nullable: true, Size: 255},
@@ -600,7 +658,7 @@ var (
 			{
 				Name:    "user_oidc_issuer_oidc_subject",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[9], UsersColumns[10]},
+				Columns: []*schema.Column{UsersColumns[10], UsersColumns[11]},
 			},
 		},
 	}
@@ -661,6 +719,7 @@ var (
 		AttachmentsTable,
 		AuthRolesTable,
 		AuthTokensTable,
+		CsvExportsTable,
 		EntitiesTable,
 		EntityFieldsTable,
 		EntityTemplatesTable,
@@ -685,6 +744,13 @@ func init() {
 	AttachmentsTable.ForeignKeys[1].RefTable = EntitiesTable
 	AuthRolesTable.ForeignKeys[0].RefTable = AuthTokensTable
 	AuthTokensTable.ForeignKeys[0].RefTable = UsersTable
+	CsvExportsTable.ForeignKeys[0].RefTable = GroupsTable
+	CsvExportsTable.ForeignKeys[1].RefTable = UsersTable
+	CsvExportsTable.Annotation = &entsql.Annotation{}
+	CsvExportsTable.Annotation.Checks = map[string]string{
+		"csv_completed": "(status != 'completed' OR (completed_at IS NOT NULL AND expires_at IS NOT NULL AND expires_at > completed_at AND artifact_path IS NOT NULL AND artifact_path <> ''))",
+		"csv_scope":     "((scope = 'collection' AND group_id IS NOT NULL) OR (scope = 'private' AND group_id IS NULL))",
+	}
 	EntitiesTable.ForeignKeys[0].RefTable = EntitiesTable
 	EntitiesTable.ForeignKeys[1].RefTable = EntityTypesTable
 	EntitiesTable.ForeignKeys[2].RefTable = GroupsTable

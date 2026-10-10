@@ -51,6 +51,7 @@ tasks:
           --path ./backend/app/api/static/docs/swagger.json \
           --output ./frontend/lib/api/types
       - go run ./backend/app/tools/typegen/main.go ./frontend/lib/api/types/data-contracts.ts
+      - cd backend && go run ./app/tools/csvcontractgen
     sources:
       - ./backend/app/tools/typegen/main.go
       - ./backend/app/api/static/docs/swagger.json

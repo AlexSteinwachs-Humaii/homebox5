@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
@@ -43,6 +44,27 @@ func (_u *GroupUpdate) SetUpdatedAt(v time.Time) *GroupUpdate {
 	return _u
 }
 
+// SetCsvExportRetentionDays sets the "csv_export_retention_days" field.
+func (_u *GroupUpdate) SetCsvExportRetentionDays(v int) *GroupUpdate {
+	_u.mutation.ResetCsvExportRetentionDays()
+	_u.mutation.SetCsvExportRetentionDays(v)
+	return _u
+}
+
+// SetNillableCsvExportRetentionDays sets the "csv_export_retention_days" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableCsvExportRetentionDays(v *int) *GroupUpdate {
+	if v != nil {
+		_u.SetCsvExportRetentionDays(*v)
+	}
+	return _u
+}
+
+// AddCsvExportRetentionDays adds value to the "csv_export_retention_days" field.
+func (_u *GroupUpdate) AddCsvExportRetentionDays(v int) *GroupUpdate {
+	_u.mutation.AddCsvExportRetentionDays(v)
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *GroupUpdate) SetName(v string) *GroupUpdate {
 	_u.mutation.SetName(v)
@@ -69,6 +91,21 @@ func (_u *GroupUpdate) SetNillableCurrency(v *string) *GroupUpdate {
 		_u.SetCurrency(*v)
 	}
 	return _u
+}
+
+// AddCsvExportIDs adds the "csv_exports" edge to the CsvExport entity by IDs.
+func (_u *GroupUpdate) AddCsvExportIDs(ids ...uuid.UUID) *GroupUpdate {
+	_u.mutation.AddCsvExportIDs(ids...)
+	return _u
+}
+
+// AddCsvExports adds the "csv_exports" edges to the CsvExport entity.
+func (_u *GroupUpdate) AddCsvExports(v ...*CsvExport) *GroupUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCsvExportIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -194,6 +231,27 @@ func (_u *GroupUpdate) AddExports(v ...*Export) *GroupUpdate {
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdate) Mutation() *GroupMutation {
 	return _u.mutation
+}
+
+// ClearCsvExports clears all "csv_exports" edges to the CsvExport entity.
+func (_u *GroupUpdate) ClearCsvExports() *GroupUpdate {
+	_u.mutation.ClearCsvExports()
+	return _u
+}
+
+// RemoveCsvExportIDs removes the "csv_exports" edge to CsvExport entities by IDs.
+func (_u *GroupUpdate) RemoveCsvExportIDs(ids ...uuid.UUID) *GroupUpdate {
+	_u.mutation.RemoveCsvExportIDs(ids...)
+	return _u
+}
+
+// RemoveCsvExports removes "csv_exports" edges to CsvExport entities.
+func (_u *GroupUpdate) RemoveCsvExports(v ...*CsvExport) *GroupUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCsvExportIDs(ids...)
 }
 
 // ClearUsers clears all "users" edges to the User entity.
@@ -402,6 +460,11 @@ func (_u *GroupUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *GroupUpdate) check() error {
+	if v, ok := _u.mutation.CsvExportRetentionDays(); ok {
+		if err := group.CsvExportRetentionDaysValidator(v); err != nil {
+			return &ValidationError{Name: "csv_export_retention_days", err: fmt.Errorf(`ent: validator failed for field "Group.csv_export_retention_days": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := group.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Group.name": %w`, err)}
@@ -425,11 +488,62 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(group.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := _u.mutation.CsvExportRetentionDays(); ok {
+		_spec.SetField(group.FieldCsvExportRetentionDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCsvExportRetentionDays(); ok {
+		_spec.AddField(group.FieldCsvExportRetentionDays, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(group.FieldName, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(group.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CsvExportsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCsvExportsIDs(); len(nodes) > 0 && !_u.mutation.CsvExportsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CsvExportsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -829,6 +943,27 @@ func (_u *GroupUpdateOne) SetUpdatedAt(v time.Time) *GroupUpdateOne {
 	return _u
 }
 
+// SetCsvExportRetentionDays sets the "csv_export_retention_days" field.
+func (_u *GroupUpdateOne) SetCsvExportRetentionDays(v int) *GroupUpdateOne {
+	_u.mutation.ResetCsvExportRetentionDays()
+	_u.mutation.SetCsvExportRetentionDays(v)
+	return _u
+}
+
+// SetNillableCsvExportRetentionDays sets the "csv_export_retention_days" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableCsvExportRetentionDays(v *int) *GroupUpdateOne {
+	if v != nil {
+		_u.SetCsvExportRetentionDays(*v)
+	}
+	return _u
+}
+
+// AddCsvExportRetentionDays adds value to the "csv_export_retention_days" field.
+func (_u *GroupUpdateOne) AddCsvExportRetentionDays(v int) *GroupUpdateOne {
+	_u.mutation.AddCsvExportRetentionDays(v)
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *GroupUpdateOne) SetName(v string) *GroupUpdateOne {
 	_u.mutation.SetName(v)
@@ -855,6 +990,21 @@ func (_u *GroupUpdateOne) SetNillableCurrency(v *string) *GroupUpdateOne {
 		_u.SetCurrency(*v)
 	}
 	return _u
+}
+
+// AddCsvExportIDs adds the "csv_exports" edge to the CsvExport entity by IDs.
+func (_u *GroupUpdateOne) AddCsvExportIDs(ids ...uuid.UUID) *GroupUpdateOne {
+	_u.mutation.AddCsvExportIDs(ids...)
+	return _u
+}
+
+// AddCsvExports adds the "csv_exports" edges to the CsvExport entity.
+func (_u *GroupUpdateOne) AddCsvExports(v ...*CsvExport) *GroupUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCsvExportIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -980,6 +1130,27 @@ func (_u *GroupUpdateOne) AddExports(v ...*Export) *GroupUpdateOne {
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdateOne) Mutation() *GroupMutation {
 	return _u.mutation
+}
+
+// ClearCsvExports clears all "csv_exports" edges to the CsvExport entity.
+func (_u *GroupUpdateOne) ClearCsvExports() *GroupUpdateOne {
+	_u.mutation.ClearCsvExports()
+	return _u
+}
+
+// RemoveCsvExportIDs removes the "csv_exports" edge to CsvExport entities by IDs.
+func (_u *GroupUpdateOne) RemoveCsvExportIDs(ids ...uuid.UUID) *GroupUpdateOne {
+	_u.mutation.RemoveCsvExportIDs(ids...)
+	return _u
+}
+
+// RemoveCsvExports removes "csv_exports" edges to CsvExport entities.
+func (_u *GroupUpdateOne) RemoveCsvExports(v ...*CsvExport) *GroupUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCsvExportIDs(ids...)
 }
 
 // ClearUsers clears all "users" edges to the User entity.
@@ -1201,6 +1372,11 @@ func (_u *GroupUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *GroupUpdateOne) check() error {
+	if v, ok := _u.mutation.CsvExportRetentionDays(); ok {
+		if err := group.CsvExportRetentionDaysValidator(v); err != nil {
+			return &ValidationError{Name: "csv_export_retention_days", err: fmt.Errorf(`ent: validator failed for field "Group.csv_export_retention_days": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := group.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Group.name": %w`, err)}
@@ -1241,11 +1417,62 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(group.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := _u.mutation.CsvExportRetentionDays(); ok {
+		_spec.SetField(group.FieldCsvExportRetentionDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCsvExportRetentionDays(); ok {
+		_spec.AddField(group.FieldCsvExportRetentionDays, field.TypeInt, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(group.FieldName, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(group.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CsvExportsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCsvExportsIDs(); len(nodes) > 0 && !_u.mutation.CsvExportsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CsvExportsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -12,10 +12,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/csvexports"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/apikey"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authroles"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
@@ -46,6 +48,7 @@ const (
 	TypeAttachment           = "Attachment"
 	TypeAuthRoles            = "AuthRoles"
 	TypeAuthTokens           = "AuthTokens"
+	TypeCsvExport            = "CsvExport"
 	TypeEntity               = "Entity"
 	TypeEntityField          = "EntityField"
 	TypeEntityTemplate       = "EntityTemplate"
@@ -2606,6 +2609,1361 @@ func (m *AuthTokensMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown AuthTokens edge %s", name)
+}
+
+// CsvExportMutation represents an operation that mutates the CsvExport nodes in the graph.
+type CsvExportMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	created_at         *time.Time
+	updated_at         *time.Time
+	scope              *csvexport.Scope
+	source             *string
+	access_requirement *string
+	request_snapshot   *csvexports.Request
+	retention_days     *int
+	addretention_days  *int
+	status             *csvexport.Status
+	completed_at       *time.Time
+	expires_at         *time.Time
+	artifact_path      *string
+	size_bytes         *int64
+	addsize_bytes      *int64
+	error              *string
+	clearedFields      map[string]struct{}
+	requester          *uuid.UUID
+	clearedrequester   bool
+	group              *uuid.UUID
+	clearedgroup       bool
+	done               bool
+	oldValue           func(context.Context) (*CsvExport, error)
+	predicates         []predicate.CsvExport
+}
+
+var _ ent.Mutation = (*CsvExportMutation)(nil)
+
+// csvexportOption allows management of the mutation configuration using functional options.
+type csvexportOption func(*CsvExportMutation)
+
+// newCsvExportMutation creates new mutation for the CsvExport entity.
+func newCsvExportMutation(c config, op Op, opts ...csvexportOption) *CsvExportMutation {
+	m := &CsvExportMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCsvExport,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCsvExportID sets the ID field of the mutation.
+func withCsvExportID(id uuid.UUID) csvexportOption {
+	return func(m *CsvExportMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CsvExport
+		)
+		m.oldValue = func(ctx context.Context) (*CsvExport, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CsvExport.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCsvExport sets the old CsvExport of the mutation.
+func withCsvExport(node *CsvExport) csvexportOption {
+	return func(m *CsvExportMutation) {
+		m.oldValue = func(context.Context) (*CsvExport, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CsvExportMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CsvExportMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of CsvExport entities.
+func (m *CsvExportMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CsvExportMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CsvExportMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CsvExport.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CsvExportMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CsvExportMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CsvExportMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CsvExportMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CsvExportMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CsvExportMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetRequesterID sets the "requester_id" field.
+func (m *CsvExportMutation) SetRequesterID(u uuid.UUID) {
+	m.requester = &u
+}
+
+// RequesterID returns the value of the "requester_id" field in the mutation.
+func (m *CsvExportMutation) RequesterID() (r uuid.UUID, exists bool) {
+	v := m.requester
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequesterID returns the old "requester_id" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldRequesterID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequesterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequesterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequesterID: %w", err)
+	}
+	return oldValue.RequesterID, nil
+}
+
+// ResetRequesterID resets all changes to the "requester_id" field.
+func (m *CsvExportMutation) ResetRequesterID() {
+	m.requester = nil
+}
+
+// SetGroupID sets the "group_id" field.
+func (m *CsvExportMutation) SetGroupID(u uuid.UUID) {
+	m.group = &u
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *CsvExportMutation) GroupID() (r uuid.UUID, exists bool) {
+	v := m.group
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldGroupID(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (m *CsvExportMutation) ClearGroupID() {
+	m.group = nil
+	m.clearedFields[csvexport.FieldGroupID] = struct{}{}
+}
+
+// GroupIDCleared returns if the "group_id" field was cleared in this mutation.
+func (m *CsvExportMutation) GroupIDCleared() bool {
+	_, ok := m.clearedFields[csvexport.FieldGroupID]
+	return ok
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *CsvExportMutation) ResetGroupID() {
+	m.group = nil
+	delete(m.clearedFields, csvexport.FieldGroupID)
+}
+
+// SetScope sets the "scope" field.
+func (m *CsvExportMutation) SetScope(c csvexport.Scope) {
+	m.scope = &c
+}
+
+// Scope returns the value of the "scope" field in the mutation.
+func (m *CsvExportMutation) Scope() (r csvexport.Scope, exists bool) {
+	v := m.scope
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScope returns the old "scope" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldScope(ctx context.Context) (v csvexport.Scope, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScope is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScope requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScope: %w", err)
+	}
+	return oldValue.Scope, nil
+}
+
+// ResetScope resets all changes to the "scope" field.
+func (m *CsvExportMutation) ResetScope() {
+	m.scope = nil
+}
+
+// SetSource sets the "source" field.
+func (m *CsvExportMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *CsvExportMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *CsvExportMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetAccessRequirement sets the "access_requirement" field.
+func (m *CsvExportMutation) SetAccessRequirement(s string) {
+	m.access_requirement = &s
+}
+
+// AccessRequirement returns the value of the "access_requirement" field in the mutation.
+func (m *CsvExportMutation) AccessRequirement() (r string, exists bool) {
+	v := m.access_requirement
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccessRequirement returns the old "access_requirement" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldAccessRequirement(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccessRequirement is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccessRequirement requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccessRequirement: %w", err)
+	}
+	return oldValue.AccessRequirement, nil
+}
+
+// ResetAccessRequirement resets all changes to the "access_requirement" field.
+func (m *CsvExportMutation) ResetAccessRequirement() {
+	m.access_requirement = nil
+}
+
+// SetRequestSnapshot sets the "request_snapshot" field.
+func (m *CsvExportMutation) SetRequestSnapshot(c csvexports.Request) {
+	m.request_snapshot = &c
+}
+
+// RequestSnapshot returns the value of the "request_snapshot" field in the mutation.
+func (m *CsvExportMutation) RequestSnapshot() (r csvexports.Request, exists bool) {
+	v := m.request_snapshot
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestSnapshot returns the old "request_snapshot" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldRequestSnapshot(ctx context.Context) (v csvexports.Request, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestSnapshot is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestSnapshot requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestSnapshot: %w", err)
+	}
+	return oldValue.RequestSnapshot, nil
+}
+
+// ResetRequestSnapshot resets all changes to the "request_snapshot" field.
+func (m *CsvExportMutation) ResetRequestSnapshot() {
+	m.request_snapshot = nil
+}
+
+// SetRetentionDays sets the "retention_days" field.
+func (m *CsvExportMutation) SetRetentionDays(i int) {
+	m.retention_days = &i
+	m.addretention_days = nil
+}
+
+// RetentionDays returns the value of the "retention_days" field in the mutation.
+func (m *CsvExportMutation) RetentionDays() (r int, exists bool) {
+	v := m.retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetentionDays returns the old "retention_days" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldRetentionDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetentionDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetentionDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetentionDays: %w", err)
+	}
+	return oldValue.RetentionDays, nil
+}
+
+// AddRetentionDays adds i to the "retention_days" field.
+func (m *CsvExportMutation) AddRetentionDays(i int) {
+	if m.addretention_days != nil {
+		*m.addretention_days += i
+	} else {
+		m.addretention_days = &i
+	}
+}
+
+// AddedRetentionDays returns the value that was added to the "retention_days" field in this mutation.
+func (m *CsvExportMutation) AddedRetentionDays() (r int, exists bool) {
+	v := m.addretention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRetentionDays resets all changes to the "retention_days" field.
+func (m *CsvExportMutation) ResetRetentionDays() {
+	m.retention_days = nil
+	m.addretention_days = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *CsvExportMutation) SetStatus(c csvexport.Status) {
+	m.status = &c
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *CsvExportMutation) Status() (r csvexport.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldStatus(ctx context.Context) (v csvexport.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *CsvExportMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (m *CsvExportMutation) SetCompletedAt(t time.Time) {
+	m.completed_at = &t
+}
+
+// CompletedAt returns the value of the "completed_at" field in the mutation.
+func (m *CsvExportMutation) CompletedAt() (r time.Time, exists bool) {
+	v := m.completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedAt returns the old "completed_at" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedAt: %w", err)
+	}
+	return oldValue.CompletedAt, nil
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (m *CsvExportMutation) ClearCompletedAt() {
+	m.completed_at = nil
+	m.clearedFields[csvexport.FieldCompletedAt] = struct{}{}
+}
+
+// CompletedAtCleared returns if the "completed_at" field was cleared in this mutation.
+func (m *CsvExportMutation) CompletedAtCleared() bool {
+	_, ok := m.clearedFields[csvexport.FieldCompletedAt]
+	return ok
+}
+
+// ResetCompletedAt resets all changes to the "completed_at" field.
+func (m *CsvExportMutation) ResetCompletedAt() {
+	m.completed_at = nil
+	delete(m.clearedFields, csvexport.FieldCompletedAt)
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *CsvExportMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *CsvExportMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ClearExpiresAt clears the value of the "expires_at" field.
+func (m *CsvExportMutation) ClearExpiresAt() {
+	m.expires_at = nil
+	m.clearedFields[csvexport.FieldExpiresAt] = struct{}{}
+}
+
+// ExpiresAtCleared returns if the "expires_at" field was cleared in this mutation.
+func (m *CsvExportMutation) ExpiresAtCleared() bool {
+	_, ok := m.clearedFields[csvexport.FieldExpiresAt]
+	return ok
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *CsvExportMutation) ResetExpiresAt() {
+	m.expires_at = nil
+	delete(m.clearedFields, csvexport.FieldExpiresAt)
+}
+
+// SetArtifactPath sets the "artifact_path" field.
+func (m *CsvExportMutation) SetArtifactPath(s string) {
+	m.artifact_path = &s
+}
+
+// ArtifactPath returns the value of the "artifact_path" field in the mutation.
+func (m *CsvExportMutation) ArtifactPath() (r string, exists bool) {
+	v := m.artifact_path
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArtifactPath returns the old "artifact_path" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldArtifactPath(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArtifactPath is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArtifactPath requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArtifactPath: %w", err)
+	}
+	return oldValue.ArtifactPath, nil
+}
+
+// ClearArtifactPath clears the value of the "artifact_path" field.
+func (m *CsvExportMutation) ClearArtifactPath() {
+	m.artifact_path = nil
+	m.clearedFields[csvexport.FieldArtifactPath] = struct{}{}
+}
+
+// ArtifactPathCleared returns if the "artifact_path" field was cleared in this mutation.
+func (m *CsvExportMutation) ArtifactPathCleared() bool {
+	_, ok := m.clearedFields[csvexport.FieldArtifactPath]
+	return ok
+}
+
+// ResetArtifactPath resets all changes to the "artifact_path" field.
+func (m *CsvExportMutation) ResetArtifactPath() {
+	m.artifact_path = nil
+	delete(m.clearedFields, csvexport.FieldArtifactPath)
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *CsvExportMutation) SetSizeBytes(i int64) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *CsvExportMutation) SizeBytes() (r int64, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldSizeBytes(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *CsvExportMutation) AddSizeBytes(i int64) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *CsvExportMutation) AddedSizeBytes() (r int64, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *CsvExportMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetError sets the "error" field.
+func (m *CsvExportMutation) SetError(s string) {
+	m.error = &s
+}
+
+// Error returns the value of the "error" field in the mutation.
+func (m *CsvExportMutation) Error() (r string, exists bool) {
+	v := m.error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldError returns the old "error" field's value of the CsvExport entity.
+// If the CsvExport object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CsvExportMutation) OldError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldError: %w", err)
+	}
+	return oldValue.Error, nil
+}
+
+// ClearError clears the value of the "error" field.
+func (m *CsvExportMutation) ClearError() {
+	m.error = nil
+	m.clearedFields[csvexport.FieldError] = struct{}{}
+}
+
+// ErrorCleared returns if the "error" field was cleared in this mutation.
+func (m *CsvExportMutation) ErrorCleared() bool {
+	_, ok := m.clearedFields[csvexport.FieldError]
+	return ok
+}
+
+// ResetError resets all changes to the "error" field.
+func (m *CsvExportMutation) ResetError() {
+	m.error = nil
+	delete(m.clearedFields, csvexport.FieldError)
+}
+
+// ClearRequester clears the "requester" edge to the User entity.
+func (m *CsvExportMutation) ClearRequester() {
+	m.clearedrequester = true
+	m.clearedFields[csvexport.FieldRequesterID] = struct{}{}
+}
+
+// RequesterCleared reports if the "requester" edge to the User entity was cleared.
+func (m *CsvExportMutation) RequesterCleared() bool {
+	return m.clearedrequester
+}
+
+// RequesterIDs returns the "requester" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequesterID instead. It exists only for internal usage by the builders.
+func (m *CsvExportMutation) RequesterIDs() (ids []uuid.UUID) {
+	if id := m.requester; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequester resets all changes to the "requester" edge.
+func (m *CsvExportMutation) ResetRequester() {
+	m.requester = nil
+	m.clearedrequester = false
+}
+
+// ClearGroup clears the "group" edge to the Group entity.
+func (m *CsvExportMutation) ClearGroup() {
+	m.clearedgroup = true
+	m.clearedFields[csvexport.FieldGroupID] = struct{}{}
+}
+
+// GroupCleared reports if the "group" edge to the Group entity was cleared.
+func (m *CsvExportMutation) GroupCleared() bool {
+	return m.GroupIDCleared() || m.clearedgroup
+}
+
+// GroupIDs returns the "group" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GroupID instead. It exists only for internal usage by the builders.
+func (m *CsvExportMutation) GroupIDs() (ids []uuid.UUID) {
+	if id := m.group; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGroup resets all changes to the "group" edge.
+func (m *CsvExportMutation) ResetGroup() {
+	m.group = nil
+	m.clearedgroup = false
+}
+
+// Where appends a list predicates to the CsvExportMutation builder.
+func (m *CsvExportMutation) Where(ps ...predicate.CsvExport) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CsvExportMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CsvExportMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CsvExport, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CsvExportMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CsvExportMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CsvExport).
+func (m *CsvExportMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CsvExportMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.created_at != nil {
+		fields = append(fields, csvexport.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, csvexport.FieldUpdatedAt)
+	}
+	if m.requester != nil {
+		fields = append(fields, csvexport.FieldRequesterID)
+	}
+	if m.group != nil {
+		fields = append(fields, csvexport.FieldGroupID)
+	}
+	if m.scope != nil {
+		fields = append(fields, csvexport.FieldScope)
+	}
+	if m.source != nil {
+		fields = append(fields, csvexport.FieldSource)
+	}
+	if m.access_requirement != nil {
+		fields = append(fields, csvexport.FieldAccessRequirement)
+	}
+	if m.request_snapshot != nil {
+		fields = append(fields, csvexport.FieldRequestSnapshot)
+	}
+	if m.retention_days != nil {
+		fields = append(fields, csvexport.FieldRetentionDays)
+	}
+	if m.status != nil {
+		fields = append(fields, csvexport.FieldStatus)
+	}
+	if m.completed_at != nil {
+		fields = append(fields, csvexport.FieldCompletedAt)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, csvexport.FieldExpiresAt)
+	}
+	if m.artifact_path != nil {
+		fields = append(fields, csvexport.FieldArtifactPath)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, csvexport.FieldSizeBytes)
+	}
+	if m.error != nil {
+		fields = append(fields, csvexport.FieldError)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CsvExportMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case csvexport.FieldCreatedAt:
+		return m.CreatedAt()
+	case csvexport.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case csvexport.FieldRequesterID:
+		return m.RequesterID()
+	case csvexport.FieldGroupID:
+		return m.GroupID()
+	case csvexport.FieldScope:
+		return m.Scope()
+	case csvexport.FieldSource:
+		return m.Source()
+	case csvexport.FieldAccessRequirement:
+		return m.AccessRequirement()
+	case csvexport.FieldRequestSnapshot:
+		return m.RequestSnapshot()
+	case csvexport.FieldRetentionDays:
+		return m.RetentionDays()
+	case csvexport.FieldStatus:
+		return m.Status()
+	case csvexport.FieldCompletedAt:
+		return m.CompletedAt()
+	case csvexport.FieldExpiresAt:
+		return m.ExpiresAt()
+	case csvexport.FieldArtifactPath:
+		return m.ArtifactPath()
+	case csvexport.FieldSizeBytes:
+		return m.SizeBytes()
+	case csvexport.FieldError:
+		return m.Error()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CsvExportMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case csvexport.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case csvexport.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case csvexport.FieldRequesterID:
+		return m.OldRequesterID(ctx)
+	case csvexport.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case csvexport.FieldScope:
+		return m.OldScope(ctx)
+	case csvexport.FieldSource:
+		return m.OldSource(ctx)
+	case csvexport.FieldAccessRequirement:
+		return m.OldAccessRequirement(ctx)
+	case csvexport.FieldRequestSnapshot:
+		return m.OldRequestSnapshot(ctx)
+	case csvexport.FieldRetentionDays:
+		return m.OldRetentionDays(ctx)
+	case csvexport.FieldStatus:
+		return m.OldStatus(ctx)
+	case csvexport.FieldCompletedAt:
+		return m.OldCompletedAt(ctx)
+	case csvexport.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case csvexport.FieldArtifactPath:
+		return m.OldArtifactPath(ctx)
+	case csvexport.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case csvexport.FieldError:
+		return m.OldError(ctx)
+	}
+	return nil, fmt.Errorf("unknown CsvExport field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CsvExportMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case csvexport.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case csvexport.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case csvexport.FieldRequesterID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequesterID(v)
+		return nil
+	case csvexport.FieldGroupID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case csvexport.FieldScope:
+		v, ok := value.(csvexport.Scope)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScope(v)
+		return nil
+	case csvexport.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case csvexport.FieldAccessRequirement:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccessRequirement(v)
+		return nil
+	case csvexport.FieldRequestSnapshot:
+		v, ok := value.(csvexports.Request)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestSnapshot(v)
+		return nil
+	case csvexport.FieldRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetentionDays(v)
+		return nil
+	case csvexport.FieldStatus:
+		v, ok := value.(csvexport.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case csvexport.FieldCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedAt(v)
+		return nil
+	case csvexport.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case csvexport.FieldArtifactPath:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArtifactPath(v)
+		return nil
+	case csvexport.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case csvexport.FieldError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetError(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CsvExportMutation) AddedFields() []string {
+	var fields []string
+	if m.addretention_days != nil {
+		fields = append(fields, csvexport.FieldRetentionDays)
+	}
+	if m.addsize_bytes != nil {
+		fields = append(fields, csvexport.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CsvExportMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case csvexport.FieldRetentionDays:
+		return m.AddedRetentionDays()
+	case csvexport.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CsvExportMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case csvexport.FieldRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetentionDays(v)
+		return nil
+	case csvexport.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CsvExportMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(csvexport.FieldGroupID) {
+		fields = append(fields, csvexport.FieldGroupID)
+	}
+	if m.FieldCleared(csvexport.FieldCompletedAt) {
+		fields = append(fields, csvexport.FieldCompletedAt)
+	}
+	if m.FieldCleared(csvexport.FieldExpiresAt) {
+		fields = append(fields, csvexport.FieldExpiresAt)
+	}
+	if m.FieldCleared(csvexport.FieldArtifactPath) {
+		fields = append(fields, csvexport.FieldArtifactPath)
+	}
+	if m.FieldCleared(csvexport.FieldError) {
+		fields = append(fields, csvexport.FieldError)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CsvExportMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CsvExportMutation) ClearField(name string) error {
+	switch name {
+	case csvexport.FieldGroupID:
+		m.ClearGroupID()
+		return nil
+	case csvexport.FieldCompletedAt:
+		m.ClearCompletedAt()
+		return nil
+	case csvexport.FieldExpiresAt:
+		m.ClearExpiresAt()
+		return nil
+	case csvexport.FieldArtifactPath:
+		m.ClearArtifactPath()
+		return nil
+	case csvexport.FieldError:
+		m.ClearError()
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CsvExportMutation) ResetField(name string) error {
+	switch name {
+	case csvexport.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case csvexport.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case csvexport.FieldRequesterID:
+		m.ResetRequesterID()
+		return nil
+	case csvexport.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case csvexport.FieldScope:
+		m.ResetScope()
+		return nil
+	case csvexport.FieldSource:
+		m.ResetSource()
+		return nil
+	case csvexport.FieldAccessRequirement:
+		m.ResetAccessRequirement()
+		return nil
+	case csvexport.FieldRequestSnapshot:
+		m.ResetRequestSnapshot()
+		return nil
+	case csvexport.FieldRetentionDays:
+		m.ResetRetentionDays()
+		return nil
+	case csvexport.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case csvexport.FieldCompletedAt:
+		m.ResetCompletedAt()
+		return nil
+	case csvexport.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case csvexport.FieldArtifactPath:
+		m.ResetArtifactPath()
+		return nil
+	case csvexport.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case csvexport.FieldError:
+		m.ResetError()
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CsvExportMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.requester != nil {
+		edges = append(edges, csvexport.EdgeRequester)
+	}
+	if m.group != nil {
+		edges = append(edges, csvexport.EdgeGroup)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CsvExportMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case csvexport.EdgeRequester:
+		if id := m.requester; id != nil {
+			return []ent.Value{*id}
+		}
+	case csvexport.EdgeGroup:
+		if id := m.group; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CsvExportMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CsvExportMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CsvExportMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedrequester {
+		edges = append(edges, csvexport.EdgeRequester)
+	}
+	if m.clearedgroup {
+		edges = append(edges, csvexport.EdgeGroup)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CsvExportMutation) EdgeCleared(name string) bool {
+	switch name {
+	case csvexport.EdgeRequester:
+		return m.clearedrequester
+	case csvexport.EdgeGroup:
+		return m.clearedgroup
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CsvExportMutation) ClearEdge(name string) error {
+	switch name {
+	case csvexport.EdgeRequester:
+		m.ClearRequester()
+		return nil
+	case csvexport.EdgeGroup:
+		m.ClearGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CsvExportMutation) ResetEdge(name string) error {
+	switch name {
+	case csvexport.EdgeRequester:
+		m.ResetRequester()
+		return nil
+	case csvexport.EdgeGroup:
+		m.ResetGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown CsvExport edge %s", name)
 }
 
 // EntityMutation represents an operation that mutates the Entity nodes in the graph.
@@ -9497,41 +10855,46 @@ func (m *ExportMutation) ResetEdge(name string) error {
 // GroupMutation represents an operation that mutates the Group nodes in the graph.
 type GroupMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *uuid.UUID
-	created_at               *time.Time
-	updated_at               *time.Time
-	name                     *string
-	currency                 *string
-	clearedFields            map[string]struct{}
-	users                    map[uuid.UUID]struct{}
-	removedusers             map[uuid.UUID]struct{}
-	clearedusers             bool
-	entity_types             map[uuid.UUID]struct{}
-	removedentity_types      map[uuid.UUID]struct{}
-	clearedentity_types      bool
-	entities                 map[uuid.UUID]struct{}
-	removedentities          map[uuid.UUID]struct{}
-	clearedentities          bool
-	tags                     map[uuid.UUID]struct{}
-	removedtags              map[uuid.UUID]struct{}
-	clearedtags              bool
-	invitation_tokens        map[uuid.UUID]struct{}
-	removedinvitation_tokens map[uuid.UUID]struct{}
-	clearedinvitation_tokens bool
-	notifiers                map[uuid.UUID]struct{}
-	removednotifiers         map[uuid.UUID]struct{}
-	clearednotifiers         bool
-	entity_templates         map[uuid.UUID]struct{}
-	removedentity_templates  map[uuid.UUID]struct{}
-	clearedentity_templates  bool
-	exports                  map[uuid.UUID]struct{}
-	removedexports           map[uuid.UUID]struct{}
-	clearedexports           bool
-	done                     bool
-	oldValue                 func(context.Context) (*Group, error)
-	predicates               []predicate.Group
+	op                           Op
+	typ                          string
+	id                           *uuid.UUID
+	created_at                   *time.Time
+	updated_at                   *time.Time
+	csv_export_retention_days    *int
+	addcsv_export_retention_days *int
+	name                         *string
+	currency                     *string
+	clearedFields                map[string]struct{}
+	csv_exports                  map[uuid.UUID]struct{}
+	removedcsv_exports           map[uuid.UUID]struct{}
+	clearedcsv_exports           bool
+	users                        map[uuid.UUID]struct{}
+	removedusers                 map[uuid.UUID]struct{}
+	clearedusers                 bool
+	entity_types                 map[uuid.UUID]struct{}
+	removedentity_types          map[uuid.UUID]struct{}
+	clearedentity_types          bool
+	entities                     map[uuid.UUID]struct{}
+	removedentities              map[uuid.UUID]struct{}
+	clearedentities              bool
+	tags                         map[uuid.UUID]struct{}
+	removedtags                  map[uuid.UUID]struct{}
+	clearedtags                  bool
+	invitation_tokens            map[uuid.UUID]struct{}
+	removedinvitation_tokens     map[uuid.UUID]struct{}
+	clearedinvitation_tokens     bool
+	notifiers                    map[uuid.UUID]struct{}
+	removednotifiers             map[uuid.UUID]struct{}
+	clearednotifiers             bool
+	entity_templates             map[uuid.UUID]struct{}
+	removedentity_templates      map[uuid.UUID]struct{}
+	clearedentity_templates      bool
+	exports                      map[uuid.UUID]struct{}
+	removedexports               map[uuid.UUID]struct{}
+	clearedexports               bool
+	done                         bool
+	oldValue                     func(context.Context) (*Group, error)
+	predicates                   []predicate.Group
 }
 
 var _ ent.Mutation = (*GroupMutation)(nil)
@@ -9710,6 +11073,62 @@ func (m *GroupMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetCsvExportRetentionDays sets the "csv_export_retention_days" field.
+func (m *GroupMutation) SetCsvExportRetentionDays(i int) {
+	m.csv_export_retention_days = &i
+	m.addcsv_export_retention_days = nil
+}
+
+// CsvExportRetentionDays returns the value of the "csv_export_retention_days" field in the mutation.
+func (m *GroupMutation) CsvExportRetentionDays() (r int, exists bool) {
+	v := m.csv_export_retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCsvExportRetentionDays returns the old "csv_export_retention_days" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldCsvExportRetentionDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCsvExportRetentionDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCsvExportRetentionDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCsvExportRetentionDays: %w", err)
+	}
+	return oldValue.CsvExportRetentionDays, nil
+}
+
+// AddCsvExportRetentionDays adds i to the "csv_export_retention_days" field.
+func (m *GroupMutation) AddCsvExportRetentionDays(i int) {
+	if m.addcsv_export_retention_days != nil {
+		*m.addcsv_export_retention_days += i
+	} else {
+		m.addcsv_export_retention_days = &i
+	}
+}
+
+// AddedCsvExportRetentionDays returns the value that was added to the "csv_export_retention_days" field in this mutation.
+func (m *GroupMutation) AddedCsvExportRetentionDays() (r int, exists bool) {
+	v := m.addcsv_export_retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCsvExportRetentionDays resets all changes to the "csv_export_retention_days" field.
+func (m *GroupMutation) ResetCsvExportRetentionDays() {
+	m.csv_export_retention_days = nil
+	m.addcsv_export_retention_days = nil
+}
+
 // SetName sets the "name" field.
 func (m *GroupMutation) SetName(s string) {
 	m.name = &s
@@ -9780,6 +11199,60 @@ func (m *GroupMutation) OldCurrency(ctx context.Context) (v string, err error) {
 // ResetCurrency resets all changes to the "currency" field.
 func (m *GroupMutation) ResetCurrency() {
 	m.currency = nil
+}
+
+// AddCsvExportIDs adds the "csv_exports" edge to the CsvExport entity by ids.
+func (m *GroupMutation) AddCsvExportIDs(ids ...uuid.UUID) {
+	if m.csv_exports == nil {
+		m.csv_exports = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.csv_exports[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCsvExports clears the "csv_exports" edge to the CsvExport entity.
+func (m *GroupMutation) ClearCsvExports() {
+	m.clearedcsv_exports = true
+}
+
+// CsvExportsCleared reports if the "csv_exports" edge to the CsvExport entity was cleared.
+func (m *GroupMutation) CsvExportsCleared() bool {
+	return m.clearedcsv_exports
+}
+
+// RemoveCsvExportIDs removes the "csv_exports" edge to the CsvExport entity by IDs.
+func (m *GroupMutation) RemoveCsvExportIDs(ids ...uuid.UUID) {
+	if m.removedcsv_exports == nil {
+		m.removedcsv_exports = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.csv_exports, ids[i])
+		m.removedcsv_exports[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCsvExports returns the removed IDs of the "csv_exports" edge to the CsvExport entity.
+func (m *GroupMutation) RemovedCsvExportsIDs() (ids []uuid.UUID) {
+	for id := range m.removedcsv_exports {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CsvExportsIDs returns the "csv_exports" edge IDs in the mutation.
+func (m *GroupMutation) CsvExportsIDs() (ids []uuid.UUID) {
+	for id := range m.csv_exports {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCsvExports resets all changes to the "csv_exports" edge.
+func (m *GroupMutation) ResetCsvExports() {
+	m.csv_exports = nil
+	m.clearedcsv_exports = false
+	m.removedcsv_exports = nil
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
@@ -10248,12 +11721,15 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, group.FieldUpdatedAt)
+	}
+	if m.csv_export_retention_days != nil {
+		fields = append(fields, group.FieldCsvExportRetentionDays)
 	}
 	if m.name != nil {
 		fields = append(fields, group.FieldName)
@@ -10273,6 +11749,8 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case group.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case group.FieldCsvExportRetentionDays:
+		return m.CsvExportRetentionDays()
 	case group.FieldName:
 		return m.Name()
 	case group.FieldCurrency:
@@ -10290,6 +11768,8 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldCreatedAt(ctx)
 	case group.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case group.FieldCsvExportRetentionDays:
+		return m.OldCsvExportRetentionDays(ctx)
 	case group.FieldName:
 		return m.OldName(ctx)
 	case group.FieldCurrency:
@@ -10317,6 +11797,13 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case group.FieldCsvExportRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCsvExportRetentionDays(v)
+		return nil
 	case group.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -10338,13 +11825,21 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *GroupMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addcsv_export_retention_days != nil {
+		fields = append(fields, group.FieldCsvExportRetentionDays)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *GroupMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case group.FieldCsvExportRetentionDays:
+		return m.AddedCsvExportRetentionDays()
+	}
 	return nil, false
 }
 
@@ -10353,6 +11848,13 @@ func (m *GroupMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *GroupMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case group.FieldCsvExportRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCsvExportRetentionDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Group numeric field %s", name)
 }
@@ -10386,6 +11888,9 @@ func (m *GroupMutation) ResetField(name string) error {
 	case group.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case group.FieldCsvExportRetentionDays:
+		m.ResetCsvExportRetentionDays()
+		return nil
 	case group.FieldName:
 		m.ResetName()
 		return nil
@@ -10398,7 +11903,10 @@ func (m *GroupMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GroupMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
+	if m.csv_exports != nil {
+		edges = append(edges, group.EdgeCsvExports)
+	}
 	if m.users != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -10430,6 +11938,12 @@ func (m *GroupMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case group.EdgeCsvExports:
+		ids := make([]ent.Value, 0, len(m.csv_exports))
+		for id := range m.csv_exports {
+			ids = append(ids, id)
+		}
+		return ids
 	case group.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.users))
 		for id := range m.users {
@@ -10484,7 +11998,10 @@ func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GroupMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
+	if m.removedcsv_exports != nil {
+		edges = append(edges, group.EdgeCsvExports)
+	}
 	if m.removedusers != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -10516,6 +12033,12 @@ func (m *GroupMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case group.EdgeCsvExports:
+		ids := make([]ent.Value, 0, len(m.removedcsv_exports))
+		for id := range m.removedcsv_exports {
+			ids = append(ids, id)
+		}
+		return ids
 	case group.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.removedusers))
 		for id := range m.removedusers {
@@ -10570,7 +12093,10 @@ func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GroupMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
+	if m.clearedcsv_exports {
+		edges = append(edges, group.EdgeCsvExports)
+	}
 	if m.clearedusers {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -10602,6 +12128,8 @@ func (m *GroupMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *GroupMutation) EdgeCleared(name string) bool {
 	switch name {
+	case group.EdgeCsvExports:
+		return m.clearedcsv_exports
 	case group.EdgeUsers:
 		return m.clearedusers
 	case group.EdgeEntityTypes:
@@ -10634,6 +12162,9 @@ func (m *GroupMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *GroupMutation) ResetEdge(name string) error {
 	switch name {
+	case group.EdgeCsvExports:
+		m.ResetCsvExports()
+		return nil
 	case group.EdgeUsers:
 		m.ResetUsers()
 		return nil
@@ -15499,6 +17030,8 @@ type UserMutation struct {
 	id                           *uuid.UUID
 	created_at                   *time.Time
 	updated_at                   *time.Time
+	csv_export_retention_days    *int
+	addcsv_export_retention_days *int
 	name                         *string
 	email                        *string
 	password                     *string
@@ -15510,6 +17043,9 @@ type UserMutation struct {
 	default_group_id             *uuid.UUID
 	settings                     *map[string]interface{}
 	clearedFields                map[string]struct{}
+	csv_exports                  map[uuid.UUID]struct{}
+	removedcsv_exports           map[uuid.UUID]struct{}
+	clearedcsv_exports           bool
 	groups                       map[uuid.UUID]struct{}
 	removedgroups                map[uuid.UUID]struct{}
 	clearedgroups                bool
@@ -15704,6 +17240,62 @@ func (m *UserMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error
 // ResetUpdatedAt resets all changes to the "updated_at" field.
 func (m *UserMutation) ResetUpdatedAt() {
 	m.updated_at = nil
+}
+
+// SetCsvExportRetentionDays sets the "csv_export_retention_days" field.
+func (m *UserMutation) SetCsvExportRetentionDays(i int) {
+	m.csv_export_retention_days = &i
+	m.addcsv_export_retention_days = nil
+}
+
+// CsvExportRetentionDays returns the value of the "csv_export_retention_days" field in the mutation.
+func (m *UserMutation) CsvExportRetentionDays() (r int, exists bool) {
+	v := m.csv_export_retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCsvExportRetentionDays returns the old "csv_export_retention_days" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldCsvExportRetentionDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCsvExportRetentionDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCsvExportRetentionDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCsvExportRetentionDays: %w", err)
+	}
+	return oldValue.CsvExportRetentionDays, nil
+}
+
+// AddCsvExportRetentionDays adds i to the "csv_export_retention_days" field.
+func (m *UserMutation) AddCsvExportRetentionDays(i int) {
+	if m.addcsv_export_retention_days != nil {
+		*m.addcsv_export_retention_days += i
+	} else {
+		m.addcsv_export_retention_days = &i
+	}
+}
+
+// AddedCsvExportRetentionDays returns the value that was added to the "csv_export_retention_days" field in this mutation.
+func (m *UserMutation) AddedCsvExportRetentionDays() (r int, exists bool) {
+	v := m.addcsv_export_retention_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCsvExportRetentionDays resets all changes to the "csv_export_retention_days" field.
+func (m *UserMutation) ResetCsvExportRetentionDays() {
+	m.csv_export_retention_days = nil
+	m.addcsv_export_retention_days = nil
 }
 
 // SetName sets the "name" field.
@@ -16144,6 +17736,60 @@ func (m *UserMutation) ResetSettings() {
 	delete(m.clearedFields, user.FieldSettings)
 }
 
+// AddCsvExportIDs adds the "csv_exports" edge to the CsvExport entity by ids.
+func (m *UserMutation) AddCsvExportIDs(ids ...uuid.UUID) {
+	if m.csv_exports == nil {
+		m.csv_exports = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.csv_exports[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCsvExports clears the "csv_exports" edge to the CsvExport entity.
+func (m *UserMutation) ClearCsvExports() {
+	m.clearedcsv_exports = true
+}
+
+// CsvExportsCleared reports if the "csv_exports" edge to the CsvExport entity was cleared.
+func (m *UserMutation) CsvExportsCleared() bool {
+	return m.clearedcsv_exports
+}
+
+// RemoveCsvExportIDs removes the "csv_exports" edge to the CsvExport entity by IDs.
+func (m *UserMutation) RemoveCsvExportIDs(ids ...uuid.UUID) {
+	if m.removedcsv_exports == nil {
+		m.removedcsv_exports = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.csv_exports, ids[i])
+		m.removedcsv_exports[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCsvExports returns the removed IDs of the "csv_exports" edge to the CsvExport entity.
+func (m *UserMutation) RemovedCsvExportsIDs() (ids []uuid.UUID) {
+	for id := range m.removedcsv_exports {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CsvExportsIDs returns the "csv_exports" edge IDs in the mutation.
+func (m *UserMutation) CsvExportsIDs() (ids []uuid.UUID) {
+	for id := range m.csv_exports {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCsvExports resets all changes to the "csv_exports" edge.
+func (m *UserMutation) ResetCsvExports() {
+	m.csv_exports = nil
+	m.clearedcsv_exports = false
+	m.removedcsv_exports = nil
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by ids.
 func (m *UserMutation) AddGroupIDs(ids ...uuid.UUID) {
 	if m.groups == nil {
@@ -16448,12 +18094,15 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, user.FieldUpdatedAt)
+	}
+	if m.csv_export_retention_days != nil {
+		fields = append(fields, user.FieldCsvExportRetentionDays)
 	}
 	if m.name != nil {
 		fields = append(fields, user.FieldName)
@@ -16497,6 +18146,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case user.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case user.FieldCsvExportRetentionDays:
+		return m.CsvExportRetentionDays()
 	case user.FieldName:
 		return m.Name()
 	case user.FieldEmail:
@@ -16530,6 +18181,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldCreatedAt(ctx)
 	case user.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case user.FieldCsvExportRetentionDays:
+		return m.OldCsvExportRetentionDays(ctx)
 	case user.FieldName:
 		return m.OldName(ctx)
 	case user.FieldEmail:
@@ -16572,6 +18225,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case user.FieldCsvExportRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCsvExportRetentionDays(v)
 		return nil
 	case user.FieldName:
 		v, ok := value.(string)
@@ -16650,13 +18310,21 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *UserMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addcsv_export_retention_days != nil {
+		fields = append(fields, user.FieldCsvExportRetentionDays)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case user.FieldCsvExportRetentionDays:
+		return m.AddedCsvExportRetentionDays()
+	}
 	return nil, false
 }
 
@@ -16665,6 +18333,13 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case user.FieldCsvExportRetentionDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCsvExportRetentionDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown User numeric field %s", name)
 }
@@ -16737,6 +18412,9 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case user.FieldCsvExportRetentionDays:
+		m.ResetCsvExportRetentionDays()
+		return nil
 	case user.FieldName:
 		m.ResetName()
 		return nil
@@ -16773,7 +18451,10 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
+	if m.csv_exports != nil {
+		edges = append(edges, user.EdgeCsvExports)
+	}
 	if m.groups != nil {
 		edges = append(edges, user.EdgeGroups)
 	}
@@ -16796,6 +18477,12 @@ func (m *UserMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case user.EdgeCsvExports:
+		ids := make([]ent.Value, 0, len(m.csv_exports))
+		for id := range m.csv_exports {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeGroups:
 		ids := make([]ent.Value, 0, len(m.groups))
 		for id := range m.groups {
@@ -16832,7 +18519,10 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
+	if m.removedcsv_exports != nil {
+		edges = append(edges, user.EdgeCsvExports)
+	}
 	if m.removedgroups != nil {
 		edges = append(edges, user.EdgeGroups)
 	}
@@ -16855,6 +18545,12 @@ func (m *UserMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case user.EdgeCsvExports:
+		ids := make([]ent.Value, 0, len(m.removedcsv_exports))
+		for id := range m.removedcsv_exports {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeGroups:
 		ids := make([]ent.Value, 0, len(m.removedgroups))
 		for id := range m.removedgroups {
@@ -16891,7 +18587,10 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
+	if m.clearedcsv_exports {
+		edges = append(edges, user.EdgeCsvExports)
+	}
 	if m.clearedgroups {
 		edges = append(edges, user.EdgeGroups)
 	}
@@ -16914,6 +18613,8 @@ func (m *UserMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
+	case user.EdgeCsvExports:
+		return m.clearedcsv_exports
 	case user.EdgeGroups:
 		return m.clearedgroups
 	case user.EdgeAuthTokens:
@@ -16940,6 +18641,9 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
+	case user.EdgeCsvExports:
+		m.ResetCsvExports()
+		return nil
 	case user.EdgeGroups:
 		m.ResetGroups()
 		return nil

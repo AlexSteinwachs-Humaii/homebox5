@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
@@ -33,6 +34,7 @@ type GroupQuery struct {
 	order                []group.OrderOption
 	inters               []Interceptor
 	predicates           []predicate.Group
+	withCsvExports       *CsvExportQuery
 	withUsers            *UserQuery
 	withEntityTypes      *EntityTypeQuery
 	withEntities         *EntityQuery
@@ -76,6 +78,28 @@ func (_q *GroupQuery) Unique(unique bool) *GroupQuery {
 func (_q *GroupQuery) Order(o ...group.OrderOption) *GroupQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryCsvExports chains the current query on the "csv_exports" edge.
+func (_q *GroupQuery) QueryCsvExports() *CsvExportQuery {
+	query := (&CsvExportClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(csvexport.Table, csvexport.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.CsvExportsTable, group.CsvExportsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryUsers chains the current query on the "users" edge.
@@ -468,6 +492,7 @@ func (_q *GroupQuery) Clone() *GroupQuery {
 		order:                append([]group.OrderOption{}, _q.order...),
 		inters:               append([]Interceptor{}, _q.inters...),
 		predicates:           append([]predicate.Group{}, _q.predicates...),
+		withCsvExports:       _q.withCsvExports.Clone(),
 		withUsers:            _q.withUsers.Clone(),
 		withEntityTypes:      _q.withEntityTypes.Clone(),
 		withEntities:         _q.withEntities.Clone(),
@@ -481,6 +506,17 @@ func (_q *GroupQuery) Clone() *GroupQuery {
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithCsvExports tells the query-builder to eager-load the nodes that are connected to
+// the "csv_exports" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithCsvExports(opts ...func(*CsvExportQuery)) *GroupQuery {
+	query := (&CsvExportClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCsvExports = query
+	return _q
 }
 
 // WithUsers tells the query-builder to eager-load the nodes that are connected to
@@ -660,7 +696,8 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = _q.querySpec()
-		loadedTypes = [9]bool{
+		loadedTypes = [10]bool{
+			_q.withCsvExports != nil,
 			_q.withUsers != nil,
 			_q.withEntityTypes != nil,
 			_q.withEntities != nil,
@@ -689,6 +726,13 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
+	}
+	if query := _q.withCsvExports; query != nil {
+		if err := _q.loadCsvExports(ctx, query, nodes,
+			func(n *Group) { n.Edges.CsvExports = []*CsvExport{} },
+			func(n *Group, e *CsvExport) { n.Edges.CsvExports = append(n.Edges.CsvExports, e) }); err != nil {
+			return nil, err
+		}
 	}
 	if query := _q.withUsers; query != nil {
 		if err := _q.loadUsers(ctx, query, nodes,
@@ -758,6 +802,39 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	return nodes, nil
 }
 
+func (_q *GroupQuery) loadCsvExports(ctx context.Context, query *CsvExportQuery, nodes []*Group, init func(*Group), assign func(*Group, *CsvExport)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(csvexport.FieldGroupID)
+	}
+	query.Where(predicate.CsvExport(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.CsvExportsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *GroupQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Group, init func(*Group), assign func(*Group, *User)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[uuid.UUID]*Group)
