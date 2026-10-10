@@ -15,7 +15,7 @@ import (
 
 // CSVRetentionPolicy applies to future completions only, never existing artifacts.
 type CSVRetentionPolicy struct {
-	Days int `json:"days"`
+	Days int `json:"days" minimum:"1" maximum:"106751" default:"30" validate:"required"`
 }
 
 func (s *CSVExportService) policyAccess(ctx context.Context, uid uuid.UUID, gid *uuid.UUID) error {

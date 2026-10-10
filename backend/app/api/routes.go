@@ -142,14 +142,14 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			{"/group/csv-exports", false, userMW},
 			{"/users/self/csv-exports", true, csvPrivateMW},
 		} {
-			r.Get(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetention(scope.private, false), scope.middleware...))
-			r.Put(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetention(scope.private, true), scope.middleware...))
-			r.Post(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "create"), scope.middleware...))
-			r.Get(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "history"), scope.middleware...))
-			r.Get(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "status"), scope.middleware...))
-			r.Get(scope.prefix+"/{id}/download", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "download"), scope.middleware...))
-			r.Post(scope.prefix+"/{id}/retry", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "retry"), scope.middleware...))
-			r.Delete(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "delete"), scope.middleware...))
+			r.Get(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetentionGet(scope.private), scope.middleware...))
+			r.Put(scope.prefix+"/retention", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetentionPut(scope.private), scope.middleware...))
+			r.Post(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSVCreate(scope.private), scope.middleware...))
+			r.Get(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSVHistory(scope.private), scope.middleware...))
+			r.Get(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSVStatus(scope.private), scope.middleware...))
+			r.Get(scope.prefix+"/{id}/download", chain.ToHandlerFunc(v1Ctrl.HandleCSVDownload(scope.private), scope.middleware...))
+			r.Post(scope.prefix+"/{id}/retry", chain.ToHandlerFunc(v1Ctrl.HandleCSVRetry(scope.private), scope.middleware...))
+			r.Delete(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSVDelete(scope.private), scope.middleware...))
 		}
 
 		r.Get("/ws/events", chain.ToHandlerFunc(v1Ctrl.HandleCacheWS(), userMW...))

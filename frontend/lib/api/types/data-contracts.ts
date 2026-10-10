@@ -1,4 +1,4 @@
-/* post-processed by ./scripts/process-types.go */
+/* post-processed by backend/app/tools/typegen/main.go */
 /* eslint-disable */
 /* tslint:disable */
 // @ts-nocheck
@@ -22,6 +22,12 @@ export enum TemplatefieldType {
   TypeNumber = "number",
   TypeBoolean = "boolean",
   TypeTime = "time",
+}
+
+export enum CSVScope {
+  CSVCollection = "collection",
+  CSVAccountPrivate = "account-private",
+  CSVCrossCollection = "cross-collection",
 }
 
 export enum MaintenanceFilterStatus {
@@ -54,6 +60,22 @@ export enum EntityfieldType {
   TypeNumber = "number",
   TypeBoolean = "boolean",
   TypeTime = "time",
+}
+
+export enum CsvexportStatus {
+  DefaultStatus = "queued",
+  StatusQueued = "queued",
+  StatusRunning = "running",
+  StatusCompleted = "completed",
+  StatusGenerationFailed = "generation-failed",
+  StatusStorageFailed = "storage-failed",
+  StatusCleanupPending = "cleanup-pending",
+}
+
+export enum CsvexportScope {
+  ScopeCollection = "collection",
+  ScopeAccountPrivate = "account-private",
+  ScopeCrossCollection = "cross-collection",
 }
 
 export enum AuthrolesRole {
@@ -177,6 +199,51 @@ export interface EntAuthTokens {
 export interface EntAuthTokensEdges {
   /** Roles holds the value of the roles edge. */
   roles: EntAuthRoles;
+  /** User holds the value of the user edge. */
+  user: EntUser;
+}
+
+export interface EntCSVExport {
+  /** Attempts holds the value of the "attempts" field. */
+  attempts: number;
+  /** Capture holds the value of the "capture" field. */
+  capture: Record<string, any>;
+  /** CompletedAt holds the value of the "completed_at" field. */
+  completed_at: string;
+  /** CreatedAt holds the value of the "created_at" field. */
+  created_at: string;
+  /**
+   * Edges holds the relations/edges for other nodes in the graph.
+   * The values are being populated by the CSVExportQuery when eager-loading is set.
+   */
+  edges: EntCSVExportEdges;
+  /** ExpiresAt holds the value of the "expires_at" field. */
+  expires_at: string;
+  /** FailureCode holds the value of the "failure_code" field. */
+  failure_code: string;
+  /** GroupID holds the value of the "group_id" field. */
+  group_id: string;
+  /** ID of the ent. */
+  id: string;
+  /** RetryAt holds the value of the "retry_at" field. */
+  retry_at: string;
+  /** Scope holds the value of the "scope" field. */
+  scope: CsvexportScope;
+  /** SizeBytes holds the value of the "size_bytes" field. */
+  size_bytes: number;
+  /** Source holds the value of the "source" field. */
+  source: string;
+  /** Status holds the value of the "status" field. */
+  status: CsvexportStatus;
+  /** UpdatedAt holds the value of the "updated_at" field. */
+  updated_at: string;
+  /** UserID holds the value of the "user_id" field. */
+  user_id: string;
+}
+
+export interface EntCSVExportEdges {
+  /** Group holds the value of the group edge. */
+  group: EntGroup;
   /** User holds the value of the user edge. */
   user: EntUser;
 }
@@ -411,6 +478,8 @@ export interface EntExportEdges {
 export interface EntGroup {
   /** CreatedAt holds the value of the "created_at" field. */
   created_at: string;
+  /** CsvRetentionDays holds the value of the "csv_retention_days" field. */
+  csv_retention_days: number;
   /** Currency holds the value of the "currency" field. */
   currency: string;
   /**
@@ -427,6 +496,8 @@ export interface EntGroup {
 }
 
 export interface EntGroupEdges {
+  /** CsvExports holds the value of the csv_exports edge. */
+  csv_exports: EntCSVExport[];
   /** Entities holds the value of the entities edge. */
   entities: EntEntity[];
   /** EntityTemplates holds the value of the entity_templates edge. */
@@ -630,6 +701,8 @@ export interface EntUser {
   activated_on: string;
   /** CreatedAt holds the value of the "created_at" field. */
   created_at: string;
+  /** CsvRetentionDays holds the value of the "csv_retention_days" field. */
+  csv_retention_days: number;
   /** DefaultGroupID holds the value of the "default_group_id" field. */
   default_group_id: string;
   /**
@@ -662,6 +735,8 @@ export interface EntUserEdges {
   api_keys: EntAPIKey[];
   /** AuthTokens holds the value of the auth_tokens edge. */
   auth_tokens: EntAuthTokens[];
+  /** CsvExports holds the value of the csv_exports edge. */
+  csv_exports: EntCSVExport[];
   /** Groups holds the value of the groups edge. */
   groups: EntGroup[];
   /** Notifiers holds the value of the notifiers edge. */
@@ -1311,6 +1386,244 @@ export interface ValueOverTimeEntry {
   value: number;
 }
 
+export interface CSVArtifact {
+  /** @format date-time */
+  completedAt?: string | null;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  expiresAt?: string | null;
+  failureCode?: "source" | "encoding" | "spool" | "upload" | "metadata";
+  /** @format uuid */
+  id: string;
+  /** @format date-time */
+  retryAt?: string | null;
+  retryMode: "none" | "requester-explicit" | "automatic-or-requester-explicit";
+  scope: CsvexportScope;
+  sizeBytes: number;
+  source:
+    | "items"
+    | "locations"
+    | "dashboard-recent-items"
+    | "entity-inventory"
+    | "tag-inventory"
+    | "entity-hierarchy"
+    | "item-selector"
+    | "location-selector"
+    | "entity-selector"
+    | "tags"
+    | "tag-hierarchy"
+    | "tag-selector"
+    | "entity-types"
+    | "entity-type-selector"
+    | "templates"
+    | "template-selector"
+    | "maintenance"
+    | "entity-maintenance"
+    | "collection-members"
+    | "collection-invitations"
+    | "collection-notifiers"
+    | "entity-attachments"
+    | "entity-media"
+    | "backup-history"
+    | "collection-csv-history"
+    | "private-csv-history"
+    | "account-api-keys"
+    | "account-collections"
+    | "collection-selector";
+  status: CsvexportStatus;
+  /** @format date-time */
+  updatedAt: string;
+}
+
+export interface CSVCaptureRequest {
+  /** @format uuid */
+  collectionId?: string;
+  /** @minItems 1 */
+  columns: (
+    | "archived"
+    | "assetId"
+    | "color"
+    | "completedAt"
+    | "completedDate"
+    | "cost"
+    | "createdAt"
+    | "currency"
+    | "description"
+    | "email"
+    | "entityType"
+    | "expiresAt"
+    | "icon"
+    | "id"
+    | "insured"
+    | "isActive"
+    | "isLocation"
+    | "itemCount"
+    | "itemId"
+    | "itemName"
+    | "kind"
+    | "lastUsedAt"
+    | "location"
+    | "mimeType"
+    | "name"
+    | "parentId"
+    | "primary"
+    | "progress"
+    | "purchasePrice"
+    | "quantity"
+    | "scheduledDate"
+    | "sizeBytes"
+    | "soldDate"
+    | "source"
+    | "status"
+    | "tags"
+    | "title"
+    | "type"
+    | "updatedAt"
+    | "uses"
+  )[];
+  entities?: CSVEntityFilters;
+  hierarchy?: CSVHierarchyContext;
+  maintenance?: CSVMaintenanceFilters;
+  ordering?: CSVOrder[];
+  recent?: CSVRecentBoundary;
+  scope: "collection" | "account-private" | "cross-collection";
+  selector?: CSVSelectorCapture;
+  source:
+    | "items"
+    | "locations"
+    | "dashboard-recent-items"
+    | "entity-inventory"
+    | "tag-inventory"
+    | "entity-hierarchy"
+    | "item-selector"
+    | "location-selector"
+    | "entity-selector"
+    | "tags"
+    | "tag-hierarchy"
+    | "tag-selector"
+    | "entity-types"
+    | "entity-type-selector"
+    | "templates"
+    | "template-selector"
+    | "maintenance"
+    | "entity-maintenance"
+    | "collection-members"
+    | "collection-invitations"
+    | "collection-notifiers"
+    | "entity-attachments"
+    | "entity-media"
+    | "backup-history"
+    | "collection-csv-history"
+    | "private-csv-history"
+    | "account-api-keys"
+    | "account-collections"
+    | "collection-selector";
+  text?: CSVTextFilters;
+}
+
+export interface CSVEntityFilters {
+  assetId?: string;
+  fields?: CSVFieldFilter[];
+  filterChildren?: boolean;
+  includeArchived?: boolean;
+  isLocation?: boolean;
+  negateTags?: boolean;
+  onlyWithPhoto?: boolean;
+  onlyWithoutPhoto?: boolean;
+  parentIds?: string[];
+  parentItemIds?: string[];
+  search?: string;
+  tagIds?: string[];
+}
+
+export interface CSVFieldFilter {
+  name: string;
+  value: string;
+}
+
+export interface CSVHierarchyContext {
+  descendants?: boolean;
+  kind: string;
+  /** @format uuid */
+  rootId: string;
+}
+
+export interface CSVMaintenanceFilters {
+  status: "scheduled" | "completed" | "both";
+}
+
+export interface CSVOrder {
+  column:
+    | "archived"
+    | "assetId"
+    | "color"
+    | "completedAt"
+    | "completedDate"
+    | "cost"
+    | "createdAt"
+    | "currency"
+    | "description"
+    | "email"
+    | "entityType"
+    | "expiresAt"
+    | "icon"
+    | "id"
+    | "insured"
+    | "isActive"
+    | "isLocation"
+    | "itemCount"
+    | "itemId"
+    | "itemName"
+    | "kind"
+    | "lastUsedAt"
+    | "location"
+    | "mimeType"
+    | "name"
+    | "parentId"
+    | "primary"
+    | "progress"
+    | "purchasePrice"
+    | "quantity"
+    | "scheduledDate"
+    | "sizeBytes"
+    | "soldDate"
+    | "source"
+    | "status"
+    | "tags"
+    | "title"
+    | "type"
+    | "updatedAt"
+    | "uses";
+  direction: "asc" | "desc";
+}
+
+export interface CSVRecentBoundary {
+  /** @format date-time */
+  capturedAt: string;
+  recordIds: string[];
+}
+
+export interface CSVRetentionPolicy {
+  /**
+   * @min 1
+   * @max 106751
+   * @default 30
+   */
+  days: number;
+}
+
+export interface CSVSelectorCapture {
+  eligibility: "explicit-set";
+  eligibleIds: string[];
+  excludedIds?: string[];
+  kind: string;
+}
+
+export interface CSVTextFilters {
+  search?: string;
+}
+
 export interface Latest {
   date: Date | string;
   version: string;
@@ -1345,6 +1658,18 @@ export interface Build {
   buildTime: string;
   commit: string;
   version: string;
+}
+
+export interface CSVError {
+  code:
+    | "csv_invalid_capture"
+    | "csv_invalid_id"
+    | "csv_invalid_retention"
+    | "csv_unavailable"
+    | "csv_expired"
+    | "csv_not_ready"
+    | "csv_storage_unavailable"
+    | "csv_internal";
 }
 
 export interface ChangePassword {
@@ -1424,6 +1749,10 @@ export interface ResetPasswordRequest {
 
 export interface ResultsRepoExportOut {
   items: ExportOut[];
+}
+
+export interface ResultsServicesCSVArtifact {
+  items?: CSVArtifact[];
 }
 
 export interface TelemetryStatus {

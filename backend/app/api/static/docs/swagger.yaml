@@ -30,6 +30,34 @@ definitions:
     - RoleAdmin
     - RoleUser
     - RoleAttachments
+  csvexport.Scope:
+    enum:
+    - collection
+    - account-private
+    - cross-collection
+    type: string
+    x-enum-varnames:
+    - ScopeCollection
+    - ScopeAccountPrivate
+    - ScopeCrossCollection
+  csvexport.Status:
+    enum:
+    - queued
+    - queued
+    - running
+    - completed
+    - generation-failed
+    - storage-failed
+    - cleanup-pending
+    type: string
+    x-enum-varnames:
+    - DefaultStatus
+    - StatusQueued
+    - StatusRunning
+    - StatusCompleted
+    - StatusGenerationFailed
+    - StatusStorageFailed
+    - StatusCleanupPending
   currencies.Currency:
     properties:
       code:
@@ -180,6 +208,74 @@ definitions:
         allOf:
         - $ref: '#/definitions/ent.AuthRoles'
         description: Roles holds the value of the roles edge.
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.CSVExport:
+    properties:
+      attempts:
+        description: Attempts holds the value of the "attempts" field.
+        type: integer
+      capture:
+        additionalProperties: true
+        description: Capture holds the value of the "capture" field.
+        type: object
+      completed_at:
+        description: CompletedAt holds the value of the "completed_at" field.
+        type: string
+      created_at:
+        description: CreatedAt holds the value of the "created_at" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.CSVExportEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the CSVExportQuery when eager-loading is set.
+      expires_at:
+        description: ExpiresAt holds the value of the "expires_at" field.
+        type: string
+      failure_code:
+        description: FailureCode holds the value of the "failure_code" field.
+        type: string
+      group_id:
+        description: GroupID holds the value of the "group_id" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: string
+      retry_at:
+        description: RetryAt holds the value of the "retry_at" field.
+        type: string
+      scope:
+        allOf:
+        - $ref: '#/definitions/csvexport.Scope'
+        description: Scope holds the value of the "scope" field.
+      size_bytes:
+        description: SizeBytes holds the value of the "size_bytes" field.
+        type: integer
+      source:
+        description: Source holds the value of the "source" field.
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/csvexport.Status'
+        description: Status holds the value of the "status" field.
+      updated_at:
+        description: UpdatedAt holds the value of the "updated_at" field.
+        type: string
+      user_id:
+        description: UserID holds the value of the "user_id" field.
+        type: string
+    type: object
+  ent.CSVExportEdges:
+    properties:
+      group:
+        allOf:
+        - $ref: '#/definitions/ent.Group'
+        description: Group holds the value of the group edge.
       user:
         allOf:
         - $ref: '#/definitions/ent.User'
@@ -543,6 +639,10 @@ definitions:
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
         type: string
+      csv_retention_days:
+        description: CsvRetentionDays holds the value of the "csv_retention_days"
+          field.
+        type: integer
       currency:
         description: Currency holds the value of the "currency" field.
         type: string
@@ -564,6 +664,11 @@ definitions:
     type: object
   ent.GroupEdges:
     properties:
+      csv_exports:
+        description: CsvExports holds the value of the csv_exports edge.
+        items:
+          $ref: '#/definitions/ent.CSVExport'
+        type: array
       entities:
         description: Entities holds the value of the entities edge.
         items:
@@ -875,6 +980,10 @@ definitions:
       created_at:
         description: CreatedAt holds the value of the "created_at" field.
         type: string
+      csv_retention_days:
+        description: CsvRetentionDays holds the value of the "csv_retention_days"
+          field.
+        type: integer
       default_group_id:
         description: DefaultGroupID holds the value of the "default_group_id" field.
         type: string
@@ -924,6 +1033,11 @@ definitions:
         description: AuthTokens holds the value of the auth_tokens edge.
         items:
           $ref: '#/definitions/ent.AuthTokens'
+        type: array
+      csv_exports:
+        description: CsvExports holds the value of the csv_exports edge.
+        items:
+          $ref: '#/definitions/ent.CSVExport'
         type: array
       groups:
         description: Groups holds the value of the groups edge.
@@ -2122,6 +2236,386 @@ definitions:
       value:
         type: number
     type: object
+  services.CSVArtifact:
+    properties:
+      completedAt:
+        format: date-time
+        type: string
+        x-nullable: true
+      createdAt:
+        format: date-time
+        type: string
+      expiresAt:
+        format: date-time
+        type: string
+        x-nullable: true
+      failureCode:
+        enum:
+        - source
+        - encoding
+        - spool
+        - upload
+        - metadata
+        type: string
+      id:
+        format: uuid
+        type: string
+      retryAt:
+        format: date-time
+        type: string
+        x-nullable: true
+      retryMode:
+        enum:
+        - none
+        - requester-explicit
+        - automatic-or-requester-explicit
+        type: string
+      scope:
+        $ref: '#/definitions/csvexport.Scope'
+      sizeBytes:
+        type: integer
+      source:
+        enum:
+        - items
+        - locations
+        - dashboard-recent-items
+        - entity-inventory
+        - tag-inventory
+        - entity-hierarchy
+        - item-selector
+        - location-selector
+        - entity-selector
+        - tags
+        - tag-hierarchy
+        - tag-selector
+        - entity-types
+        - entity-type-selector
+        - templates
+        - template-selector
+        - maintenance
+        - entity-maintenance
+        - collection-members
+        - collection-invitations
+        - collection-notifiers
+        - entity-attachments
+        - entity-media
+        - backup-history
+        - collection-csv-history
+        - private-csv-history
+        - account-api-keys
+        - account-collections
+        - collection-selector
+        type: string
+      status:
+        $ref: '#/definitions/csvexport.Status'
+      updatedAt:
+        format: date-time
+        type: string
+    required:
+    - completedAt
+    - createdAt
+    - expiresAt
+    - id
+    - retryMode
+    - scope
+    - sizeBytes
+    - source
+    - status
+    - updatedAt
+    type: object
+  services.CSVCaptureRequest:
+    properties:
+      collectionId:
+        format: uuid
+        type: string
+      columns:
+        items:
+          enum:
+          - archived
+          - assetId
+          - color
+          - completedAt
+          - completedDate
+          - cost
+          - createdAt
+          - currency
+          - description
+          - email
+          - entityType
+          - expiresAt
+          - icon
+          - id
+          - insured
+          - isActive
+          - isLocation
+          - itemCount
+          - itemId
+          - itemName
+          - kind
+          - lastUsedAt
+          - location
+          - mimeType
+          - name
+          - parentId
+          - primary
+          - progress
+          - purchasePrice
+          - quantity
+          - scheduledDate
+          - sizeBytes
+          - soldDate
+          - source
+          - status
+          - tags
+          - title
+          - type
+          - updatedAt
+          - uses
+          type: string
+        minItems: 1
+        type: array
+      entities:
+        $ref: '#/definitions/services.CSVEntityFilters'
+      hierarchy:
+        $ref: '#/definitions/services.CSVHierarchyContext'
+      maintenance:
+        $ref: '#/definitions/services.CSVMaintenanceFilters'
+      ordering:
+        items:
+          $ref: '#/definitions/services.CSVOrder'
+        type: array
+      recent:
+        $ref: '#/definitions/services.CSVRecentBoundary'
+      scope:
+        allOf:
+        - $ref: '#/definitions/services.CSVScope'
+        enum:
+        - collection
+        - account-private
+        - cross-collection
+      selector:
+        $ref: '#/definitions/services.CSVSelectorCapture'
+      source:
+        enum:
+        - items
+        - locations
+        - dashboard-recent-items
+        - entity-inventory
+        - tag-inventory
+        - entity-hierarchy
+        - item-selector
+        - location-selector
+        - entity-selector
+        - tags
+        - tag-hierarchy
+        - tag-selector
+        - entity-types
+        - entity-type-selector
+        - templates
+        - template-selector
+        - maintenance
+        - entity-maintenance
+        - collection-members
+        - collection-invitations
+        - collection-notifiers
+        - entity-attachments
+        - entity-media
+        - backup-history
+        - collection-csv-history
+        - private-csv-history
+        - account-api-keys
+        - account-collections
+        - collection-selector
+        type: string
+      text:
+        $ref: '#/definitions/services.CSVTextFilters'
+    required:
+    - columns
+    - scope
+    - source
+    type: object
+  services.CSVEntityFilters:
+    properties:
+      assetId:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/services.CSVFieldFilter'
+        type: array
+      filterChildren:
+        type: boolean
+      includeArchived:
+        type: boolean
+      isLocation:
+        type: boolean
+      negateTags:
+        type: boolean
+      onlyWithPhoto:
+        type: boolean
+      onlyWithoutPhoto:
+        type: boolean
+      parentIds:
+        items:
+          type: string
+        type: array
+      parentItemIds:
+        items:
+          type: string
+        type: array
+      search:
+        type: string
+      tagIds:
+        items:
+          type: string
+        type: array
+    type: object
+  services.CSVFieldFilter:
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+    required:
+    - name
+    - value
+    type: object
+  services.CSVHierarchyContext:
+    properties:
+      descendants:
+        type: boolean
+      kind:
+        type: string
+      rootId:
+        format: uuid
+        type: string
+    required:
+    - kind
+    - rootId
+    type: object
+  services.CSVMaintenanceFilters:
+    properties:
+      status:
+        enum:
+        - scheduled
+        - completed
+        - both
+        type: string
+    required:
+    - status
+    type: object
+  services.CSVOrder:
+    properties:
+      column:
+        enum:
+        - archived
+        - assetId
+        - color
+        - completedAt
+        - completedDate
+        - cost
+        - createdAt
+        - currency
+        - description
+        - email
+        - entityType
+        - expiresAt
+        - icon
+        - id
+        - insured
+        - isActive
+        - isLocation
+        - itemCount
+        - itemId
+        - itemName
+        - kind
+        - lastUsedAt
+        - location
+        - mimeType
+        - name
+        - parentId
+        - primary
+        - progress
+        - purchasePrice
+        - quantity
+        - scheduledDate
+        - sizeBytes
+        - soldDate
+        - source
+        - status
+        - tags
+        - title
+        - type
+        - updatedAt
+        - uses
+        type: string
+      direction:
+        enum:
+        - asc
+        - desc
+        type: string
+    required:
+    - column
+    - direction
+    type: object
+  services.CSVRecentBoundary:
+    properties:
+      capturedAt:
+        format: date-time
+        type: string
+      recordIds:
+        items:
+          type: string
+        type: array
+    required:
+    - capturedAt
+    - recordIds
+    type: object
+  services.CSVRetentionPolicy:
+    properties:
+      days:
+        default: 30
+        maximum: 106751
+        minimum: 1
+        type: integer
+    required:
+    - days
+    type: object
+  services.CSVScope:
+    enum:
+    - collection
+    - account-private
+    - cross-collection
+    type: string
+    x-enum-varnames:
+    - CSVCollection
+    - CSVAccountPrivate
+    - CSVCrossCollection
+  services.CSVSelectorCapture:
+    properties:
+      eligibility:
+        enum:
+        - explicit-set
+        type: string
+      eligibleIds:
+        items:
+          type: string
+        type: array
+      excludedIds:
+        items:
+          type: string
+        type: array
+      kind:
+        type: string
+    required:
+    - eligibility
+    - eligibleIds
+    - kind
+    type: object
+  services.CSVTextFilters:
+    properties:
+      search:
+        type: string
+    type: object
   services.Latest:
     properties:
       date:
@@ -2202,6 +2696,22 @@ definitions:
         type: string
       version:
         type: string
+    type: object
+  v1.CSVError:
+    properties:
+      code:
+        enum:
+        - csv_invalid_capture
+        - csv_invalid_id
+        - csv_invalid_retention
+        - csv_unavailable
+        - csv_expired
+        - csv_not_ready
+        - csv_storage_unavailable
+        - csv_internal
+        type: string
+    required:
+    - code
     type: object
   v1.ChangePassword:
     properties:
@@ -2319,6 +2829,13 @@ definitions:
       items:
         items:
           $ref: '#/definitions/repo.ExportOut'
+        type: array
+    type: object
+  v1.Results-services_CSVArtifact:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/services.CSVArtifact'
         type: array
     type: object
   v1.TelemetryStatus:
@@ -3077,6 +3594,439 @@ paths:
       summary: Update Entity Type
       tags:
       - Entity Types
+  /v1/group/csv-exports:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404).
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/v1.Results-services_CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: List currently authorized CSV artifacts
+      tags:
+      - CSV exports
+    post:
+      consumes:
+      - application/json
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Unknown/duplicate keys, unsupported
+        columns and pagination are rejected. Source-dependent rules are defined in
+        the CSV consumption guide and source coverage matrix.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Validated source capture
+        in: body
+        name: capture
+        required: true
+        schema:
+          $ref: '#/definitions/services.CSVCaptureRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Capture and enqueue a CSV export
+      tags:
+      - CSV exports
+  /v1/group/csv-exports/{id}:
+    delete:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). 202 has an empty body and means
+        cleanup-pending, not confirmed blob removal; repeated scoped missing deletion
+        succeeds.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Empty body
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Accept durable deletion intent
+      tags:
+      - CSV exports
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404).
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Observe CSV lifecycle
+      tags:
+      - CSV exports
+  /v1/group/csv-exports/{id}/download:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Returns text/csv UTF-8 attachment
+        bytes, not JSON or a redirect. Authorization is rechecked and freshly generated
+        canonical bytes must match retained bytes; changed data can deny download.
+        Expiry is enforced at or after expiresAt (410). Local-save/network failures
+        do not change server lifecycle.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Download canonical retained CSV bytes
+      tags:
+      - CSV exports
+  /v1/group/csv-exports/{id}/retry:
+    post:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). 202 has an empty body. Only
+        the requester may retry generation-failed or storage-failed; other states
+        return 409.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Empty body
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Accept an explicit requester retry
+      tags:
+      - CSV exports
+  /v1/group/csv-exports/retention:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Collection policy requires current
+        ownership; private policy works without a collection. Default 30, positive
+        whole days up to 106751. Policy is selected at completion and expiry is fixed
+        thereafter.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVRetentionPolicy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Read CSV retention policy
+      tags:
+      - CSV exports
+    put:
+      consumes:
+      - application/json
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Collection policy requires current
+        ownership; private policy works without a collection. Default 30, positive
+        whole days up to 106751. Policy is selected at completion and expiry is fixed
+        thereafter.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Whole-day retention
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/services.CSVRetentionPolicy'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVRetentionPolicy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Configure CSV retention policy
+      tags:
+      - CSV exports
   /v1/group/exports:
     get:
       description: Returns export job rows for the caller's group, newest first.
@@ -4278,6 +5228,439 @@ paths:
       summary: Delete API Key
       tags:
       - User
+  /v1/users/self/csv-exports:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404).
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/v1.Results-services_CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: List currently authorized CSV artifacts
+      tags:
+      - CSV exports
+    post:
+      consumes:
+      - application/json
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Unknown/duplicate keys, unsupported
+        columns and pagination are rejected. Source-dependent rules are defined in
+        the CSV consumption guide and source coverage matrix.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Validated source capture
+        in: body
+        name: capture
+        required: true
+        schema:
+          $ref: '#/definitions/services.CSVCaptureRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Capture and enqueue a CSV export
+      tags:
+      - CSV exports
+  /v1/users/self/csv-exports/{id}:
+    delete:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). 202 has an empty body and means
+        cleanup-pending, not confirmed blob removal; repeated scoped missing deletion
+        succeeds.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Empty body
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Accept durable deletion intent
+      tags:
+      - CSV exports
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404).
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVArtifact'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Observe CSV lifecycle
+      tags:
+      - CSV exports
+  /v1/users/self/csv-exports/{id}/download:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Returns text/csv UTF-8 attachment
+        bytes, not JSON or a redirect. Authorization is rechecked and freshly generated
+        canonical bytes must match retained bytes; changed data can deny download.
+        Expiry is enforced at or after expiresAt (410). Local-save/network failures
+        do not change server lifecycle.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Download canonical retained CSV bytes
+      tags:
+      - CSV exports
+  /v1/users/self/csv-exports/{id}/retry:
+    post:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). 202 has an empty body. Only
+        the requester may retry generation-failed or storage-failed; other states
+        return 409.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Artifact UUID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Empty body
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Accept an explicit requester retry
+      tags:
+      - CSV exports
+  /v1/users/self/csv-exports/retention:
+    get:
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Collection policy requires current
+        ownership; private policy works without a collection. Default 30, positive
+        whole days up to 106751. Policy is selected at completion and expiry is fixed
+        thereafter.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVRetentionPolicy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Read CSV retention policy
+      tags:
+      - CSV exports
+    put:
+      consumes:
+      - application/json
+      description: Collection routes require current membership and source permissions;
+        X-Tenant selects the collection. Private routes need no tenant and use the
+        authenticated user only. Errors use safe codes; unavailable authorization
+        is indistinguishable from missing data (404). Collection policy requires current
+        ownership; private policy works without a collection. Default 30, positive
+        whole days up to 106751. Policy is selected at completion and expiry is fixed
+        thereafter.
+      parameters:
+      - description: Collection UUID for collection routes only; capture.collectionId
+          must match
+        in: header
+        name: X-Tenant
+        type: string
+      - description: Whole-day retention
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/services.CSVRetentionPolicy'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/services.CSVRetentionPolicy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.CSVError'
+      security:
+      - Bearer: []
+      summary: Configure CSV retention policy
+      tags:
+      - CSV exports
   /v1/users/self/settings:
     get:
       produces:

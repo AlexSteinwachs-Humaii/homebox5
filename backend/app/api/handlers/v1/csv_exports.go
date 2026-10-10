@@ -35,12 +35,12 @@ func (ctrl *V1Controller) HandleCSV(private bool, operation string) errchain.Han
 			case errors.Is(err, services.ErrCSVStorage):
 				status, code = http.StatusServiceUnavailable, "csv_storage_unavailable"
 			}
-			return server.JSON(w, status, map[string]string{"code": code})
+			return server.JSON(w, status, CSVError{Code: code})
 		}
 		if operation == "create" {
 			capture, err := services.DecodeCSVCapture(r.Body)
 			if err != nil {
-				return server.JSON(w, http.StatusBadRequest, map[string]string{"code": "csv_invalid_capture"})
+				return server.JSON(w, http.StatusBadRequest, CSVError{Code: "csv_invalid_capture"})
 			}
 			if (private && capture.CollectionID != nil) || (!private && (capture.CollectionID == nil || *capture.CollectionID != ctx.GID)) {
 				return fail(services.ErrCSVAccess)
@@ -61,7 +61,7 @@ func (ctrl *V1Controller) HandleCSV(private bool, operation string) errchain.Han
 		}
 		id, err := ctrl.routeID(r)
 		if err != nil {
-			return server.JSON(w, http.StatusBadRequest, map[string]string{"code": "csv_invalid_id"})
+			return server.JSON(w, http.StatusBadRequest, CSVError{Code: "csv_invalid_id"})
 		}
 		switch operation {
 		case "status":

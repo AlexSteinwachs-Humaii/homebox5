@@ -1155,6 +1155,594 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/group/csv-exports": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "List currently authorized CSV artifacts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/v1.Results-services_CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Unknown/duplicate keys, unsupported columns and pagination are rejected. Source-dependent rules are defined in the CSV consumption guide and source coverage matrix.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Capture and enqueue a CSV export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Validated source capture",
+                        "name": "capture",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVCaptureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/group/csv-exports/retention": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Collection policy requires current ownership; private policy works without a collection. Default 30, positive whole days up to 106751. Policy is selected at completion and expiry is fixed thereafter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Read CSV retention policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Collection policy requires current ownership; private policy works without a collection. Default 30, positive whole days up to 106751. Policy is selected at completion and expiry is fixed thereafter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Configure CSV retention policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Whole-day retention",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/group/csv-exports/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Observe CSV lifecycle",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). 202 has an empty body and means cleanup-pending, not confirmed blob removal; repeated scoped missing deletion succeeds.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Accept durable deletion intent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Empty body"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/group/csv-exports/{id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Returns text/csv UTF-8 attachment bytes, not JSON or a redirect. Authorization is rechecked and freshly generated canonical bytes must match retained bytes; changed data can deny download. Expiry is enforced at or after expiresAt (410). Local-save/network failures do not change server lifecycle.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Download canonical retained CSV bytes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/group/csv-exports/{id}/retry": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). 202 has an empty body. Only the requester may retry generation-failed or storage-failed; other states return 409.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Accept an explicit requester retry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Empty body"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/group/exports": {
             "get": {
                 "security": [
@@ -3111,6 +3699,594 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/users/self/csv-exports": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "List currently authorized CSV artifacts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/v1.Results-services_CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Unknown/duplicate keys, unsupported columns and pagination are rejected. Source-dependent rules are defined in the CSV consumption guide and source coverage matrix.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Capture and enqueue a CSV export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Validated source capture",
+                        "name": "capture",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVCaptureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/self/csv-exports/retention": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Collection policy requires current ownership; private policy works without a collection. Default 30, positive whole days up to 106751. Policy is selected at completion and expiry is fixed thereafter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Read CSV retention policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Collection policy requires current ownership; private policy works without a collection. Default 30, positive whole days up to 106751. Policy is selected at completion and expiry is fixed thereafter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Configure CSV retention policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Whole-day retention",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVRetentionPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/self/csv-exports/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Observe CSV lifecycle",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/services.CSVArtifact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). 202 has an empty body and means cleanup-pending, not confirmed blob removal; repeated scoped missing deletion succeeds.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Accept durable deletion intent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Empty body"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/self/csv-exports/{id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). Returns text/csv UTF-8 attachment bytes, not JSON or a redirect. Authorization is rechecked and freshly generated canonical bytes must match retained bytes; changed data can deny download. Expiry is enforced at or after expiresAt (410). Local-save/network failures do not change server lifecycle.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Download canonical retained CSV bytes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/self/csv-exports/{id}/retry": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Collection routes require current membership and source permissions; X-Tenant selects the collection. Private routes need no tenant and use the authenticated user only. Errors use safe codes; unavailable authorization is indistinguishable from missing data (404). 202 has an empty body. Only the requester may retry generation-failed or storage-failed; other states return 409.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSV exports"
+                ],
+                "summary": "Accept an explicit requester retry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection UUID for collection routes only; capture.collectionId must match",
+                        "name": "X-Tenant",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Artifact UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Empty body"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CSVError"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users/self/settings": {
             "get": {
                 "security": [
@@ -3231,6 +4407,40 @@ const docTemplate = `{
                 "RoleAdmin",
                 "RoleUser",
                 "RoleAttachments"
+            ]
+        },
+        "csvexport.Scope": {
+            "type": "string",
+            "enum": [
+                "collection",
+                "account-private",
+                "cross-collection"
+            ],
+            "x-enum-varnames": [
+                "ScopeCollection",
+                "ScopeAccountPrivate",
+                "ScopeCrossCollection"
+            ]
+        },
+        "csvexport.Status": {
+            "type": "string",
+            "enum": [
+                "queued",
+                "queued",
+                "running",
+                "completed",
+                "generation-failed",
+                "storage-failed",
+                "cleanup-pending"
+            ],
+            "x-enum-varnames": [
+                "DefaultStatus",
+                "StatusQueued",
+                "StatusRunning",
+                "StatusCompleted",
+                "StatusGenerationFailed",
+                "StatusStorageFailed",
+                "StatusCleanupPending"
             ]
         },
         "currencies.Currency": {
@@ -3459,6 +4669,109 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/ent.AuthRoles"
+                        }
+                    ]
+                },
+                "user": {
+                    "description": "User holds the value of the user edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.CSVExport": {
+            "type": "object",
+            "properties": {
+                "attempts": {
+                    "description": "Attempts holds the value of the \"attempts\" field.",
+                    "type": "integer"
+                },
+                "capture": {
+                    "description": "Capture holds the value of the \"capture\" field.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "completed_at": {
+                    "description": "CompletedAt holds the value of the \"completed_at\" field.",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CSVExportQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CSVExportEdges"
+                        }
+                    ]
+                },
+                "expires_at": {
+                    "description": "ExpiresAt holds the value of the \"expires_at\" field.",
+                    "type": "string"
+                },
+                "failure_code": {
+                    "description": "FailureCode holds the value of the \"failure_code\" field.",
+                    "type": "string"
+                },
+                "group_id": {
+                    "description": "GroupID holds the value of the \"group_id\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "retry_at": {
+                    "description": "RetryAt holds the value of the \"retry_at\" field.",
+                    "type": "string"
+                },
+                "scope": {
+                    "description": "Scope holds the value of the \"scope\" field.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/csvexport.Scope"
+                        }
+                    ]
+                },
+                "size_bytes": {
+                    "description": "SizeBytes holds the value of the \"size_bytes\" field.",
+                    "type": "integer"
+                },
+                "source": {
+                    "description": "Source holds the value of the \"source\" field.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status holds the value of the \"status\" field.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/csvexport.Status"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "UserID holds the value of the \"user_id\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.CSVExportEdges": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "description": "Group holds the value of the group edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Group"
                         }
                     ]
                 },
@@ -3985,6 +5298,10 @@ const docTemplate = `{
                     "description": "CreatedAt holds the value of the \"created_at\" field.",
                     "type": "string"
                 },
+                "csv_retention_days": {
+                    "description": "CsvRetentionDays holds the value of the \"csv_retention_days\" field.",
+                    "type": "integer"
+                },
                 "currency": {
                     "description": "Currency holds the value of the \"currency\" field.",
                     "type": "string"
@@ -4014,6 +5331,13 @@ const docTemplate = `{
         "ent.GroupEdges": {
             "type": "object",
             "properties": {
+                "csv_exports": {
+                    "description": "CsvExports holds the value of the csv_exports edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CSVExport"
+                    }
+                },
                 "entities": {
                     "description": "Entities holds the value of the entities edge.",
                     "type": "array",
@@ -4470,6 +5794,10 @@ const docTemplate = `{
                     "description": "CreatedAt holds the value of the \"created_at\" field.",
                     "type": "string"
                 },
+                "csv_retention_days": {
+                    "description": "CsvRetentionDays holds the value of the \"csv_retention_days\" field.",
+                    "type": "integer"
+                },
                 "default_group_id": {
                     "description": "DefaultGroupID holds the value of the \"default_group_id\" field.",
                     "type": "string"
@@ -4536,6 +5864,13 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/ent.AuthTokens"
+                    }
+                },
+                "csv_exports": {
+                    "description": "CsvExports holds the value of the csv_exports edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.CSVExport"
                     }
                 },
                 "groups": {
@@ -6277,6 +7612,493 @@ const docTemplate = `{
                 }
             }
         },
+        "services.CSVArtifact": {
+            "type": "object",
+            "required": [
+                "completedAt",
+                "createdAt",
+                "expiresAt",
+                "id",
+                "retryMode",
+                "scope",
+                "sizeBytes",
+                "source",
+                "status",
+                "updatedAt"
+            ],
+            "properties": {
+                "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "failureCode": {
+                    "type": "string",
+                    "enum": [
+                        "source",
+                        "encoding",
+                        "spool",
+                        "upload",
+                        "metadata"
+                    ]
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "retryAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "x-nullable": true
+                },
+                "retryMode": {
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "requester-explicit",
+                        "automatic-or-requester-explicit"
+                    ]
+                },
+                "scope": {
+                    "$ref": "#/definitions/csvexport.Scope"
+                },
+                "sizeBytes": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "items",
+                        "locations",
+                        "dashboard-recent-items",
+                        "entity-inventory",
+                        "tag-inventory",
+                        "entity-hierarchy",
+                        "item-selector",
+                        "location-selector",
+                        "entity-selector",
+                        "tags",
+                        "tag-hierarchy",
+                        "tag-selector",
+                        "entity-types",
+                        "entity-type-selector",
+                        "templates",
+                        "template-selector",
+                        "maintenance",
+                        "entity-maintenance",
+                        "collection-members",
+                        "collection-invitations",
+                        "collection-notifiers",
+                        "entity-attachments",
+                        "entity-media",
+                        "backup-history",
+                        "collection-csv-history",
+                        "private-csv-history",
+                        "account-api-keys",
+                        "account-collections",
+                        "collection-selector"
+                    ]
+                },
+                "status": {
+                    "$ref": "#/definitions/csvexport.Status"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "services.CSVCaptureRequest": {
+            "type": "object",
+            "required": [
+                "columns",
+                "scope",
+                "source"
+            ],
+            "properties": {
+                "collectionId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "columns": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "archived",
+                            "assetId",
+                            "color",
+                            "completedAt",
+                            "completedDate",
+                            "cost",
+                            "createdAt",
+                            "currency",
+                            "description",
+                            "email",
+                            "entityType",
+                            "expiresAt",
+                            "icon",
+                            "id",
+                            "insured",
+                            "isActive",
+                            "isLocation",
+                            "itemCount",
+                            "itemId",
+                            "itemName",
+                            "kind",
+                            "lastUsedAt",
+                            "location",
+                            "mimeType",
+                            "name",
+                            "parentId",
+                            "primary",
+                            "progress",
+                            "purchasePrice",
+                            "quantity",
+                            "scheduledDate",
+                            "sizeBytes",
+                            "soldDate",
+                            "source",
+                            "status",
+                            "tags",
+                            "title",
+                            "type",
+                            "updatedAt",
+                            "uses"
+                        ]
+                    }
+                },
+                "entities": {
+                    "$ref": "#/definitions/services.CSVEntityFilters"
+                },
+                "hierarchy": {
+                    "$ref": "#/definitions/services.CSVHierarchyContext"
+                },
+                "maintenance": {
+                    "$ref": "#/definitions/services.CSVMaintenanceFilters"
+                },
+                "ordering": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.CSVOrder"
+                    }
+                },
+                "recent": {
+                    "$ref": "#/definitions/services.CSVRecentBoundary"
+                },
+                "scope": {
+                    "enum": [
+                        "collection",
+                        "account-private",
+                        "cross-collection"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/services.CSVScope"
+                        }
+                    ]
+                },
+                "selector": {
+                    "$ref": "#/definitions/services.CSVSelectorCapture"
+                },
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "items",
+                        "locations",
+                        "dashboard-recent-items",
+                        "entity-inventory",
+                        "tag-inventory",
+                        "entity-hierarchy",
+                        "item-selector",
+                        "location-selector",
+                        "entity-selector",
+                        "tags",
+                        "tag-hierarchy",
+                        "tag-selector",
+                        "entity-types",
+                        "entity-type-selector",
+                        "templates",
+                        "template-selector",
+                        "maintenance",
+                        "entity-maintenance",
+                        "collection-members",
+                        "collection-invitations",
+                        "collection-notifiers",
+                        "entity-attachments",
+                        "entity-media",
+                        "backup-history",
+                        "collection-csv-history",
+                        "private-csv-history",
+                        "account-api-keys",
+                        "account-collections",
+                        "collection-selector"
+                    ]
+                },
+                "text": {
+                    "$ref": "#/definitions/services.CSVTextFilters"
+                }
+            }
+        },
+        "services.CSVEntityFilters": {
+            "type": "object",
+            "properties": {
+                "assetId": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.CSVFieldFilter"
+                    }
+                },
+                "filterChildren": {
+                    "type": "boolean"
+                },
+                "includeArchived": {
+                    "type": "boolean"
+                },
+                "isLocation": {
+                    "type": "boolean"
+                },
+                "negateTags": {
+                    "type": "boolean"
+                },
+                "onlyWithPhoto": {
+                    "type": "boolean"
+                },
+                "onlyWithoutPhoto": {
+                    "type": "boolean"
+                },
+                "parentIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "parentItemIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "search": {
+                    "type": "string"
+                },
+                "tagIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "services.CSVFieldFilter": {
+            "type": "object",
+            "required": [
+                "name",
+                "value"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.CSVHierarchyContext": {
+            "type": "object",
+            "required": [
+                "kind",
+                "rootId"
+            ],
+            "properties": {
+                "descendants": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "rootId": {
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "services.CSVMaintenanceFilters": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "scheduled",
+                        "completed",
+                        "both"
+                    ]
+                }
+            }
+        },
+        "services.CSVOrder": {
+            "type": "object",
+            "required": [
+                "column",
+                "direction"
+            ],
+            "properties": {
+                "column": {
+                    "type": "string",
+                    "enum": [
+                        "archived",
+                        "assetId",
+                        "color",
+                        "completedAt",
+                        "completedDate",
+                        "cost",
+                        "createdAt",
+                        "currency",
+                        "description",
+                        "email",
+                        "entityType",
+                        "expiresAt",
+                        "icon",
+                        "id",
+                        "insured",
+                        "isActive",
+                        "isLocation",
+                        "itemCount",
+                        "itemId",
+                        "itemName",
+                        "kind",
+                        "lastUsedAt",
+                        "location",
+                        "mimeType",
+                        "name",
+                        "parentId",
+                        "primary",
+                        "progress",
+                        "purchasePrice",
+                        "quantity",
+                        "scheduledDate",
+                        "sizeBytes",
+                        "soldDate",
+                        "source",
+                        "status",
+                        "tags",
+                        "title",
+                        "type",
+                        "updatedAt",
+                        "uses"
+                    ]
+                },
+                "direction": {
+                    "type": "string",
+                    "enum": [
+                        "asc",
+                        "desc"
+                    ]
+                }
+            }
+        },
+        "services.CSVRecentBoundary": {
+            "type": "object",
+            "required": [
+                "capturedAt",
+                "recordIds"
+            ],
+            "properties": {
+                "capturedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "recordIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "services.CSVRetentionPolicy": {
+            "type": "object",
+            "required": [
+                "days"
+            ],
+            "properties": {
+                "days": {
+                    "type": "integer",
+                    "default": 30,
+                    "maximum": 106751,
+                    "minimum": 1
+                }
+            }
+        },
+        "services.CSVScope": {
+            "type": "string",
+            "enum": [
+                "collection",
+                "account-private",
+                "cross-collection"
+            ],
+            "x-enum-varnames": [
+                "CSVCollection",
+                "CSVAccountPrivate",
+                "CSVCrossCollection"
+            ]
+        },
+        "services.CSVSelectorCapture": {
+            "type": "object",
+            "required": [
+                "eligibility",
+                "eligibleIds",
+                "kind"
+            ],
+            "properties": {
+                "eligibility": {
+                    "type": "string",
+                    "enum": [
+                        "explicit-set"
+                    ]
+                },
+                "eligibleIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "excludedIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kind": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.CSVTextFilters": {
+            "type": "object",
+            "properties": {
+                "search": {
+                    "type": "string"
+                }
+            }
+        },
         "services.Latest": {
             "type": "object",
             "properties": {
@@ -6393,6 +8215,27 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "v1.CSVError": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": [
+                        "csv_invalid_capture",
+                        "csv_invalid_id",
+                        "csv_invalid_retention",
+                        "csv_unavailable",
+                        "csv_expired",
+                        "csv_not_ready",
+                        "csv_storage_unavailable",
+                        "csv_internal"
+                    ]
                 }
             }
         },
@@ -6565,6 +8408,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/repo.ExportOut"
+                    }
+                }
+            }
+        },
+        "v1.Results-services_CSVArtifact": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.CSVArtifact"
                     }
                 }
             }

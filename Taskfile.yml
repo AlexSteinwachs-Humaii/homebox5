@@ -31,16 +31,17 @@ tasks:
     cmds:
       - swag init --dir={{ .API }},{{ .INTERNAL }}/core/services,{{ .INTERNAL }}/data/repo --parseDependency
       - npx -y -p swagger2openapi swagger2openapi --outfile ./docs/openapi-3.json ./docs/swagger.json
-      - npx -y -p swagger2openapi swagger2openapi --yaml --outfile ./docs/openapi-3.yaml ./docs/swagger.json
+      - cd ../../../ && go run ./app/tools/csvopenapi ./app/api/static/docs/openapi-3.json ./app/api/static/docs/openapi-3.yaml
       - cp -r ./docs/swagger.json ../../../../docs/public/api/swagger-2.0.json
       - cp -r ./docs/swagger.yaml ../../../../docs/public/api/swagger-2.0.yaml
       - cp -r ./docs/openapi-3.json ../../../../docs/public/api/openapi-3.0.json
       - cp -r ./docs/openapi-3.yaml ../../../../docs/public/api/openapi-3.0.yaml
     sources:
-      - "./backend/app/api/**/*"
-      - "./backend/internal/data/**"
-      - "./backend/internal/core/services/**/*"
-      - "./backend/app/tools/typegen/main.go"
+      - "{{.ROOT_DIR}}/backend/app/api/**/*"
+      - "{{.ROOT_DIR}}/backend/internal/data/**"
+      - "{{.ROOT_DIR}}/backend/internal/core/services/**/*"
+      - "{{.ROOT_DIR}}/backend/app/tools/typegen/main.go"
+      - "{{.ROOT_DIR}}/backend/app/tools/csvopenapi/**"
   typescript-types:
     desc: Generates typescript types from swagger definition
     cmds:

@@ -50,9 +50,9 @@ const (
 // contract; executable row adapters are implemented by subsequent stories.
 // Columns are an explicit projection, never reflection over an Ent object/DTO.
 type CSVSourceSpec struct {
-	Source            CSVSource   `json:"source"`
+	Source            CSVSource   `json:"source" enums:"items,locations,dashboard-recent-items,entity-inventory,tag-inventory,entity-hierarchy,item-selector,location-selector,entity-selector,tags,tag-hierarchy,tag-selector,entity-types,entity-type-selector,templates,template-selector,maintenance,entity-maintenance,collection-members,collection-invitations,collection-notifiers,entity-attachments,entity-media,backup-history,collection-csv-history,private-csv-history,account-api-keys,account-collections,collection-selector"`
 	Adapter           CSVAdapter  `json:"adapter"`
-	Scope             CSVScope    `json:"scope"`
+	Scope             CSVScope    `json:"scope" enums:"collection,account-private,cross-collection"`
 	Access            CSVAccess   `json:"access"`
 	Columns           []CSVColumn `json:"columns"`
 	OrderColumns      []CSVColumn `json:"orderColumns"`
@@ -190,23 +190,23 @@ type CSVEntityFilters struct {
 	FilterChildren   bool             `json:"filterChildren,omitempty"`
 }
 type CSVFieldFilter struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string `validate:"required" json:"name"`
+	Value string `validate:"required" json:"value"`
 }
 type CSVTextFilters struct {
 	Search string `json:"search"`
 }
 
 type CSVMaintenanceFilters struct {
-	Status string `json:"status"`
+	Status string `validate:"required" json:"status" enums:"scheduled,completed,both"`
 }
 type CSVOrder struct {
-	Column    CSVColumn `json:"column"`
-	Direction string    `json:"direction"`
+	Column    CSVColumn `validate:"required" json:"column" enums:"archived,assetId,color,completedAt,completedDate,cost,createdAt,currency,description,email,entityType,expiresAt,icon,id,insured,isActive,isLocation,itemCount,itemId,itemName,kind,lastUsedAt,location,mimeType,name,parentId,primary,progress,purchasePrice,quantity,scheduledDate,sizeBytes,soldDate,source,status,tags,title,type,updatedAt,uses"`
+	Direction string    `validate:"required" json:"direction" enums:"asc,desc"`
 }
 type CSVHierarchyContext struct {
-	Kind        string    `json:"kind"`
-	RootID      uuid.UUID `json:"rootId"`
+	Kind        string    `validate:"required" json:"kind"`
+	RootID      uuid.UUID `validate:"required" json:"rootId" format:"uuid"`
 	Descendants bool      `json:"descendants"`
 }
 
@@ -214,9 +214,9 @@ type CSVHierarchyContext struct {
 // Adapters must verify the policy/context and exclusions against the originating
 // selector operation. An empty eligible set must never mean unrestricted.
 type CSVSelectorCapture struct {
-	Kind        string      `json:"kind"`
-	Eligibility string      `json:"eligibility"`
-	EligibleIDs []uuid.UUID `json:"eligibleIds"`
+	Kind        string      `validate:"required" json:"kind"`
+	Eligibility string      `validate:"required" json:"eligibility" enums:"explicit-set"`
+	EligibleIDs []uuid.UUID `validate:"required" json:"eligibleIds"`
 	ExcludedIDs []uuid.UUID `json:"excludedIds"`
 }
 
@@ -224,14 +224,14 @@ type CSVSelectorCapture struct {
 // for these IDs only, recheck access, and fail on stale references. Empty IDs
 // denotes an empty recent set. Neither page size nor generation time recomputes it.
 type CSVRecentBoundary struct {
-	CapturedAt time.Time   `json:"capturedAt"`
-	RecordIDs  []uuid.UUID `json:"recordIds"`
+	CapturedAt time.Time   `validate:"required" json:"capturedAt" format:"date-time"`
+	RecordIDs  []uuid.UUID `validate:"required" json:"recordIds"`
 }
 type CSVCaptureRequest struct {
-	Source       CSVSource              `json:"source"`
-	Scope        CSVScope               `json:"scope"`
-	CollectionID *uuid.UUID             `json:"collectionId,omitempty"`
-	Columns      []CSVColumn            `json:"columns"`
+	Source       CSVSource              `validate:"required" json:"source" enums:"items,locations,dashboard-recent-items,entity-inventory,tag-inventory,entity-hierarchy,item-selector,location-selector,entity-selector,tags,tag-hierarchy,tag-selector,entity-types,entity-type-selector,templates,template-selector,maintenance,entity-maintenance,collection-members,collection-invitations,collection-notifiers,entity-attachments,entity-media,backup-history,collection-csv-history,private-csv-history,account-api-keys,account-collections,collection-selector"`
+	Scope        CSVScope               `validate:"required" json:"scope" enums:"collection,account-private,cross-collection"`
+	CollectionID *uuid.UUID             `json:"collectionId,omitempty" format:"uuid"`
+	Columns      []CSVColumn            `json:"columns" validate:"required,min=1" enums:"archived,assetId,color,completedAt,completedDate,cost,createdAt,currency,description,email,entityType,expiresAt,icon,id,insured,isActive,isLocation,itemCount,itemId,itemName,kind,lastUsedAt,location,mimeType,name,parentId,primary,progress,purchasePrice,quantity,scheduledDate,sizeBytes,soldDate,source,status,tags,title,type,updatedAt,uses"`
 	Ordering     []CSVOrder             `json:"ordering"`
 	Entities     *CSVEntityFilters      `json:"entities,omitempty"`
 	Text         *CSVTextFilters        `json:"text,omitempty"`

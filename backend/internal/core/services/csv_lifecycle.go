@@ -24,18 +24,18 @@ var (
 // CSVArtifact is the public lifecycle projection. Internal capture, storage keys
 // and diagnostic details must never be serialized by a lifecycle endpoint.
 type CSVArtifact struct {
-	ID          uuid.UUID        `json:"id"`
-	Source      string           `json:"source"`
-	Scope       csvexport.Scope  `json:"scope"`
-	Status      csvexport.Status `json:"status"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
-	CompletedAt *time.Time       `json:"completedAt"`
-	ExpiresAt   *time.Time       `json:"expiresAt"`
-	SizeBytes   int64            `json:"sizeBytes"`
-	FailureCode string           `json:"failureCode,omitempty"`
-	RetryMode   string           `json:"retryMode"`
-	RetryAt     *time.Time       `json:"retryAt,omitempty"`
+	ID          uuid.UUID        `validate:"required" json:"id" format:"uuid"`
+	Source      string           `validate:"required" json:"source" enums:"items,locations,dashboard-recent-items,entity-inventory,tag-inventory,entity-hierarchy,item-selector,location-selector,entity-selector,tags,tag-hierarchy,tag-selector,entity-types,entity-type-selector,templates,template-selector,maintenance,entity-maintenance,collection-members,collection-invitations,collection-notifiers,entity-attachments,entity-media,backup-history,collection-csv-history,private-csv-history,account-api-keys,account-collections,collection-selector"`
+	Scope       csvexport.Scope  `validate:"required" json:"scope"`
+	Status      csvexport.Status `validate:"required" json:"status"`
+	CreatedAt   time.Time        `validate:"required" json:"createdAt" format:"date-time"`
+	UpdatedAt   time.Time        `validate:"required" json:"updatedAt" format:"date-time"`
+	CompletedAt *time.Time       `validate:"required" json:"completedAt" format:"date-time" extensions:"x-nullable"`
+	ExpiresAt   *time.Time       `validate:"required" json:"expiresAt" format:"date-time" extensions:"x-nullable"`
+	SizeBytes   int64            `validate:"required" json:"sizeBytes"`
+	FailureCode string           `json:"failureCode,omitempty" enums:"source,encoding,spool,upload,metadata"`
+	RetryMode   string           `validate:"required" json:"retryMode" enums:"none,requester-explicit,automatic-or-requester-explicit"`
+	RetryAt     *time.Time       `json:"retryAt,omitempty" format:"date-time" extensions:"x-nullable"`
 }
 
 func CSVArtifactView(row *ent.CSVExport) CSVArtifact {

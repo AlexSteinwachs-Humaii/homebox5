@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type ReReplace struct {
@@ -40,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	text := "/* post-processed by ./scripts/process-types.go */\n"
+	text := "/* post-processed by backend/app/tools/typegen/main.go */\n"
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println(err)
@@ -66,10 +67,7 @@ func main() {
 		NewReDate("scheduledDate"),
 	}
 
-	for _, replace := range replaces {
-		fmt.Printf("Replacing '%v' -> '%s'\n", replace.Regex, replace.Text)
-		text = replace.Regex.ReplaceAllString(text, replace.Text)
-	}
+	text = processContracts(text, replaces[:])
 
 	err = os.WriteFile(path, []byte(text), 0644)
 	if err != nil {
@@ -78,4 +76,27 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+// CSV contracts retain Swagger optionality and wire-format timestamp strings.
+// Legacy consumers still receive the historical transformations outside CSV.
+func processContracts(text string, replaces []ReReplace) string {
+	csv := regexp.MustCompile(`(?s)export (?:interface|type) (?:ServicesCSV|V1CSV|V1ResultsServicesCSV)[^\n]*?\{.*?\n\}`)
+	var protected []string
+	text = csv.ReplaceAllStringFunc(text, func(block string) string {
+		for _, replace := range replaces {
+			if replace.Regex.String() == ` Services` || replace.Regex.String() == ` V1` {
+				block = replace.Regex.ReplaceAllString(block, replace.Text)
+			}
+		}
+		protected = append(protected, block)
+		return fmt.Sprintf("__CSV_CONTRACT_%d__", len(protected)-1)
+	})
+	for _, replace := range replaces {
+		text = replace.Regex.ReplaceAllString(text, replace.Text)
+	}
+	for i, block := range protected {
+		text = strings.ReplaceAll(text, fmt.Sprintf("__CSV_CONTRACT_%d__", i), block)
+	}
+	return text
 }

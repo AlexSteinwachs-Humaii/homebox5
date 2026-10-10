@@ -1,0 +1,176 @@
+---
+title: Server CSV API
+description: Generate, retain and download CSV artifacts without implementing list screens.
+---
+
+CSV is an independent server capability. The record-list CSV UI is a **consumer** of
+these contracts, not a second encoder or policy implementation. No list screens,
+static-choice exports or print controls are needed for this workflow.
+
+## Contracts and scopes
+
+The [OpenAPI 3 specification](/api/openapi-3.0.json) and
+[Swagger 2 specification](/api/swagger-2.0.json) are generated from Go controller
+annotations and service DTOs. TypeScript consumers import `CSVCaptureRequest`,
+`CSVArtifact`, `CSVRetentionPolicy`, `CSVError` and `ResultsServicesCSVArtifact`
+from `frontend/lib/api/types/data-contracts.ts`. Do not hand-maintain parallel types.
+
+All paths below are relative to `/api/v1`. Authenticate with the existing Bearer
+session or supported API-key authentication; never include credentials in captures.
+
+| Operation | Method and suffix | Successful response |
+| --- | --- | --- |
+| Configure policy | `PUT /retention` with `{"days":30}` | 200 policy |
+| Read policy | `GET /retention` | 200 policy |
+| Request export | `POST` with capture JSON | 202 artifact |
+| History | `GET` | 200 `{"items":[...]}` |
+| Observe lifecycle | `GET /{id}` | 200 artifact |
+| Retained download | `GET /{id}/download` | 200 CSV attachment bytes |
+| Explicit retry | `POST /{id}/retry` | 202, **empty body** |
+| Delete | `DELETE /{id}` | 202, **empty body**, durable cleanup intent |
+
+Use `/group/csv-exports` for collection sources. Send `X-Tenant: <collection UUID>`
+and the same `collectionId` in the capture. The existing tenant middleware may
+select a default when the header is absent; explicit selection is recommended.
+Every operation checks current membership and source-specific permissions.
+Only current owners can read or change collection retention.
+
+Use `/users/self/csv-exports` for `account-private` and `cross-collection` sources.
+**Omit `collectionId` and `X-Tenant`**: no membership or selected collection is
+required. The authenticated user owns these artifacts and their history; they
+never enter shared history. Cross-collection means only currently authorized
+collections, not a caller-supplied tenant list.
+
+## API-only example
+
+This exports API-key **metadata**, never key values, hashes or peppers. Set `BASE`
+and `TOKEN` in your local environment. A new account with no keys produces a header-only CSV.
+
+```sh
+ROOT="$BASE/api/v1/users/self/csv-exports"
+AUTH="Authorization: Bearer $TOKEN"
+curl --fail-with-body -H "$AUTH" -H 'Content-Type: application/json' \
+  -X PUT "$ROOT/retention" --data '{"days":30}'
+ID=$(curl --fail-with-body -H "$AUTH" -H 'Content-Type: application/json' \
+  "$ROOT" --data '{"source":"account-api-keys","scope":"account-private","columns":["id","name","createdAt"]}' | jq -r .id)
+curl --fail-with-body -H "$AUTH" "$ROOT/$ID"
+# Poll status until completed; inspect failureCode/retryMode if it fails.
+curl --fail-with-body -H "$AUTH" "$ROOT"
+# Only after status is completed:
+curl --fail-with-body -H "$AUTH" "$ROOT/$ID/download" -o export.csv
+curl --fail-with-body -H "$AUTH" "$ROOT/$ID/download" -o retained.csv
+cmp export.csv retained.csv
+curl --fail-with-body -H "$AUTH" -X DELETE "$ROOT/$ID"
+```
+
+Both downloads serve the same retained canonical bytes; there is no local encoder.
+This equality example assumes source data and permissions remain unchanged.
+Deletion acceptance does not mean immediate blob removal; cleanup runs separately.
+
+## Captured query and column rules
+
+`source` is a typed list surface, not a table or query. `scope` must match it.
+`columns` is nonempty, unique, and ordered; only source-permitted data columns are
+accepted. `ordering` is an optional ordered sequence of `{column,direction}`, with
+unique permitted order columns and `asc`/`desc`. Stable ID tie-breaks are applied.
+No paging, virtual window, SQL, role, owner or blob-path fields are accepted.
+Unknown, duplicate and case-aliased keys, trailing JSON, and bodies over 1 MiB fail.
+
+| Sources | Capture family / required context | Permitted columns |
+| --- | --- | --- |
+| `items`, `locations`, `dashboard-recent-items`, `entity-inventory`, `tag-inventory`, `entity-hierarchy`, `item-selector`, `location-selector`, `entity-selector` | `entities`; recent requires `recent`; inventory/hierarchy require entity or tag `hierarchy`; selectors require `selector` | id, assetId, name, description, quantity, insured, archived, createdAt, updatedAt, purchasePrice, parentId, entityType, tags, soldDate, itemCount, location |
+| `tags`, `tag-hierarchy`, `tag-selector` | `text`; hierarchy requires tag root; selector requires selector | id, name, description, parentId, color, icon, createdAt, updatedAt |
+| `entity-types`, `entity-type-selector` | `text`; selector requires selector | id, name, description, isLocation |
+| `templates`, `template-selector` | `text`; selector requires selector | id, name, description |
+| `maintenance`, `entity-maintenance` | `maintenance.status`: scheduled/completed/both; embedded requires entity root | id, name, description, itemId, itemName, scheduledDate, completedDate, cost |
+| `collection-members` | collection membership | id, name, email |
+| `collection-invitations` | collection membership; no join tokens | id, expiresAt, uses |
+| `collection-notifiers` | collection membership and requesting-user data | id, name, isActive, createdAt, updatedAt |
+| `entity-attachments`, `entity-media` | entity root; no descendants; permitted metadata only | id, title, type, mimeType, primary |
+| `backup-history` | collection ZIP history metadata only | id, kind, createdAt, updatedAt, status, progress, sizeBytes |
+| `collection-csv-history`, `private-csv-history` | collection or account-private respectively | id, source, status, createdAt, completedAt, expiresAt |
+| `account-api-keys` | account-private | id, name, createdAt, expiresAt, lastUsedAt |
+| `account-collections`, `collection-selector` | cross-collection; text; selector requires selector | id, name, createdAt, updatedAt, currency |
+
+Entity ordering permits id, name, createdAt, updatedAt, assetId, quantity, insured,
+purchasePrice, location, archived. Other sources permit id and name where available
+(or just id). Entity filters include search, kind, parentIds, parentItemIds, tagIds,
+field name/value pairs, assetId, negateTags, photo predicates, includeArchived and
+filterChildren. Unsupported filter families and contradictory kind/photo predicates
+are rejected, never ignored. Text is case-folded substring search on name/description
+(name only for collections). Hierarchy captures use `{kind,rootId,descendants}`;
+all references must resolve in the authorized scope. Entity-maintenance and
+attachment/media contexts forbid descendants.
+
+Recent boundaries freeze **membership**, not values: `{capturedAt,recordIds}` is
+required for dashboard recent exports. Generation reads current values for those
+IDs only; it does not recompute top-N. Selector captures use
+`{kind,eligibility:"explicit-set",eligibleIds,excludedIds}`; exclusions must be a
+subset. Empty arrays mean an empty set, never unrestricted data. With no ordering,
+selectors preserve eligible-ID order. Recent and selector provenance requires a
+trusted `CSVBoundaryAuthority`; the default server wiring currently has no such
+provider and **rejects** these requests. Raw client ID assertions are not authority.
+Integrators must not invent a permissive fallback or assume every catalogue source
+is available without that prerequisite.
+
+The executable `CSVSourceCatalogue()` and
+`backend/internal/core/services/csv_source_coverage.md` record exact adapter rules
+and upstream prerequisites. Static theme/language/currency choices, navigation
+and layout controls are excluded; a collection's currency is record data.
+
+## Lifecycle, failures and bytes
+
+States are `queued`, `running`, `completed`, `generation-failed`, `storage-failed`
+and `cleanup-pending`. `createdAt` is request time; `completedAt` and `expiresAt`
+are null before successful completion. `failureCode` is a safe category, not raw
+SQL/blob diagnostics (`source` or `encoding` for generation; `spool`, `upload`,
+or `metadata` for storage). Generation failures need `requester-explicit` retry;
+storage failures allow `automatic-or-requester-explicit` retry with `retryAt`.
+Other states have `retryMode: "none"`. Explicit retry requires the original
+requester and current authorization. Generation reads current source values,
+not a submission-time value snapshot.
+
+Downloads return `text/csv; charset=utf-8`, `Content-Disposition: attachment`,
+`Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. There are no public
+blob URLs, raw blob keys, secrets or internal capture diagnostics in lifecycle DTOs.
+Use the response as binary/text bytes, not `response.json()`. Errors are JSON
+`{code}`: 400 invalid capture/ID/retention, 404 `csv_unavailable` (missing or denied),
+409 `csv_not_ready`, 410 `csv_expired`, 503 `csv_storage_unavailable`, or 500
+`csv_internal`. Existing authentication/tenant middleware may return its own
+400/401/403 error envelope before the CSV handler. Swagger 2 cannot express
+per-response MIME types; OpenAPI 3 refines download success versus JSON errors.
+
+Authorization is rechecked on generation, history, status and download, including
+context/eligibility and source-specific restrictions. Download also regenerates
+canonical bytes and compares them to retained bytes, conservatively denying even
+benign changed data rather than serving possibly restricted historical content.
+Permission revocation, stale IDs or source changes can make an old artifact
+unavailable. Downloads recheck authorization and expiry after reading storage.
+
+Canonical output is UTF-8, comma-delimited, LF, no BOM, with machine column names
+in requested order. Quotes, commas and multiline fields use CSV escaping. Empty
+values are empty cells; timestamps use UTC RFC3339Nano, booleans true/false and
+numbers nonlocalized decimal (currency values use no currency symbol). Strings
+whose first non-space/control/format character is `=`, `+`, `-` or `@` receive an
+apostrophe prefix; typed negative numbers are not strings and stay numeric.
+
+A browser local-save cancellation, filesystem error or interrupted response is a
+**client outcome**, not a generation/storage failure. Do not retry generation or
+mark completion failed merely because saving failed; a retained artifact remains
+completed and can be downloaded again while authorized and unexpired.
+
+## Retention and regeneration
+
+Both policies default to 30 positive whole days (maximum 106751). Retention is
+selected at **successful completion**, then expiry is persisted and fixed.
+Policy edits affect future completions only. Download is denied at or after expiry
+even if cleanup is delayed. Blob deletion precedes metadata removal; failures
+retain recoverable cleanup state. CSV has its own persistence, namespace and
+worker; existing ZIP backup/import generation and **seven-day cleanup** are separate.
+
+From repository root, run `task --force swag` then `task --force typescript-types`.
+The first generates server Swagger/OpenAPI and copies them to `docs/public/api`;
+it also refines OpenAPI binary/error MIME types. The second uses
+swagger-typescript-api and the Go postprocessor. CSV optional fields and wire
+strings are preserved; do not edit generated files by hand. Full `task generate`
+also regenerates Ent and is not necessary for annotation-only changes.

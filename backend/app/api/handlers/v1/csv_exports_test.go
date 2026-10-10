@@ -85,6 +85,9 @@ func TestCSVAPIIndependentPrivateWorkflow(t *testing.T) {
 	downloaded := call("GET", "/csv/"+row.ID.String()+"/download", "", user.ID)
 	require.Equal(t, 200, downloaded.Code)
 	require.Equal(t, "name\n", downloaded.Body.String())
+	downloadedAgain := call("GET", "/csv/"+row.ID.String()+"/download", "", user.ID)
+	require.Equal(t, 200, downloadedAgain.Code)
+	require.Equal(t, downloaded.Body.Bytes(), downloadedAgain.Body.Bytes())
 	// A disconnected/local-save client does not change the retained lifecycle.
 	cancelReq := httptest.NewRequest("GET", "/csv/"+row.ID.String()+"/download", nil)
 	routeCtx := chi.NewRouteContext()
