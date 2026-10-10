@@ -3,6 +3,7 @@ export default {
   darkMode: ["class"],
   safelist: [
     "dark",
+    "theme-cinematic",
     "theme-aqua",
     "theme-black",
     "theme-bumblebee",
@@ -43,7 +44,21 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-body)"],
+        editorial: ["var(--font-editorial)"],
+      },
+      spacing: {
+        "page-gutter": "var(--page-gutter)",
+        "section-gap": "var(--section-gap)",
+      },
       colors: {
+        surface: {
+          DEFAULT: "hsl(var(--background))",
+          raised: "hsl(var(--card))",
+          inset: "hsl(var(--muted))",
+          overlay: "hsl(var(--popover))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

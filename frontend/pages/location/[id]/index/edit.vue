@@ -257,7 +257,15 @@
     value,
   }));
 
+  const attachmentEditorOpener = ref<HTMLElement | null>(null);
+
+  function restoreAttachmentEditorFocus(event: Event) {
+    event.preventDefault();
+    if (attachmentEditorOpener.value?.isConnected) attachmentEditorOpener.value.focus();
+  }
+
   function openAttachmentEditDialog(attachment: ItemAttachment) {
+    attachmentEditorOpener.value = document.activeElement as HTMLElement;
     editState.id = attachment.id;
     editState.title = attachment.title;
     editState.type = attachment.type;
@@ -275,7 +283,8 @@
     });
 
     if (error) {
-      toast.error(t("items.toast.failed_delete_attachment"));
+      editState.loading = false;
+      toast.error(t("items.toast.failed_update_attachment"));
       return;
     }
 
@@ -319,9 +328,9 @@
 </script>
 
 <template>
-  <div v-if="item" class="pb-8">
+  <div v-if="item" class="min-w-0 pb-8" :aria-busy="saving || !!requestPending">
     <Dialog :dialog-id="DialogID.AttachmentEdit">
-      <DialogContent>
+      <DialogContent @close-auto-focus="restoreAttachmentEditorFocus">
         <DialogHeader>
           <DialogTitle>{{ $t("items.edit.edit_attachment_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -329,8 +338,8 @@
         <FormTextField v-model="editState.title" :label="$t('items.edit.edit_attachment_dialog.attachment_title')" />
         <div>
           <Label for="attachment-type"> {{ $t("items.edit.edit_attachment_dialog.attachment_type") }} </Label>
-          <Select id="attachment-type" v-model:model-value="editState.type">
-            <SelectTrigger>
+          <Select v-model:model-value="editState.type">
+            <SelectTrigger id="attachment-type">
               <SelectValue :placeholder="$t('items.edit.edit_attachment_dialog.select_type')" />
             </SelectTrigger>
             <SelectContent>
@@ -363,7 +372,7 @@
 
     <section class="relative">
       <div
-        class="sticky z-10 my-4 flex items-center justify-between gap-2"
+        class="hb-panel sticky z-10 my-4 flex flex-wrap items-center justify-between gap-3 p-3"
         :class="{
           'top-[calc(var(--header-height-mobile)+0.25rem)] sm:top-[calc(var(--header-height)+0.25rem)]':
             !preferences.displayLegacyHeader,
@@ -374,7 +383,7 @@
           <Tooltip>
             <TooltipTrigger as-child>
               <Label class="flex cursor-pointer items-center gap-2 backdrop-blur-sm">
-                <Switch v-model="preferences.editorAdvancedView" />
+                <Switch v-model="preferences.editorAdvancedView" :aria-label="$t('items.advanced')" />
                 {{ $t("items.advanced") }}
               </Label>
             </TooltipTrigger>
@@ -387,10 +396,11 @@
           {{ $t("global.save") }}
         </Button>
       </div>
+      <p v-if="requestPending" role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
       <div v-if="!requestPending" class="space-y-6">
         <BaseCard class="overflow-visible">
           <template #title> {{ $t("locations.update_location") }} </template>
-          <div class="mb-6 grid gap-4 border-t px-5 pt-2 md:grid-cols-2">
+          <div class="grid min-w-0 gap-5 border-t p-4 sm:p-6 md:grid-cols-2">
             <LocationSelector v-model="parent" label="Parent Location" :current-location="item" />
             <TagSelector v-model="item.tagIds" :tags="tags" />
             <div class="flex flex-col gap-1">
@@ -405,7 +415,7 @@
 
           <div class="border-t sm:p-0">
             <div v-for="field in mainFields" :key="field.ref" class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
+              <div class="min-w-0 border-b p-4 sm:px-6">
                 <FormTextArea
                   v-if="field.type === 'textarea'"
                   v-model="item[field.ref]"
@@ -455,14 +465,20 @@
             <div
               v-for="(field, idx) in item.fields"
               :key="`field-${idx}`"
-              class="grid grid-cols-2 gap-2 pt-4 md:grid-cols-4"
+              class="grid min-w-0 grid-cols-1 gap-3 pt-4 md:grid-cols-4"
             >
               <FormTextField v-model="field.name" :label="$t('global.name')" />
-              <div class="col-span-3 flex items-end">
+              <div class="flex min-w-0 items-end md:col-span-3">
                 <FormTextField v-model="field.textValue" :label="$t('global.value')" :max-length="500" />
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon" variant="destructive" class="ml-2" @click="item.fields.splice(idx, 1)">
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      class="ml-2 shrink-0"
+                      :aria-label="$t('global.delete')"
+                      @click="item.fields.splice(idx, 1)"
+                    >
                       <MdiDelete />
                     </Button>
                   </TooltipTrigger>
@@ -476,9 +492,9 @@
           </div>
         </BaseCard>
 
-        <Card ref="attDropZone" class="overflow-visible shadow-xl">
+        <Card ref="attDropZone" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.attachments") }}</h3>
+            <h3 class="hb-section-title">{{ $t("items.attachments") }}</h3>
             <p class="text-xs">{{ $t("items.changes_persisted_immediately") }}</p>
           </div>
           <div class="border-t p-4">
@@ -488,7 +504,8 @@
             </div>
             <button
               v-else
-              class="grid h-24 w-full place-content-center border-2 border-dashed border-primary"
+              type="button"
+              class="grid min-h-24 w-full place-content-center rounded-md border-2 border-dashed border-primary p-3 text-center [overflow-wrap:anywhere]"
               @click="clickUpload"
             >
               <input ref="refAttachmentInput" hidden type="file" @change="uploadImage" />
@@ -501,12 +518,12 @@
               <li
                 v-for="attachment in item.attachments"
                 :key="attachment.id"
-                class="grid grid-cols-6 justify-between py-3 pl-3 pr-4 text-sm"
+                class="flex min-w-0 flex-wrap items-center gap-3 p-3 text-sm"
               >
-                <p class="col-span-4 my-auto">
+                <p class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                   {{ attachment.title }}
                 </p>
-                <p class="my-auto">
+                <p class="text-muted-foreground">
                   {{ $t(`items.${attachment.type}`) }}
                 </p>
                 <div class="flex justify-end gap-2">
@@ -515,6 +532,7 @@
                       <Button
                         variant="outline"
                         size="icon"
+                        :aria-label="$t('items.photo') + ': ' + attachment.title"
                         @click="
                           openDialog(DialogID.ItemImage, {
                             params: {
@@ -539,7 +557,12 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button variant="destructive" size="icon" @click="deleteAttachment(attachment.id)">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        :aria-label="$t('global.delete') + ': ' + attachment.title"
+                        @click="deleteAttachment(attachment.id)"
+                      >
                         <MdiDelete />
                       </Button>
                     </TooltipTrigger>
@@ -547,7 +570,11 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" @click="openAttachmentEditDialog(attachment)">
+                      <Button
+                        size="icon"
+                        :aria-label="$t('global.edit') + ': ' + attachment.title"
+                        @click="openAttachmentEditDialog(attachment)"
+                      >
                         <MdiPencil />
                       </Button>
                     </TooltipTrigger>
@@ -561,4 +588,5 @@
       </div>
     </section>
   </div>
+  <p v-else role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
 </template>

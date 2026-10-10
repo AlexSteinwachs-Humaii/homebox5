@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n";
-  import { Dialog, DialogContent } from "@/components/ui/dialog";
+  import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
   import { Button, buttonVariants } from "@/components/ui/button";
   import { useDialog } from "@/components/ui/dialog-provider";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
@@ -29,8 +29,30 @@
     originalSrc: "",
   });
 
+  const failed = ref(false);
+  const opener = ref<HTMLElement | null>(null);
+
+  function restoreFocus(event: Event) {
+    event.preventDefault();
+    if (opener.value?.isConnected) opener.value.focus();
+  }
+
+  function resetImage() {
+    image.originalSrc = "";
+    image.originalType = undefined;
+    image.thumbnailSrc = "";
+    failed.value = false;
+  }
+
+  function closeImage() {
+    closeDialog(DialogID.ItemImage);
+    resetImage();
+  }
+
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.ItemImage, params => {
+      opener.value = document.activeElement as HTMLElement;
+      failed.value = false;
       image.attachmentId = params.attachmentId;
       image.itemId = params.itemId;
       if (params.type === "preloaded") {
@@ -67,6 +89,7 @@
       action: "delete",
       id: image.attachmentId,
     });
+    resetImage();
     toast.success(t("items.toast.attachment_deleted"));
   }
 </script>
@@ -74,33 +97,49 @@
 <template>
   <Dialog :dialog-id="DialogID.ItemImage">
     <DialogContent
-      class="max-h-[90svh] w-auto max-w-[min(calc(100vw_-_1rem),32rem)] border-transparent bg-transparent p-0 md:max-w-lg"
+      class="max-h-[90svh] w-[calc(100vw_-_2rem)] max-w-3xl gap-3 p-4"
       disable-close
+      :aria-describedby="undefined"
+      @close-auto-focus="restoreFocus"
     >
-      <picture>
-        <source :srcset="image.originalSrc" :type="image.originalType" />
-        <img
-          :src="image.thumbnailSrc"
-          alt="attachment image"
-          class="min-w-64 max-w-[min(calc(100vw_-_1rem),32rem)] md:w-auto md:max-w-lg"
-        />
-      </picture>
-      <Button variant="destructive" size="icon" class="absolute right-[84px] top-1" @click="deleteAttachment">
-        <MdiDelete />
-      </Button>
-      <a :class="buttonVariants({ size: 'icon' })" :href="image.originalSrc" download class="absolute right-11 top-1">
-        <MdiDownload />
-      </a>
-      <Button
-        size="icon"
-        class="absolute right-1 top-1"
-        @click="
-          closeDialog(DialogID.ItemImage);
-          image.originalSrc = '';
-        "
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <DialogTitle>{{ $t("items.photo") }}</DialogTitle>
+        <div class="flex gap-2">
+          <Button variant="destructive" size="icon" :aria-label="$t('global.delete')" @click="deleteAttachment">
+            <MdiDelete />
+          </Button>
+          <a
+            :class="buttonVariants({ size: 'icon' })"
+            :href="image.originalSrc"
+            download
+            :aria-label="$t('components.item.attachments_list.download')"
+          >
+            <MdiDownload />
+          </a>
+          <Button size="icon" :aria-label="$t('global.close')" @click="closeImage">
+            <MdiClose />
+          </Button>
+        </div>
+      </div>
+      <p v-if="failed" role="status" class="text-muted-foreground">{{ $t("items.photo_unavailable") }}</p>
+      <a
+        :href="image.originalSrc"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        :aria-label="$t('components.item.attachments_list.open_new_tab')"
       >
-        <MdiClose />
-      </Button>
+        <picture v-show="!failed">
+          <source :srcset="image.originalSrc" :type="image.originalType" />
+          <img
+            :src="image.thumbnailSrc || image.originalSrc"
+            :alt="$t('items.photo')"
+            class="mx-auto max-h-[65svh] max-w-full object-contain"
+            @error="failed = true"
+          />
+        </picture>
+        <span class="mt-2 block text-center text-sm underline">{{ $t("items.view_original_photo") }}</span>
+      </a>
     </DialogContent>
   </Dialog>
 </template>

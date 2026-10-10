@@ -1,6 +1,10 @@
 <template>
-  <BaseModal :dialog-id="DialogID.CreateCollection" :title="$t('components.collection.create_modal.title')">
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
+  <BaseModal
+    keyboard-focus
+    :dialog-id="DialogID.CreateCollection"
+    :title="$t('components.collection.create_modal.title')"
+  >
+    <form class="flex min-w-0 flex-col gap-4" @submit.prevent="create()">
       <FormTextField
         v-model="form.name"
         :trigger-focus="focused"
@@ -11,14 +15,29 @@
         :min-length="1"
       />
 
-      <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit">{{ $t("global.create") }}</Button>
-          <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
+      <div class="mt-4 flex min-w-0 flex-wrap justify-end gap-2 border-t pt-4">
+        <div class="flex min-w-0 flex-wrap justify-end gap-2">
+          <Button :disabled="loading" class="h-auto min-h-10 max-w-full whitespace-normal" type="submit">{{
+            $t("global.create")
+          }}</Button>
+          <Button
+            variant="outline"
+            class="h-auto min-h-10 max-w-full whitespace-normal"
+            :disabled="loading"
+            type="button"
+            @click="create(false)"
+          >
             {{ $t("global.create_and_add") }}
           </Button>
-        </ButtonGroup>
+        </div>
       </div>
+      <p
+        v-if="errorMessage"
+        role="alert"
+        class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+      >
+        {{ errorMessage }}
+      </p>
     </form>
   </BaseModal>
 </template>
@@ -30,7 +49,7 @@
   import BaseModal from "@/components/App/CreateModal.vue";
   import { useDialog } from "~/components/ui/dialog-provider";
   import FormTextField from "~/components/Form/TextField.vue";
-  import { Button, ButtonGroup } from "~/components/ui/button";
+  import { Button } from "~/components/ui/button";
   import { useUserApi } from "~/composables/use-api";
   import { useCollections } from "~/composables/use-collections";
 
@@ -39,6 +58,12 @@
   const { activeDialog, closeDialog, registerOpenDialogCallback } = useDialog();
 
   const loading = ref(false);
+  const errorMessage = ref("");
+
+  function reportError(message: string) {
+    errorMessage.value = message;
+    toast.error(message);
+  }
   const focused = ref(false);
 
   const form = reactive({ name: "" });
@@ -63,6 +88,7 @@
       if (active && active === DialogID.CreateCollection) {
         // reset and focus on open
         form.name = "";
+        errorMessage.value = "";
         focused.value = true;
       }
     }
@@ -70,15 +96,16 @@
 
   async function create(close = true) {
     if (loading.value) {
-      toast.error(t("components.collection.create_modal.toast.already_creating"));
+      reportError(t("components.collection.create_modal.toast.already_creating"));
       return;
     }
 
     if (!form.name || form.name.trim().length === 0) {
-      toast.error(t("components.collection.create_modal.toast.please_enter_name"));
+      reportError(t("components.collection.create_modal.toast.please_enter_name"));
       return;
     }
 
+    errorMessage.value = "";
     loading.value = true;
 
     if (shift?.value) close = false;
@@ -87,7 +114,7 @@
 
     if (error) {
       loading.value = false;
-      toast.error(t("components.collection.create_modal.toast.create_failed"));
+      reportError(t("components.collection.create_modal.toast.create_failed"));
       return;
     }
 

@@ -1,8 +1,8 @@
 <template>
   <div
     ref="el"
-    class="grid h-24 w-full place-content-center border-2 border-dashed border-primary"
-    :class="isOverDropZone ? 'bg-primary bg-opacity-10' : ''"
+    class="grid min-h-24 w-full place-content-center rounded-md border-2 border-dashed border-primary p-3 text-center [overflow-wrap:anywhere]"
+    :class="isOverDropZone ? 'bg-primary/10' : ''"
   >
     <slot />
   </div>

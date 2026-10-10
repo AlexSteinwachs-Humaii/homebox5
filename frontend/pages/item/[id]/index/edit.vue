@@ -12,7 +12,7 @@
   import MdiImageOutline from "~icons/mdi/image-outline";
   import MdiOpenInNew from "~icons/mdi/open-in-new";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-  import { Button } from "@/components/ui/button";
+  import { Button, buttonVariants } from "@/components/ui/button";
   import { useDialog } from "@/components/ui/dialog-provider";
   import { Checkbox } from "@/components/ui/checkbox";
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,12 +101,16 @@
       return;
     }
 
+    // Disabling Save removes focus before the confirmation can remember it.
+    const saveTrigger = document.activeElement as HTMLElement | null;
     saving.value = true;
     const isConvertingToLocation = item.value.entityType?.isLocation;
     if (isConvertingToLocation) {
       const { isCanceled } = await confirm.open(t("items.edit.change_entity_type_confirm"));
       if (isCanceled) {
         saving.value = false;
+        await nextTick();
+        if (saveTrigger?.isConnected) saveTrigger.focus();
         return;
       }
     }
@@ -467,7 +471,15 @@
     value,
   }));
 
+  const attachmentEditorOpener = ref<HTMLElement | null>(null);
+
+  function restoreAttachmentEditorFocus(event: Event) {
+    event.preventDefault();
+    if (attachmentEditorOpener.value?.isConnected) attachmentEditorOpener.value.focus();
+  }
+
   function openAttachmentEditDialog(attachment: ItemAttachment) {
+    attachmentEditorOpener.value = document.activeElement as HTMLElement;
     editState.id = attachment.id;
     editState.title = attachment.title;
     editState.type = attachment.type;
@@ -486,7 +498,8 @@
     });
 
     if (error) {
-      toast.error(t("items.toast.failed_delete_attachment"));
+      editState.loading = false;
+      toast.error(t("items.toast.failed_update_attachment"));
       return;
     }
 
@@ -602,9 +615,9 @@
 </script>
 
 <template>
-  <div v-if="item" class="pb-8">
+  <div v-if="item" class="min-w-0 pb-8" :aria-busy="saving || !!requestPending">
     <Dialog :dialog-id="DialogID.AttachmentEdit">
-      <DialogContent>
+      <DialogContent @close-auto-focus="restoreAttachmentEditorFocus">
         <DialogHeader>
           <DialogTitle>{{ $t("items.edit.edit_attachment_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -612,8 +625,8 @@
         <FormTextField v-model="editState.title" :label="$t('items.edit.edit_attachment_dialog.attachment_title')" />
         <div>
           <Label for="attachment-type"> {{ $t("items.edit.edit_attachment_dialog.attachment_type") }} </Label>
-          <Select id="attachment-type" v-model:model-value="editState.type">
-            <SelectTrigger>
+          <Select v-model:model-value="editState.type">
+            <SelectTrigger id="attachment-type">
               <SelectValue :placeholder="$t('items.edit.edit_attachment_dialog.select_type')" />
             </SelectTrigger>
             <SelectContent>
@@ -646,7 +659,7 @@
 
     <section class="relative">
       <div
-        class="sticky z-10 my-4 flex items-center justify-between gap-2"
+        class="hb-panel sticky z-10 my-4 flex flex-wrap items-center justify-between gap-3 p-3"
         :class="{
           'top-[calc(var(--header-height-mobile)+0.25rem)] sm:top-[calc(var(--header-height)+0.25rem)]':
             !preferences.displayLegacyHeader,
@@ -657,7 +670,7 @@
           <Tooltip>
             <TooltipTrigger as-child>
               <Label class="flex cursor-pointer items-center gap-2 backdrop-blur-sm">
-                <Switch v-model="preferences.editorAdvancedView" />
+                <Switch v-model="preferences.editorAdvancedView" :aria-label="$t('items.advanced')" />
                 {{ $t("items.advanced") }}
               </Label>
             </TooltipTrigger>
@@ -670,10 +683,11 @@
           {{ $t("global.save") }}
         </Button>
       </div>
+      <p v-if="requestPending" role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
       <div v-if="!requestPending" class="space-y-6">
         <BaseCard class="overflow-visible">
           <template #title> {{ $t("items.edit_details") }} </template>
-          <div class="mb-6 grid gap-4 border-t px-5 pt-2 md:grid-cols-2">
+          <div class="grid min-w-0 gap-5 border-t p-4 sm:p-6 md:grid-cols-2">
             <LocationSelector v-model="location" @update:model-value="onLocationChanged()" />
             <ItemSelector
               v-model="parent"
@@ -688,8 +702,12 @@
               @update:model-value="maybeSyncWithParentLocation()"
             />
             <div class="flex flex-col gap-2">
-              <Label class="px-1">{{ $t("items.sync_child_locations") }}</Label>
-              <Switch v-model="item.syncChildEntityLocations" @update:model-value="syncChildEntityLocations()" />
+              <Label for="sync-child-locations" class="px-1">{{ $t("items.sync_child_locations") }}</Label>
+              <Switch
+                id="sync-child-locations"
+                v-model="item.syncChildEntityLocations"
+                @update:model-value="syncChildEntityLocations()"
+              />
             </div>
             <TagSelector v-model="item.tagIds" :tags="tags" />
             <div class="flex flex-col gap-1">
@@ -704,7 +722,7 @@
 
           <div class="border-t sm:p-0">
             <div v-for="field in mainFields" :key="field.ref" class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
+              <div class="min-w-0 border-b p-4 sm:px-6">
                 <FormTextArea
                   v-if="field.type === 'textarea'"
                   v-model="item[field.ref]"
@@ -761,15 +779,21 @@
             <div
               v-for="(field, idx) in item.fields"
               :key="`field-${idx}`"
-              class="grid grid-cols-2 gap-2 pt-4 md:grid-cols-4"
+              class="grid min-w-0 grid-cols-1 gap-3 pt-4 md:grid-cols-4"
             >
               <!-- <FormSelect v-model:value="field.type" label="Field Type" :items="fieldTypes" value-key="value" /> -->
               <FormTextField v-model="field.name" :label="$t('global.name')" />
-              <div class="col-span-3 flex items-end">
+              <div class="flex min-w-0 items-end md:col-span-3">
                 <FormTextField v-model="field.textValue" :label="$t('global.value')" :max-length="500" />
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon" variant="destructive" class="ml-2" @click="item.fields.splice(idx, 1)">
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      class="ml-2 shrink-0"
+                      :aria-label="$t('global.delete')"
+                      @click="item.fields.splice(idx, 1)"
+                    >
                       <MdiDelete />
                     </Button>
                   </TooltipTrigger>
@@ -785,16 +809,16 @@
 
         <Card
           ref="attDropZone"
-          class="overflow-visible shadow-xl"
+          class="hb-panel overflow-visible"
           @dragover.prevent
           @drop.prevent="handleAttachmentCardDrop"
         >
           <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.attachments") }}</h3>
+            <h3 class="hb-section-title">{{ $t("items.attachments") }}</h3>
             <p class="text-xs">{{ $t("items.changes_persisted_immediately") }}</p>
           </div>
           <div class="border-t p-4">
-            <div v-if="attDropZoneActive" class="grid grid-cols-4 gap-4">
+            <div v-if="attDropZoneActive" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <DropZone data-link-type="photo" @drop="dropPhoto"> {{ $t("items.photos") }} </DropZone>
               <DropZone data-link-type="warranty" @drop="dropWarranty"> {{ $t("items.warranty") }} </DropZone>
               <DropZone data-link-type="manual" @drop="dropManual"> {{ $t("items.manuals") }} </DropZone>
@@ -817,12 +841,12 @@
               <li
                 v-for="attachment in item.attachments"
                 :key="attachment.id"
-                class="grid grid-cols-6 justify-between py-3 pl-3 pr-4 text-sm"
+                class="flex min-w-0 flex-wrap items-center gap-3 p-3 text-sm"
               >
-                <p class="col-span-4 my-auto">
+                <p class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                   {{ attachment.title }}
                 </p>
-                <p class="my-auto">
+                <p class="text-muted-foreground">
                   {{ $t(`items.${attachment.type}`) }}
                 </p>
                 <div class="flex justify-end gap-2">
@@ -831,6 +855,7 @@
                       <Button
                         variant="outline"
                         size="icon"
+                        :aria-label="$t('items.photo') + ': ' + attachment.title"
                         @click="
                           openDialog(DialogID.ItemImage, {
                             params: {
@@ -861,10 +886,14 @@
                     "
                   >
                     <TooltipTrigger as-child>
-                      <a :href="attachment.path" target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="icon">
-                          <MdiOpenInNew />
-                        </Button>
+                      <a
+                        :href="attachment.path"
+                        :class="buttonVariants({ variant: 'outline', size: 'icon' })"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        :aria-label="$t('components.item.attachments_list.open_new_tab') + ': ' + attachment.title"
+                      >
+                        <MdiOpenInNew />
                       </a>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -873,7 +902,12 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button variant="destructive" size="icon" @click="deleteAttachment(attachment.id)">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        :aria-label="$t('global.delete') + ': ' + attachment.title"
+                        @click="deleteAttachment(attachment.id)"
+                      >
                         <MdiDelete />
                       </Button>
                     </TooltipTrigger>
@@ -881,7 +915,11 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" @click="openAttachmentEditDialog(attachment)">
+                      <Button
+                        size="icon"
+                        :aria-label="$t('global.edit') + ': ' + attachment.title"
+                        @click="openAttachmentEditDialog(attachment)"
+                      >
                         <MdiPencil />
                       </Button>
                     </TooltipTrigger>
@@ -893,13 +931,13 @@
           </div>
         </Card>
 
-        <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
+        <Card v-if="preferences.editorAdvancedView" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.purchase_details") }}</h3>
+            <h3 class="hb-section-title">{{ $t("items.purchase_details") }}</h3>
           </div>
           <div class="border-t sm:p-0">
             <div v-for="field in purchaseFields" :key="field.ref" class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
+              <div class="min-w-0 border-b p-4 sm:px-6">
                 <FormTextArea
                   v-if="field.type === 'textarea'"
                   v-model="item[field.ref]"
@@ -942,13 +980,13 @@
           </div>
         </Card>
 
-        <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
+        <Card v-if="preferences.editorAdvancedView" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.warranty_details") }}</h3>
+            <h3 class="hb-section-title">{{ $t("items.warranty_details") }}</h3>
           </div>
           <div class="border-t sm:p-0">
             <div v-for="field in warrantyFields" :key="field.ref" class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
+              <div class="min-w-0 border-b p-4 sm:px-6">
                 <FormTextArea
                   v-if="field.type === 'textarea'"
                   v-model="item[field.ref]"
@@ -991,13 +1029,13 @@
           </div>
         </Card>
 
-        <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
+        <Card v-if="preferences.editorAdvancedView" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.sold_details") }}</h3>
+            <h3 class="hb-section-title">{{ $t("items.sold_details") }}</h3>
           </div>
           <div class="border-t sm:p-0">
             <div v-for="field in soldFields" :key="field.ref" class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
+              <div class="min-w-0 border-b p-4 sm:px-6">
                 <FormTextArea
                   v-if="field.type === 'textarea'"
                   v-model="item[field.ref]"
@@ -1042,4 +1080,5 @@
       </div>
     </section>
   </div>
+  <p v-else role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
 </template>

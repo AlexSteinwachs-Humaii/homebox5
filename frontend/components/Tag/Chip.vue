@@ -31,7 +31,7 @@
 
 <template>
   <NuxtLink
-    class="group/tag-chip flex gap-2 rounded-full border shadow transition duration-300 hover:bg-accent/50"
+    class="hb-focus group/tag-chip flex max-w-full items-center gap-2 rounded-full border shadow transition duration-300 hover:bg-accent/50"
     :class="{
       'p-4 py-1 text-base': size === 'lg',
       'p-3 py-1 text-sm': size !== 'sm' && size !== 'lg',
@@ -42,12 +42,15 @@
     :style="
       tag.color
         ? { backgroundColor: tag.color, color: getContrastTextColor(tag.color) }
-        : { backgroundColor: 'hsl(var(--accent))' }
+        : {
+            backgroundColor: 'hsl(var(--accent))',
+            color: 'hsl(var(--accent-foreground))',
+          }
     "
     :to="`/tag/${tag.id}`"
   >
     <template v-if="!hideIcon">
-      <div class="relative">
+      <div class="relative shrink-0">
         <component :is="chipIcon" class="invisible" /><!-- hack to ensure the size is correct -->
 
         <div
@@ -58,6 +61,6 @@
         </div>
       </div>
     </template>
-    {{ tag.name }}
+    <span class="min-w-0 break-words">{{ tag.name }}</span>
   </NuxtLink>
 </template>

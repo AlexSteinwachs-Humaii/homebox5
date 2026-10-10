@@ -51,11 +51,14 @@
 </script>
 
 <template>
-  <section>
+  <section class="min-w-0">
     <MaintenanceEditModal />
     <ItemChangeDetails />
 
-    <BaseSectionHeader class="flex items-center justify-between" :class="{ 'mb-2 mt-4': !externalPagination }">
+    <BaseSectionHeader
+      class="flex flex-wrap items-center justify-between gap-3"
+      :class="{ 'mb-2 mt-4': !externalPagination }"
+    >
       <div class="flex gap-2 text-nowrap">
         {{ $t("components.item.view.selectable.items") }}
         <Badge v-if="!externalPagination">
@@ -65,19 +68,25 @@
       <template #subtitle>
         <div
           id="selectable-subtitle"
-          class="flex grow items-center px-2"
+          class="flex grow items-center gap-3 px-2"
           :class="{ hidden: !preferences.quickActions.enabled }"
         />
       </template>
       <template #description>
         <div v-if="!viewSet">
           <ButtonGroup>
-            <Button size="sm" :variant="itemView === 'card' ? 'default' : 'outline'" @click="setViewPreference('card')">
+            <Button
+              size="sm"
+              :aria-pressed="itemView === 'card'"
+              :variant="itemView === 'card' ? 'default' : 'outline'"
+              @click="setViewPreference('card')"
+            >
               <MdiCardTextOutline class="size-5" />
               {{ $t("components.item.view.selectable.card") }}
             </Button>
             <Button
               size="sm"
+              :aria-pressed="itemView === 'table'"
               :variant="itemView === 'table' ? 'default' : 'outline'"
               @click="setViewPreference('table')"
             >
@@ -89,9 +98,12 @@
       </template>
     </BaseSectionHeader>
 
-    <p v-if="externalPagination && pagination!.totalSize > 0" class="mb-4 flex items-center text-base font-medium">
+    <p
+      v-if="externalPagination && pagination!.totalSize > 0"
+      class="mb-4 flex flex-wrap items-center gap-2 text-sm font-medium"
+    >
       {{ $t("items.results", { total: pagination!.totalSize }) }}
-      <span class="ml-auto text-base">
+      <span class="ml-auto text-sm text-muted-foreground">
         {{
           $t("items.pages", {
             page: pagination!.page,

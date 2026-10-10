@@ -1,9 +1,15 @@
 <template>
   <div
     ref="cardRef"
-    class="absolute left-0 top-0 z-10 w-[250px] cursor-pointer rounded-lg border border-border bg-background/85 p-2 shadow-lg backdrop-blur-sm"
+    class="hb-scanner-surface hb-focus absolute left-0 top-0 z-10 w-[250px] max-w-[calc(100vw-2rem)] cursor-pointer p-3"
     :style="cardStyle"
+    :role="canNavigate ? 'button' : 'status'"
+    :tabindex="canNavigate ? 0 : undefined"
+    :aria-label="canNavigate ? t('scanner_ar.open_result', { name: resultName }) : undefined"
+    :aria-busy="loading"
     @click="handleClick"
+    @keydown.enter.prevent="handleClick"
+    @keydown.space.prevent="handleClick"
   >
     <!-- Loading state -->
     <div v-if="loading" class="flex flex-col gap-1.5">
@@ -12,7 +18,7 @@
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error || !entity" class="text-xs text-destructive">
+    <div v-else-if="error || !entity" class="break-words text-sm text-card-foreground">
       {{ t("scanner_ar.not_found") }}
     </div>
 
@@ -120,6 +126,17 @@
   }>();
 
   const { t } = useI18n();
+
+  const canNavigate = computed(() =>
+    Boolean(props.entity?.item?.id || props.entity?.location?.id || props.entity?.childItems?.length)
+  );
+  const resultName = computed(
+    () =>
+      props.entity?.item?.name ||
+      props.entity?.location?.name ||
+      props.entity?.childItems?.[0]?.name ||
+      t("scanner_ar.title")
+  );
 
   const formattedPrice = ref("");
   const formattedTotalPrice = ref("");

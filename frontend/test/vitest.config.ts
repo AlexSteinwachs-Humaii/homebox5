@@ -3,6 +3,8 @@ export default async () => {
   const path = await import("path");
 
   return defineConfig({
+    // Nuxt's application composables run client-side (SSR is disabled).
+    define: { "import.meta.client": true },
     test: {
       globalSetup: "./test/setup.ts",
       include: ["**/*.test.ts"],
@@ -10,6 +12,7 @@ export default async () => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, ".."),
+        "~": path.resolve(__dirname, ".."),
         "~~": path.resolve(__dirname, ".."),
       },
     },

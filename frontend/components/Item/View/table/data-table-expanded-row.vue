@@ -2,6 +2,7 @@
   import { computed } from "vue";
   import type { EntitySummary } from "~/lib/api/types/data-contracts";
   import TagChip from "@/components/Tag/Chip.vue";
+  import MdiImageOffOutline from "~icons/mdi/image-off-outline";
   import Badge from "~/components/ui/badge/Badge.vue";
 
   const props = defineProps<{
@@ -16,7 +17,7 @@
 
   const imageUrl = computed(() => {
     if (!props.item.imageId) {
-      return "/no-image.jpg";
+      return null;
     }
     if (props.item.thumbnailId) {
       return api.authURL(`/entities/${props.item.id}/attachments/${props.item.thumbnailId}`);
@@ -27,14 +28,23 @@
 </script>
 
 <template>
-  <div class="flex items-start gap-3">
+  <div class="flex flex-col items-start gap-4 sm:flex-row">
     <div class="shrink-0">
-      <img :src="imageUrl" class="size-32 rounded-lg bg-muted object-cover" />
+      <img v-if="imageUrl" :src="imageUrl" :alt="item.name" class="size-20 rounded-lg bg-muted object-contain" />
+      <div
+        v-else
+        class="flex size-20 items-center justify-center rounded-lg bg-muted text-muted-foreground"
+        aria-hidden="true"
+      >
+        <MdiImageOffOutline class="size-6" />
+      </div>
     </div>
     <div class="flex min-w-0 flex-1 flex-col gap-2">
-      <h2 class="truncate text-xl font-bold">{{ item.name }}</h2>
-      <Badge class="w-min text-nowrap bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:underline">
-        <NuxtLink v-if="item.location" :to="`/location/${item.location.id}`">
+      <h2 class="break-words text-lg font-semibold">{{ item.name }}</h2>
+      <Badge
+        class="max-w-full text-wrap break-words bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:underline"
+      >
+        <NuxtLink v-if="item.location" :to="`/location/${item.location.id}`" class="hb-focus">
           {{ item.location.name }}
         </NuxtLink>
       </Badge>

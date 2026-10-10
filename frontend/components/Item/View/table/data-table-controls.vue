@@ -13,10 +13,9 @@
     PaginationList,
     PaginationListItem,
   } from "@/components/ui/pagination";
-  import { DialogID, useDialog } from "~/components/ui/dialog-provider/utils";
   import type { Pagination as PaginationType } from "../pagination";
 
-  const { openDialog } = useDialog();
+  defineEmits<{ (e: "openSettings", event: MouseEvent): void }>();
 
   const props = defineProps<{
     table: TableType<EntitySummary>;
@@ -39,12 +38,17 @@
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-0">
+  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
     <div class="order-2 flex items-center gap-2 md:order-1">
-      <Button class="size-10 p-0" variant="outline" @click="openDialog(DialogID.ItemTableSettings)">
+      <Button
+        class="size-10 shrink-0 p-0"
+        :aria-label="$t('components.item.view.table.table_settings')"
+        variant="outline"
+        @click="$emit('openSettings', $event)"
+      >
         <MdiTableCog />
       </Button>
-      <div class="text-sm text-muted-foreground">
+      <div class="min-w-0 break-words text-sm text-muted-foreground" role="status" aria-live="polite">
         {{
           $t("components.item.view.table.selected_rows", {
             selected: table.getFilteredSelectedRowModel().rows.length,
@@ -62,7 +66,7 @@
         :page="externalPagination ? externalPagination.page : table.getState().pagination.pageIndex + 1"
         @update:page="val => setPage(val)"
       >
-        <PaginationList v-slot="{ items: pageItems }" class="flex items-center gap-1">
+        <PaginationList v-slot="{ items: pageItems }" class="flex flex-wrap items-center justify-center gap-1">
           <PaginationFirst @click="() => setPage(1)" />
           <template v-for="(item, index) in pageItems">
             <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>

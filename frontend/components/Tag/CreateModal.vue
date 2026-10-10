@@ -1,6 +1,6 @@
 <template>
   <BaseModal :dialog-id="DialogID.CreateTag" :title="$t('components.tag.create_modal.title')">
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
+    <form class="flex min-w-0 flex-col gap-4" @submit.prevent="create()">
       <FormTextField
         v-model="form.name"
         :trigger-focus="focused"
@@ -22,8 +22,10 @@
       <ColorSelector v-model="form.color" :label="$t('components.tag.create_modal.tag_color')" :show-hex="true" />
       <IconSelector v-model="form.icon" :label="$t('components.tag.create_modal.tag_icon')" />
       <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit">{{ $t("global.create") }}</Button>
+        <ButtonGroup class="flex-wrap gap-y-2">
+          <Button :disabled="loading" type="submit">
+            {{ loading ? $t("global.loading") : $t("global.create") }}
+          </Button>
           <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
             {{ $t("global.create_and_add") }}
           </Button>

@@ -114,6 +114,7 @@
   }
 
   async function update() {
+    if (updating.value) return;
     updating.value = true;
 
     // Prepare the data with proper format for API
@@ -140,12 +141,12 @@
 
 <template>
   <Dialog :dialog-id="DialogID.UpdateTemplate">
-    <DialogContent class="max-h-[90vh] overflow-y-auto">
+    <DialogContent class="max-h-[90dvh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{{ $t("components.template.edit_modal.title") }}</DialogTitle>
       </DialogHeader>
 
-      <form v-if="template" class="flex flex-col gap-2" @submit.prevent="update">
+      <form v-if="template" class="flex min-w-0 flex-col gap-4" :aria-busy="updating" @submit.prevent="update">
         <FormTextField
           v-model="updateData.name"
           :autofocus="true"
@@ -171,7 +172,7 @@
             :label="$t('components.template.form.item_description')"
             :max-length="1000"
           />
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid gap-4 sm:grid-cols-2">
             <FormTextField
               v-model.number="updateData.defaultQuantity"
               :label="$t('global.quantity')"
@@ -195,13 +196,13 @@
             :label="$t('components.template.form.default_location')"
           />
           <TagSelector v-model="updateData.defaultTagIds" :tags="tags ?? []" />
-          <div class="flex items-center gap-4">
+          <div class="flex flex-wrap items-start gap-4">
             <div class="flex items-center gap-2">
-              <Switch id="editInsured" v-model:checked="updateData.defaultInsured" />
+              <Switch id="editInsured" v-model="updateData.defaultInsured" />
               <Label for="editInsured" class="text-sm">{{ $t("global.insured") }}</Label>
             </div>
             <div class="flex items-center gap-2">
-              <Switch id="editWarranty" v-model:checked="updateData.defaultLifetimeWarranty" />
+              <Switch id="editWarranty" v-model="updateData.defaultLifetimeWarranty" />
               <Label for="editWarranty" class="text-sm">{{ $t("components.template.form.lifetime_warranty") }}</Label>
             </div>
           </div>
@@ -221,26 +222,38 @@
           </Button>
         </div>
         <div v-if="updateData.fields.length > 0" class="flex flex-col gap-2">
-          <div v-for="(field, idx) in updateData.fields" :key="idx" class="flex items-end gap-2">
+          <div
+            v-for="(field, idx) in updateData.fields"
+            :key="idx"
+            class="hb-panel flex min-w-0 flex-wrap items-end gap-3 p-3"
+          >
             <FormTextField
               v-model="field.name"
               :label="$t('components.template.form.field_name')"
               :max-length="255"
-              class="flex-1"
+              class="min-w-0 basis-full sm:flex-1 sm:basis-0"
             />
             <FormTextField
               v-model="field.textValue"
               :label="$t('components.template.form.default_value')"
-              class="flex-1"
+              class="min-w-0 basis-full sm:flex-1 sm:basis-0"
             />
-            <Button type="button" size="icon" variant="ghost" @click="updateData.fields.splice(idx, 1)">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              :aria-label="$t('global.delete')"
+              @click="updateData.fields.splice(idx, 1)"
+            >
               <MdiDelete class="size-4" />
             </Button>
           </div>
         </div>
 
         <DialogFooter>
-          <Button type="submit" :loading="updating">{{ $t("global.update") }}</Button>
+          <Button type="submit" :disabled="updating">
+            {{ updating ? $t("global.loading") : $t("global.update") }}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>
@@ -249,18 +262,20 @@
   <BaseContainer v-if="template">
     <Title>{{ template.name }}</Title>
 
-    <Card class="p-3">
+    <Card class="hb-panel min-w-0 p-4 sm:p-6">
       <header :class="{ 'mb-2': template.description }">
         <div class="flex flex-wrap items-end gap-2">
-          <div>
-            <h1 class="pb-1 text-2xl">{{ template.name }}</h1>
+          <div class="min-w-0 flex-1 basis-64">
+            <h1 class="break-words pb-2 font-editorial text-3xl leading-tight tracking-tight sm:text-4xl">
+              {{ template.name }}
+            </h1>
             <div class="flex flex-wrap gap-1 text-xs text-muted-foreground">
               <span>{{ $t("global.created") }} <DateTime :date="template.createdAt" /></span>
               <span>•</span>
               <span>{{ $t("components.template.detail.updated") }} <DateTime :date="template.updatedAt" /></span>
             </div>
           </div>
-          <div class="ml-auto flex gap-2">
+          <div class="ml-auto flex flex-wrap gap-2">
             <Button @click="openUpdate">
               <MdiPencil class="mr-1" />
               {{ $t("global.edit") }}
@@ -274,57 +289,74 @@
       </header>
 
       <Separator v-if="template.description" class="my-3" />
-      <Markdown v-if="template.description" :source="template.description" />
+      <div v-if="template.description" class="min-w-0 break-words">
+        <Markdown :source="template.description" />
+      </div>
 
       <Separator class="my-3" />
       <div class="grid gap-4 text-sm md:grid-cols-2">
         <div>
           <h3 class="mb-2 font-medium">{{ $t("components.template.detail.default_values") }}</h3>
           <dl class="flex flex-col gap-1">
-            <div v-if="template.defaultName" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.item_name") }}</dt>
-              <dd>{{ template.defaultName }}</dd>
+            <div v-if="template.defaultName" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("components.template.form.item_name") }}</dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultName }}</dd>
             </div>
-            <div v-if="template.defaultDescription" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.item_description") }}</dt>
-              <dd class="max-w-[200px] truncate">{{ template.defaultDescription }}</dd>
+            <div v-if="template.defaultDescription" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.item_description") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultDescription }}</dd>
             </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("global.quantity") }}</dt>
-              <dd>{{ template.defaultQuantity }}</dd>
+            <div class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.quantity") }}</dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultQuantity }}</dd>
             </div>
-            <div v-if="template.defaultModelNumber" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.model_number") }}</dt>
-              <dd>{{ template.defaultModelNumber }}</dd>
+            <div v-if="template.defaultModelNumber" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.model_number") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultModelNumber }}</dd>
             </div>
-            <div v-if="template.defaultManufacturer" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.manufacturer") }}</dt>
-              <dd>{{ template.defaultManufacturer }}</dd>
+            <div v-if="template.defaultManufacturer" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.manufacturer") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultManufacturer }}</dd>
             </div>
-            <div v-if="template.defaultLocation" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.location") }}</dt>
-              <dd>{{ template.defaultLocation.name }}</dd>
+            <div v-if="template.defaultLocation" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("components.template.form.location") }}</dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultLocation.name }}</dd>
             </div>
-            <div v-if="template.defaultTags && template.defaultTags.length > 0" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("global.tags") }}</dt>
-              <dd>{{ template.defaultTags.map(t => t.name).join(", ") }}</dd>
+            <div
+              v-if="template.defaultTags && template.defaultTags.length > 0"
+              class="grid min-w-0 grid-cols-2 gap-3 py-1"
+            >
+              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.tags") }}</dt>
+              <dd class="min-w-0 break-words text-right">{{ template.defaultTags.map(t => t.name).join(", ") }}</dd>
             </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("global.insured") }}</dt>
-              <dd>{{ template.defaultInsured ? $t("global.yes") : $t("global.no") }}</dd>
+            <div class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.insured") }}</dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultInsured ? $t("global.yes") : $t("global.no") }}
+              </dd>
             </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.lifetime_warranty") }}</dt>
-              <dd>{{ template.defaultLifetimeWarranty ? $t("global.yes") : $t("global.no") }}</dd>
+            <div class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.lifetime_warranty") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultLifetimeWarranty ? $t("global.yes") : $t("global.no") }}
+              </dd>
             </div>
           </dl>
         </div>
         <div v-if="template.fields.length > 0">
           <h3 class="mb-2 font-medium">{{ $t("components.template.form.custom_fields") }}</h3>
           <dl class="flex flex-col gap-1">
-            <div v-for="field in template.fields" :key="field.id" class="flex justify-between">
-              <dt class="text-muted-foreground">{{ field.name }}</dt>
-              <dd>{{ field.textValue || "—" }}</dd>
+            <div v-for="field in template.fields" :key="field.id" class="grid min-w-0 grid-cols-2 gap-3 py-1">
+              <dt class="min-w-0 break-words text-muted-foreground">{{ field.name }}</dt>
+              <dd class="min-w-0 break-words text-right">{{ field.textValue || "—" }}</dd>
             </div>
           </dl>
         </div>

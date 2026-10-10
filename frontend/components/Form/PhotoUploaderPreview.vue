@@ -4,15 +4,15 @@
       <div class="mt-8 w-full">
         <img
           :src="photo.fileBase64"
-          class="w-full rounded object-fill shadow-sm"
+          class="w-full rounded object-contain"
           :alt="$t('components.entity.create_modal.uploaded')"
         />
       </div>
 
-      <div class="mt-2 flex items-center gap-2">
+      <div class="mt-2 flex flex-wrap items-center gap-2">
         <TooltipProvider class="flex gap-2" :delay-duration="0">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger as-child>
               <Button size="icon" type="button" variant="destructive" @click.prevent="emit('delete', index)">
                 <MdiDelete />
                 <div class="sr-only">{{ $t("components.entity.create_modal.delete_photo") }}</div>
@@ -24,7 +24,7 @@
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger as-child>
               <Button size="icon" type="button" variant="default" @click.prevent="emit('rotate', index)">
                 <MdiRotateClockwise />
                 <div class="sr-only">{{ $t("components.entity.create_modal.rotate_photo") }}</div>
@@ -36,10 +36,11 @@
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger as-child>
               <Button
                 size="icon"
                 type="button"
+                :aria-pressed="photo.primary"
                 :variant="photo.primary ? 'default' : 'outline'"
                 @click.prevent="emit('setPrimary', index)"
               >

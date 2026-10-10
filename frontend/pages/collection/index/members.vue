@@ -90,17 +90,21 @@
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div v-if="loading" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+  <div class="min-w-0 space-y-4">
+    <h2 class="hb-section-title">{{ $t("collection.tabs.members") }}</h2>
+    <p v-if="error" role="alert" class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground">
+      {{ error }}
+    </p>
+    <div v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
       {{ $t("global.loading") }}
     </div>
 
     <div v-else>
-      <div v-if="!members.length" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+      <div v-if="!members.length && !error" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
         {{ $t("collection.members.empty") }}
       </div>
 
-      <div v-else class="scroll-bg overflow-x-auto rounded-md border bg-card">
+      <div v-if="members.length" class="hb-panel scroll-bg min-w-0 overflow-x-auto">
         <Table class="min-w-[480px]">
           <TableHeader>
             <TableRow>
@@ -111,8 +115,8 @@
           </TableHeader>
           <TableBody>
             <TableRow v-for="user in members" :key="user.id">
-              <TableCell>{{ user.name }}</TableCell>
-              <TableCell>{{ user.email }}</TableCell>
+              <TableCell class="max-w-64 break-words [overflow-wrap:anywhere]">{{ user.name }}</TableCell>
+              <TableCell class="max-w-64 break-all">{{ user.email }}</TableCell>
               <TableCell>
                 <div class="ml-auto">
                   <TooltipProvider :delay-duration="0">

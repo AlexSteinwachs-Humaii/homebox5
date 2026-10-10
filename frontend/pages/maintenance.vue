@@ -16,7 +16,7 @@
 
 <template>
   <div>
-    <BaseContainer class="flex flex-col gap-4">
+    <BaseContainer class="flex min-w-0 flex-col gap-6">
       <BaseSectionHeader> {{ $t("menu.maintenance") }} </BaseSectionHeader>
       <MaintenanceListView />
     </BaseContainer>

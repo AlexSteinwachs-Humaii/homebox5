@@ -1,40 +1,64 @@
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <Button size="sm" variant="outline" class="group/filter">
-        {{ label }} {{ len }}
+      <Button size="sm" variant="outline" class="group/filter h-auto min-h-9 max-w-full whitespace-normal text-left">
+        <span class="min-w-0 break-words">{{ label }} {{ len }}</span>
         <MdiChevronDown class="transition-transform group-data-[state=open]/filter:rotate-180" />
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="z-40 p-0">
+    <PopoverContent class="z-40 w-80 max-w-[calc(100vw-2rem)] p-0" align="start">
       <div class="p-4 shadow-sm">
-        <Input v-model="search" type="text" :placeholder="$t('components.search.filter.search_placeholder')" />
+        <Input
+          v-model="search"
+          type="search"
+          :aria-label="`${label}: ${$t('components.search.filter.search_placeholder')}`"
+          :placeholder="$t('components.search.filter.search_placeholder')"
+        />
       </div>
-      <div class="max-h-72 divide-y overflow-y-auto">
+      <div class="max-h-[min(18rem,50vh)] divide-y overflow-y-auto">
+        <p
+          v-if="selectedView.length === 0 && unselected.length === 0"
+          role="status"
+          class="break-words p-4 text-sm text-muted-foreground"
+        >
+          {{ $t("components.search.filter.no_results") }}
+        </p>
         <Label
           v-for="v in selectedView"
           :key="v.id"
-          class="flex cursor-pointer justify-between px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+          class="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground"
         >
-          <div>
+          <div class="min-w-0 break-words">
             <span>{{ v.name }}</span>
-            <span v-if="v.treeString && v.treeString !== v.name" class="ml-auto text-xs">{{ v.treeString }}</span>
+            <span v-if="v.treeString && v.treeString !== v.name" class="block text-xs text-muted-foreground">{{
+              v.treeString
+            }}</span>
           </div>
-          <Checkbox :model-value="true" @update:model-value="_ => (selected = selected.filter(s => s.id !== v.id))" />
+          <Checkbox
+            :model-value="true"
+            :aria-label="v.name"
+            class="shrink-0"
+            @update:model-value="_ => (selected = selected.filter(s => s.id !== v.id))"
+          />
         </Label>
         <hr v-if="selected.length > 0" />
         <Label
           v-for="v in unselected"
           :key="v.id"
-          class="flex cursor-pointer justify-between px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+          class="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground"
         >
-          <div>
+          <div class="min-w-0 break-words">
             <div>{{ v.name }}</div>
-            <div v-if="v.treeString && v.treeString !== v.name" class="ml-auto text-xs">
+            <div v-if="v.treeString && v.treeString !== v.name" class="text-xs text-muted-foreground">
               {{ v.treeString }}
             </div>
           </div>
-          <Checkbox :model-value="false" @update:model-value="_ => (selected = [...selected, v])" />
+          <Checkbox
+            :model-value="false"
+            :aria-label="v.name"
+            class="shrink-0"
+            @update:model-value="_ => (selected = [...selected, v])"
+          />
         </Label>
       </div>
     </PopoverContent>

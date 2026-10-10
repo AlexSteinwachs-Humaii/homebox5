@@ -1,23 +1,33 @@
 <template>
   <Dialog :dialog-id="DialogID.EditMaintenance">
-    <DialogContent>
+    <DialogContent @close-auto-focus="restoreFocus">
       <DialogHeader>
         <DialogTitle>
           {{ entry.id ? $t("maintenance.modal.edit_title") : $t("maintenance.modal.new_title") }}
         </DialogTitle>
       </DialogHeader>
 
-      <form class="flex flex-col gap-2" @submit.prevent="dispatchFormSubmit">
+      <form class="flex min-w-0 flex-col gap-4" :aria-busy="saving" @submit.prevent="dispatchFormSubmit">
         <FormTextField v-model="entry.name" autofocus :label="$t('maintenance.modal.entry_name')" />
         <DatePicker v-model="entry.completedDate" :label="$t('maintenance.modal.completed_date')" />
         <DatePicker v-model="entry.scheduledDate" :label="$t('maintenance.modal.scheduled_date')" />
         <FormTextArea v-model="entry.description" :label="$t('maintenance.modal.notes')" />
-        <FormTextField v-model="entry.cost" autofocus :label="$t('maintenance.modal.cost')" />
+        <FormTextField v-model="entry.cost" :label="$t('maintenance.modal.cost')" />
+
+        <p v-if="saveError" role="alert" class="rounded-md border border-destructive p-3 text-popover-foreground">
+          {{ saveError }}
+        </p>
 
         <DialogFooter>
-          <Button type="submit">
+          <Button type="submit" :disabled="saving">
             <MdiPost />
-            {{ entry.id ? $t("maintenance.modal.edit_action") : $t("maintenance.modal.new_action") }}
+            {{
+              saving
+                ? $t("global.loading")
+                : entry.id
+                  ? $t("maintenance.modal.edit_action")
+                  : $t("maintenance.modal.new_action")
+            }}
           </Button>
         </DialogFooter>
       </form>
@@ -52,13 +62,29 @@
     itemIds: null as string[] | null,
   });
 
-  async function dispatchFormSubmit() {
-    if (entry.id) {
-      await editEntry();
-      return;
+  const saving = ref(false);
+  const saveError = ref("");
+  let trigger: HTMLElement | null = null;
+  function restoreFocus(event: Event) {
+    if (trigger?.isConnected) {
+      event.preventDefault();
+      trigger.focus();
     }
+  }
 
-    await createEntry();
+  async function dispatchFormSubmit() {
+    if (saving.value) return;
+    saving.value = true;
+    saveError.value = "";
+    try {
+      if (entry.id) await editEntry();
+      else await createEntry();
+    } catch {
+      saveError.value = t(entry.id ? "maintenance.toast.failed_to_update" : "maintenance.toast.failed_to_create");
+      toast.error(saveError.value);
+    } finally {
+      saving.value = false;
+    }
   }
 
   async function createEntry() {
@@ -66,7 +92,7 @@
       return;
     }
 
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       entry.itemIds.map(async itemId => {
         const { error } = await api.items.maintenance.create(itemId, {
           name: entry.name,
@@ -77,12 +103,18 @@
         });
 
         if (error) {
-          toast.error(t("maintenance.toast.failed_to_create"));
-          return;
+          throw new Error("Failed to create entry");
         }
       })
     );
 
+    // Retain only failed targets so retrying a partial batch cannot duplicate successes.
+    entry.itemIds = entry.itemIds.filter((_, index) => results[index]?.status === "rejected");
+    if (entry.itemIds.length) {
+      saveError.value = t("maintenance.toast.failed_to_create");
+      toast.error(saveError.value);
+      return;
+    }
     closeDialog(DialogID.EditMaintenance, true);
   }
 
@@ -100,7 +132,8 @@
     });
 
     if (error) {
-      toast.error(t("maintenance.toast.failed_to_update"));
+      saveError.value = t("maintenance.toast.failed_to_update");
+      toast.error(saveError.value);
       return;
     }
 
@@ -109,6 +142,8 @@
 
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.EditMaintenance, params => {
+      trigger = document.activeElement as HTMLElement | null;
+      saveError.value = "";
       switch (params.type) {
         case "create":
           entry.id = null;

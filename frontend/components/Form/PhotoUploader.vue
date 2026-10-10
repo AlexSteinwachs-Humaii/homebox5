@@ -1,16 +1,25 @@
 <template>
   <div class="w-full">
     <div class="flex w-full flex-col gap-1.5">
-      <Label for="photo-uploader" class="flex w-full px-1">
+      <Label :for="inputId" class="flex w-full px-1">
         {{ label }}
       </Label>
 
-      <div class="relative inline-block">
-        <Button type="button" variant="outline" class="w-full" aria-hidden="true" @click.prevent="openFilePicker">
+      <div
+        class="relative inline-block rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
+      >
+        <Button
+          type="button"
+          variant="outline"
+          class="w-full"
+          aria-hidden="true"
+          tabindex="-1"
+          @click.prevent="openFilePicker"
+        >
           {{ buttonLabel }}
         </Button>
         <Input
-          id="photo-uploader"
+          :id="inputId"
           ref="fileInput"
           class="absolute left-0 top-0 size-full cursor-pointer opacity-0"
           type="file"
@@ -24,11 +33,12 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from "vue";
+  import { computed, ref, useId } from "vue";
   import { useI18n } from "vue-i18n";
   import { Label } from "~/components/ui/label";
   import { Input } from "~/components/ui/input";
   import { Button } from "~/components/ui/button";
+  import { toast } from "~/components/ui/sonner";
   import { filesToPhotoPreviews, type PhotoPreview } from "./photo-uploader";
 
   const props = withDefaults(
@@ -49,9 +59,12 @@
   }>();
 
   const { t } = useI18n();
+  const inputId = useId();
   const fileInput = ref<HTMLInputElement | null>(null);
 
-  const label = computed(() => props.label || t("components.entity.create_modal.item_photo"));
+  const label = computed(
+    () => props.label || t("components.entity.create_modal.entity_photo", { type: t("global.item") })
+  );
   const buttonLabel = computed(() => props.buttonLabel || t("components.entity.create_modal.upload_photos"));
 
   function openFilePicker() {
@@ -62,9 +75,12 @@
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
-    const photos = await filesToPhotoPreviews(input.files, props.existingCount);
-
-    emit("selected", photos);
-    input.value = "";
+    try {
+      const photos = await filesToPhotoPreviews(input.files, props.existingCount);
+      emit("selected", photos);
+      input.value = "";
+    } catch {
+      toast.error(t("items.toast.failed_upload_attachment"));
+    }
   }
 </script>

@@ -31,7 +31,7 @@
       role="status"
       aria-live="polite"
     >
-      <p class="mx-auto max-w-xs">
+      <p class="mx-auto max-w-xs break-words">
         {{ $t("components.location.tree.no_locations") }}
       </p>
       <Button
@@ -46,8 +46,8 @@
       </Button>
     </div>
 
-    <ul role="tree" :aria-labelledby="treeId" class="space-y-1">
-      <li v-for="item in sortedLocs" :key="item.id" role="treeitem">
+    <ul :aria-labelledby="treeId" class="space-y-1">
+      <li v-for="item in sortedLocs" :key="item.id">
         <LocationTreeNode :item="item" :tree-id="treeId" :show-items="props.showItems ?? true" />
       </li>
     </ul>

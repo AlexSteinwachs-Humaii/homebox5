@@ -1,8 +1,14 @@
 <template>
-  <Card class="overflow-hidden shadow-xl">
+  <Card class="hb-panel overflow-hidden shadow-sm">
     <CardHeader v-if="$slots.title" class="px-4 py-5 sm:px-6">
-      <component :is="collapsable ? 'button' : 'div'" v-on="collapsable ? { click: toggle } : {}">
-        <h3 class="flex items-center text-lg font-medium leading-6">
+      <component
+        :is="collapsable ? 'button' : 'div'"
+        :type="collapsable ? 'button' : undefined"
+        :aria-expanded="collapsable ? !collapsed : undefined"
+        class="hb-focus text-left"
+        v-on="collapsable ? { click: toggle } : {}"
+      >
+        <h3 class="hb-section-title flex items-center gap-2">
           <slot name="title" />
           <template v-if="collapsable">
             <span class="ml-2 transition-transform" :class="{ 'rotate-180': collapsed }">
@@ -12,7 +18,7 @@
         </h3>
       </component>
       <div>
-        <p v-if="$slots.subtitle" class="mt-1 max-w-2xl text-sm text-foreground/70">
+        <p v-if="$slots.subtitle" class="mt-1 max-w-2xl text-sm text-muted-foreground">
           <slot name="subtitle" />
         </p>
         <template v-if="$slots['title-actions']">

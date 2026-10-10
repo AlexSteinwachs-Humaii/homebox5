@@ -220,41 +220,44 @@
   <div>
     <ItemImageDialog />
 
-    <div v-if="location">
+    <div v-if="location" class="min-w-0">
       <!-- set page title -->
       <Title>{{ location.name }}</Title>
 
-      <!-- Photo gallery -->
-      <section v-if="photos.length > 0" class="mb-4">
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+      <!-- Photo gallery. Thumbnails stay letterboxed so real photos are not cropped or scaled. -->
+      <section class="mb-4 min-w-0">
+        <p v-if="photos.length === 0" class="rounded-lg border bg-muted p-4 text-sm text-muted-foreground">
+          {{ $t("items.no_photos") }}
+        </p>
+        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           <button
             v-for="(photo, i) in photos"
             :key="i"
-            class="group relative aspect-1 h-32 overflow-hidden rounded-lg border bg-muted"
+            class="relative aspect-1 h-32 overflow-hidden rounded-lg border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             @click="openImageDialog(photo, location.id)"
           >
             <img
               :src="photo.thumbnailSrc || photo.originalSrc"
               :alt="location.name"
-              class="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+              class="size-full object-contain"
             />
           </button>
         </div>
       </section>
 
-      <Card class="p-3">
+      <Card class="hb-panel p-4 sm:p-6">
         <header :class="{ 'mb-2': location?.description }">
-          <div class="flex flex-wrap items-end gap-2">
+          <div class="flex flex-wrap items-start gap-4">
             <div
-              class="mb-auto flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+              class="flex size-12 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-muted-foreground"
             >
               <MdiPackageVariant class="size-7" />
             </div>
-            <div>
+            <div class="min-w-0 flex-1 basis-48">
               <Breadcrumb v-if="location?.parent">
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <BreadcrumbLink as-child class="text-foreground/70 hover:underline">
+                    <BreadcrumbLink as-child class="hb-focus text-muted-foreground hover:underline">
                       <NuxtLink :to="`/location/${location.parent.id}`">
                         {{ location.parent.name }}
                       </NuxtLink>
@@ -264,14 +267,16 @@
                   <BreadcrumbItem> {{ location.name }} </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-              <h1 class="flex items-center gap-3 pb-1 text-2xl">
-                {{ location ? location.name : "" }}
+              <h1
+                class="flex flex-wrap items-center gap-3 break-words pb-2 font-editorial text-3xl leading-tight tracking-tight sm:text-4xl"
+              >
+                <span class="min-w-0 max-w-full break-words">{{ location ? location.name : "" }}</span>
 
                 <Badge v-if="location && location.totalPrice" variant="secondary">
                   <Currency :amount="location.totalPrice" />
                 </Badge>
               </h1>
-              <div class="flex flex-wrap gap-1 text-xs">
+              <div class="flex flex-wrap gap-1 text-xs text-muted-foreground">
                 <div>
                   {{ $t("global.created") }}
                   <DateTime :date="location?.createdAt" />
@@ -281,21 +286,26 @@
                 <TagChip v-for="tag in location.tags" :key="tag.id" :tag="tag" size="sm" />
               </div>
             </div>
-            <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-2">
+            <div class="ml-auto flex max-w-full flex-wrap items-center gap-2">
               <LabelMaker :id="location.id" type="location" />
-              <Button class="w-9 md:w-auto" @click="openCreateItem">
+              <Button class="w-9 md:w-auto" :aria-label="$t('components.location.create_item')" @click="openCreateItem">
                 <MdiPlus name="mdi-plus" />
                 <span class="hidden md:inline">
                   {{ $t("components.location.create_item") }}
                 </span>
               </Button>
-              <Button class="w-9 md:w-auto" @click="goToEdit">
+              <Button class="w-9 md:w-auto" :aria-label="$t('global.edit')" @click="goToEdit">
                 <MdiPencil name="mdi-pencil" />
                 <span class="hidden md:inline">
                   {{ $t("global.edit") }}
                 </span>
               </Button>
-              <Button variant="destructive" class="w-9 md:w-auto" @click="confirmDelete()">
+              <Button
+                variant="destructive"
+                class="w-9 md:w-auto"
+                :aria-label="$t('global.delete')"
+                @click="confirmDelete()"
+              >
                 <MdiDelete name="mdi-delete" />
                 <span class="hidden md:inline">
                   {{ $t("global.delete") }}
@@ -305,17 +315,21 @@
           </div>
         </header>
         <Separator v-if="location && location.description" />
-        <Markdown v-if="location && location.description" class="mt-3 text-base" :source="location.description" />
+        <Markdown
+          v-if="location && location.description"
+          class="min-w-0 pt-4 text-base"
+          :source="location.description"
+        />
       </Card>
 
       <!-- Details (notes, custom fields) -->
-      <BaseCard v-if="locationDetails.length > 0" class="mt-4">
+      <BaseCard v-if="locationDetails.length > 0" class="mt-section-gap">
         <template #title> {{ $t("global.details") }} </template>
         <DetailsSection :details="locationDetails" />
       </BaseCard>
 
       <!-- Attachments (non-photo) -->
-      <BaseCard v-if="hasNonPhotoAttachments" class="mt-4">
+      <BaseCard v-if="hasNonPhotoAttachments" class="mt-section-gap">
         <template #title> {{ $t("items.attachments") }} </template>
         <div class="border-t px-4 py-2">
           <ItemAttachmentsList
@@ -342,14 +356,16 @@
       </BaseCard>
 
       <!-- Items in this location -->
-      <section v-if="location && items">
+      <section v-if="location && items" class="mt-section-gap min-w-0">
         <ItemViewSelectable :items="items" @refresh="refreshItemList" />
       </section>
 
       <!-- Child locations -->
-      <section v-if="location && location.children && location.children.length > 0" class="mt-6">
-        <BaseSectionHeader class="mb-5"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <section v-if="location && location.children && location.children.length > 0" class="mt-section-gap">
+        <BaseSectionHeader class="mb-5">
+          {{ $t("locations.child_locations") }}
+        </BaseSectionHeader>
+        <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <LocationCard v-for="child in location.children" :key="child.id" :location="child" />
         </div>
       </section>

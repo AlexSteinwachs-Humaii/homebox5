@@ -1,9 +1,11 @@
 <template>
   <BaseModal :dialog-id="DialogID.CreateEntity">
     <template #title>
-      <div class="flex items-center gap-2 text-nowrap">
-        <span>Create</span>
+      <div class="flex min-w-0 flex-wrap items-center gap-2">
+        <span>{{ $t("global.create") }}</span>
+        <span v-if="pendingCreatedEntity">{{ t(selectedEntityType?.name || "global.entity") }}</span>
         <EntitySelector
+          v-else
           :selected-entity-type="selectedEntityType?.id"
           :entity-types="subItemCreate ? entityTypes.filter(t => !t.isLocation) : entityTypes"
           size="sm"
@@ -12,11 +14,11 @@
       </div>
     </template>
     <template #header-actions>
-      <div class="flex gap-2">
+      <div v-if="!pendingCreatedEntity" class="flex gap-2">
         <TooltipProvider :delay-duration="0">
           <!-- Template selector button -->
           <Tooltip v-if="!selectedEntityType?.isLocation">
-            <TooltipTrigger>
+            <TooltipTrigger as-child>
               <TemplateSelector v-model="selectedTemplate" compact @template-selected="handleTemplateSelected" />
             </TooltipTrigger>
             <TooltipContent>
@@ -26,8 +28,15 @@
 
           <ButtonGroup>
             <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="start" @click="openQrScannerPage()">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  :disabled="loading"
+                  size="icon"
+                  data-pos="start"
+                  :aria-label="$t('components.entity.create_modal.product_tooltip_scan_barcode')"
+                  @click="openQrScannerPage()"
+                >
                   <MdiBarcodeScan class="size-5" />
                 </Button>
               </TooltipTrigger>
@@ -36,8 +45,15 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="end" @click="openBarcodeDialog()">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  :disabled="loading"
+                  size="icon"
+                  data-pos="end"
+                  :aria-label="$t('components.entity.create_modal.product_tooltip_input_barcode')"
+                  @click="openBarcodeDialog()"
+                >
                   <MdiBarcode class="size-5" />
                 </Button>
               </TooltipTrigger>
@@ -50,140 +66,146 @@
       </div>
     </template>
 
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
-      <LocationSelector v-model="form.location" />
+    <form class="flex min-w-0 flex-col gap-5" :aria-busy="loading" @submit.prevent="create()">
+      <p v-if="pendingCreatedEntity" role="status" class="rounded-md border p-3 text-sm">
+        {{ $t("components.entity.create_modal.toast.record_created_photos_pending") }}
+      </p>
+      <fieldset :disabled="!!pendingCreatedEntity" class="flex min-w-0 flex-col gap-5">
+        <LocationSelector v-model="form.location" />
 
-      <!-- Template Info Display - Collapsible banner with distinct styling -->
-      <div v-if="templateData" class="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex flex-1 items-start gap-2">
-            <MdiFileDocumentOutline class="mt-0.5 size-4 shrink-0 text-primary" />
-            <div class="flex-1">
-              <h4 class="text-sm font-medium text-foreground">
-                {{ $t("components.template.using_template", { name: templateData.name }) }}
-              </h4>
-              <button
-                type="button"
-                class="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                @click="showTemplateDetails = !showTemplateDetails"
-              >
-                <span v-if="!showTemplateDetails">{{ $t("components.template.show_defaults") }}</span>
-                <span v-else>{{ $t("components.template.hide_defaults") }}</span>
-                <MdiChevronDown class="size-4 transition-transform" :class="{ 'rotate-180': showTemplateDetails }" />
-              </button>
+        <!-- Template Info Display - Collapsible banner with distinct styling -->
+        <div v-if="templateData" class="hb-panel min-w-0 break-words border-l-4 border-l-primary p-4">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex min-w-0 flex-1 items-start gap-2">
+              <MdiFileDocumentOutline class="mt-0.5 size-4 shrink-0 text-primary" />
+              <div class="min-w-0 flex-1">
+                <h4 class="text-sm font-medium text-foreground">
+                  {{ $t("components.template.using_template", { name: templateData.name }) }}
+                </h4>
+                <button
+                  type="button"
+                  class="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  :aria-expanded="showTemplateDetails"
+                  @click="showTemplateDetails = !showTemplateDetails"
+                >
+                  <span v-if="!showTemplateDetails">{{ $t("components.template.show_defaults") }}</span>
+                  <span v-else>{{ $t("components.template.hide_defaults") }}</span>
+                  <MdiChevronDown class="size-4 transition-transform" :class="{ 'rotate-180': showTemplateDetails }" />
+                </button>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              class="size-7 shrink-0"
+              :aria-label="$t('components.entity.create_modal.clear_template')"
+              @click="clearTemplate"
+            >
+              <MdiClose class="size-4" />
+            </Button>
+          </div>
+
+          <!-- Collapsible details section -->
+          <div v-if="showTemplateDetails" class="mt-3 border-t border-primary/20 pt-3">
+            <div class="flex flex-col gap-2 text-xs text-muted-foreground">
+              <p v-if="templateData.description" class="text-foreground/80">{{ templateData.description }}</p>
+              <div class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                <div v-if="templateData.defaultName">
+                  <span class="font-medium">{{ $t("global.name") }}:</span> {{ templateData.defaultName }}
+                </div>
+                <div>
+                  <span class="font-medium">{{ $t("global.quantity") }}:</span> {{ templateData.defaultQuantity }}
+                </div>
+                <div>
+                  <span class="font-medium">{{ $t("global.insured") }}:</span>
+                  {{ templateData.defaultInsured ? $t("global.yes") : $t("global.no") }}
+                </div>
+                <div v-if="templateData.defaultManufacturer">
+                  <span class="font-medium">{{ $t("components.template.form.manufacturer") }}:</span>
+                  {{ templateData.defaultManufacturer }}
+                </div>
+                <div v-if="templateData.defaultModelNumber">
+                  <span class="font-medium">{{ $t("components.template.form.model_number") }}:</span>
+                  {{ templateData.defaultModelNumber }}
+                </div>
+                <div v-if="templateData.defaultLifetimeWarranty">
+                  <span class="font-medium">{{ $t("components.template.form.lifetime_warranty") }}:</span>
+                  {{ $t("global.yes") }}
+                </div>
+                <div v-if="templateData.defaultLocation">
+                  <span class="font-medium">{{ $t("components.template.form.location") }}:</span>
+                  {{ templateData.defaultLocation.name }}
+                </div>
+              </div>
+              <div v-if="templateData.defaultTags && templateData.defaultTags.length > 0" class="mt-1">
+                <span class="font-medium">{{ $t("global.tags") }}:</span>
+                {{ templateData.defaultTags.map((t: any) => t.name).join(", ") }}
+              </div>
+              <div v-if="templateData.defaultDescription" class="mt-1">
+                <p class="font-medium">{{ $t("components.template.form.item_description") }}:</p>
+                <p class="ml-2">{{ templateData.defaultDescription }}</p>
+              </div>
+              <div v-if="templateData.fields && templateData.fields.length > 0" class="mt-1">
+                <p class="font-medium">{{ $t("components.template.form.custom_fields") }}:</p>
+                <ul class="ml-4 flex list-none flex-col gap-1">
+                  <li v-for="field in templateData.fields" :key="field.id">
+                    <span class="font-medium">{{ field.name }}:</span>
+                    <span> {{ field.textValue || $t("components.template.empty_value") }}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="size-7 shrink-0"
-            :aria-label="$t('components.entity.create_modal.clear_template')"
-            @click="clearTemplate"
-          >
-            <MdiClose class="size-4" />
-          </Button>
         </div>
 
-        <!-- Collapsible details section -->
-        <div v-if="showTemplateDetails" class="mt-3 border-t border-primary/20 pt-3">
-          <div class="flex flex-col gap-2 text-xs text-muted-foreground">
-            <p v-if="templateData.description" class="text-foreground/80">{{ templateData.description }}</p>
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-              <div v-if="templateData.defaultName">
-                <span class="font-medium">{{ $t("global.name") }}:</span> {{ templateData.defaultName }}
-              </div>
-              <div>
-                <span class="font-medium">{{ $t("global.quantity") }}:</span> {{ templateData.defaultQuantity }}
-              </div>
-              <div>
-                <span class="font-medium">{{ $t("global.insured") }}:</span>
-                {{ templateData.defaultInsured ? $t("global.yes") : $t("global.no") }}
-              </div>
-              <div v-if="templateData.defaultManufacturer">
-                <span class="font-medium">{{ $t("components.template.form.manufacturer") }}:</span>
-                {{ templateData.defaultManufacturer }}
-              </div>
-              <div v-if="templateData.defaultModelNumber">
-                <span class="font-medium">{{ $t("components.template.form.model_number") }}:</span>
-                {{ templateData.defaultModelNumber }}
-              </div>
-              <div v-if="templateData.defaultLifetimeWarranty">
-                <span class="font-medium">{{ $t("components.template.form.lifetime_warranty") }}:</span>
-                {{ $t("global.yes") }}
-              </div>
-              <div v-if="templateData.defaultLocation">
-                <span class="font-medium">{{ $t("components.template.form.location") }}:</span>
-                {{ templateData.defaultLocation.name }}
-              </div>
-            </div>
-            <div v-if="templateData.defaultTags && templateData.defaultTags.length > 0" class="mt-1">
-              <span class="font-medium">{{ $t("global.tags") }}:</span>
-              {{ templateData.defaultTags.map((t: any) => t.name).join(", ") }}
-            </div>
-            <div v-if="templateData.defaultDescription" class="mt-1">
-              <p class="font-medium">{{ $t("components.template.form.item_description") }}:</p>
-              <p class="ml-2">{{ templateData.defaultDescription }}</p>
-            </div>
-            <div v-if="templateData.fields && templateData.fields.length > 0" class="mt-1">
-              <p class="font-medium">{{ $t("components.template.form.custom_fields") }}:</p>
-              <ul class="ml-4 flex list-none flex-col gap-1">
-                <li v-for="field in templateData.fields" :key="field.id">
-                  <span class="font-medium">{{ field.name }}:</span>
-                  <span> {{ field.textValue || $t("components.template.empty_value") }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ItemSelector
-        v-if="subItemCreate"
-        v-model="parent"
-        v-model:search="query"
-        :label="$t('components.entity.create_modal.parent_item')"
-        :items="results"
-        item-text="name"
-        :no-results-text="$t('components.entity.create_modal.item_selector_no_results_text')"
-        :is-loading="isLoading"
-        :trigger-search="triggerSearch"
-      />
-      <FormTextField
-        ref="nameInput"
-        v-model="form.name"
-        :trigger-focus="focused"
-        :autofocus="true"
-        :label="
-          $t('components.entity.create_modal.entity_name', {
-            type: selectedEntityType ? t(selectedEntityType.name) : '',
-          })
-        "
-        :max-length="255"
-        :min-length="1"
-      />
-      <FormTextField
-        v-if="!selectedEntityType?.isLocation"
-        v-model.number="form.quantity"
-        :label="
-          $t('components.entity.create_modal.entity_quantity', {
-            type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
-          })
-        "
-        type="number"
-        step="any"
-        :min="0"
-      />
-      <FormTextArea
-        v-model="form.description"
-        :label="
-          $t('components.entity.create_modal.entity_description', {
-            type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
-          })
-        "
-        :max-length="1000"
-      />
-      <TagSelector v-model="form.tags" :tags="tags ?? []" />
+        <ItemSelector
+          v-if="subItemCreate"
+          v-model="parent"
+          v-model:search="query"
+          :label="$t('components.entity.create_modal.parent_item')"
+          :items="results"
+          item-text="name"
+          :no-results-text="$t('components.entity.create_modal.item_selector_no_results_text')"
+          :is-loading="isLoading"
+          :trigger-search="triggerSearch"
+        />
+        <FormTextField
+          ref="nameInput"
+          v-model="form.name"
+          :trigger-focus="focused"
+          :autofocus="true"
+          :label="
+            $t('components.entity.create_modal.entity_name', {
+              type: selectedEntityType ? t(selectedEntityType.name) : '',
+            })
+          "
+          :max-length="255"
+          :min-length="1"
+        />
+        <FormTextField
+          v-if="!selectedEntityType?.isLocation"
+          v-model.number="form.quantity"
+          :label="
+            $t('components.entity.create_modal.entity_quantity', {
+              type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
+            })
+          "
+          type="number"
+          step="any"
+          :min="0"
+        />
+        <FormTextArea
+          v-model="form.description"
+          :label="
+            $t('components.entity.create_modal.entity_description', {
+              type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
+            })
+          "
+          :max-length="1000"
+        />
+        <TagSelector v-model="form.tags" :tags="tags ?? []" />
+      </fieldset>
       <PhotoUploader
         :label="
           $t('components.entity.create_modal.entity_photo', {
@@ -194,23 +216,18 @@
         :existing-count="form.photos.length"
         @selected="appendPhotos"
       />
-      <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit" class="group">
-            <div class="relative mx-2">
-              <div
-                class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
-              >
-                <MdiPackageVariant class="size-5 group-hover:hidden" />
-                <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
-              </div>
-            </div>
-            {{ $t("global.create") }}
-          </Button>
-          <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
-            {{ $t("global.create_and_add") }}
-          </Button>
-        </ButtonGroup>
+      <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <Button :disabled="loading" type="submit">
+          <MdiLoading v-if="loading" class="size-5 animate-spin" aria-hidden="true" />
+          {{ pendingCreatedEntity ? $t("components.entity.create_modal.retry_photos") : $t("global.create") }}
+        </Button>
+        <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
+          {{
+            pendingCreatedEntity
+              ? $t("components.entity.create_modal.retry_photos_and_add")
+              : $t("global.create_and_add")
+          }}
+        </Button>
       </div>
 
       <PhotoUploaderPreview
@@ -240,8 +257,7 @@
   import { useLocationStore } from "~~/stores/locations";
   import MdiBarcode from "~icons/mdi/barcode";
   import MdiBarcodeScan from "~icons/mdi/barcode-scan";
-  import MdiPackageVariant from "~icons/mdi/package-variant";
-  import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
+  import MdiLoading from "~icons/mdi/loading";
   import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
   import MdiChevronDown from "~icons/mdi/chevron-down";
   import MdiClose from "~icons/mdi/close";
@@ -514,6 +530,7 @@
 
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.CreateEntity, async params => {
+      if (pendingCreatedEntity.value) return;
       subItemCreate.value = false;
       let parentItemLocationId = null;
       parent.value = {};
@@ -588,6 +605,10 @@
     onUnmounted(cleanup);
   });
 
+  // Creation and photo upload are separate API operations. Retain the already
+  // created record on partial failure so retry cannot create a duplicate.
+  const pendingCreatedEntity = ref<{ id: string } | null>(null);
+
   async function create(close = true) {
     // An empty entityTypeId serializes to "" and fails UUID unmarshalling on the
     // backend, so block creation up front rather than firing a doomed request.
@@ -619,7 +640,9 @@
     let error, data;
 
     // If the selected entity type is a location, use the location creation endpoint
-    if (selectedEntityType.value?.isLocation) {
+    if (pendingCreatedEntity.value) {
+      data = pendingCreatedEntity.value;
+    } else if (selectedEntityType.value?.isLocation) {
       const result = await api.items.createLocation({
         name: form.name,
         description: form.description,
@@ -672,15 +695,17 @@
       return;
     }
 
-    toast.success(
-      t("components.entity.create_modal.toast.create_success", {
-        type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
-      })
-    );
+    if (!pendingCreatedEntity.value) {
+      toast.success(
+        t("components.entity.create_modal.toast.create_success", {
+          type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
+        })
+      );
+    }
 
     if (form.photos.length > 0) {
       toast.info(t("components.entity.create_modal.toast.uploading_photos", { count: form.photos.length }));
-      let uploadError = false;
+      const failedPhotos: PhotoPreview[] = [];
       for (const photo of form.photos) {
         const { error: attachError } = await api.items.attachments.add(
           data.id,
@@ -691,18 +716,23 @@
         );
 
         if (attachError) {
-          uploadError = true;
+          failedPhotos.push(photo);
           toast.error(t("components.entity.create_modal.toast.upload_failed", { photoName: photo.photoName }));
           console.error(attachError);
         }
       }
-      if (uploadError) {
-        toast.warning(t("components.entity.create_modal.toast.some_photos_failed", { count: form.photos.length }));
+      if (failedPhotos.length) {
+        form.photos = failedPhotos;
+        pendingCreatedEntity.value = { id: data.id };
+        loading.value = false;
+        toast.warning(t("components.entity.create_modal.toast.some_photos_failed", { count: failedPhotos.length }));
+        return;
       } else {
         toast.success(t("components.entity.create_modal.toast.upload_success", { count: form.photos.length }));
       }
     }
 
+    pendingCreatedEntity.value = null;
     form.name = "";
     form.quantity = 1;
     form.description = "";

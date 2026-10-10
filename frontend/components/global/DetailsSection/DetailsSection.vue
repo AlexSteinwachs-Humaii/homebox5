@@ -1,11 +1,15 @@
 <template>
-  <div class="border-t px-4 py-5 sm:p-0">
-    <dl class="sm:divide-y">
-      <div v-for="detail in details" :key="detail.name" class="group py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-        <dt class="text-sm font-medium">
+  <div class="min-w-0 border-t">
+    <dl class="divide-y divide-border">
+      <div
+        v-for="detail in details"
+        :key="detail.name"
+        class="group grid min-w-0 gap-2 p-4 sm:grid-cols-3 sm:gap-4 sm:px-6"
+      >
+        <dt class="min-w-0 text-sm font-medium text-muted-foreground">
           {{ $t(detail.name) }}
         </dt>
-        <dd class="text-start text-sm sm:col-span-2">
+        <dd class="min-w-0 text-start text-sm leading-relaxed sm:col-span-2">
           <slot :name="detail.slot || detail.name" v-bind="{ detail }">
             <DateTime
               v-if="detail.type == 'date'"
@@ -22,7 +26,7 @@
                       target="_blank"
                       rel="noopener noreferrer"
                       :class="badgeVariants()"
-                      class="gap-1"
+                      class="hb-focus max-w-full gap-1 whitespace-normal text-start"
                     >
                       <MdiOpenInNew />
                       {{ detail.text }}
@@ -37,7 +41,7 @@
             <template v-else-if="detail.type === 'markdown'">
               <ClientOnly>
                 <!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
-                <div class="markdown-container w-full overflow-hidden break-words">
+                <div class="markdown-container min-w-0 break-words">
                   <Markdown :source="detail.text" />
                 </div>
               </ClientOnly>
@@ -50,14 +54,11 @@
                   :href="maybeUrl(detail.text.toString()).url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="overflow-hidden break-all text-primary underline hover:text-primary/80"
+                  class="hb-focus min-w-0 break-words text-primary underline hover:text-primary/80"
                   >{{ detail.text }}</a
                 >
-                <span v-else class="overflow-hidden break-all">{{ detail.text }}</span>
-                <span
-                  v-if="detail.copyable"
-                  class="my-0 ml-4 shrink-0 opacity-0 transition-opacity duration-75 group-hover:opacity-100"
-                >
+                <span v-else class="min-w-0 break-words">{{ detail.text }}</span>
+                <span v-if="detail.copyable" class="my-0 ml-4 shrink-0">
                   <CopyText v-if="detail.text.toString()" :text="detail.text.toString()" :icon-size="16" />
                 </span>
               </span>
@@ -87,7 +88,7 @@
   });
 </script>
 
-<style>
+<style scoped>
   /* Use :deep to target elements inside the markdown container */
   :deep(.markdown-container) {
     /* General container styles */

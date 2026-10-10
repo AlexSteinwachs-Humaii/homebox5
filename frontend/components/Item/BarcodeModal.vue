@@ -1,30 +1,28 @@
 <template>
   <Dialog :dialog-id="DialogID.ProductImport">
-    <DialogContent :class="'w-full md:max-w-xl lg:max-w-4xl'">
+    <DialogContent class="min-w-0 md:max-w-xl lg:max-w-4xl">
       <DialogHeader>
-        <DialogTitle>{{ $t("components.item.product_import.title") }}</DialogTitle>
+        <DialogTitle class="font-editorial text-2xl font-normal">{{
+          $t("components.item.product_import.title")
+        }}</DialogTitle>
       </DialogHeader>
 
-      <div
-        v-if="errorMessage"
-        class="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 p-4 text-destructive"
-        role="alert"
-      >
-        <MdiAlertCircleOutline class="text-destructive" />
+      <div v-if="errorMessage" class="hb-scanner-feedback" role="alert">
+        <MdiAlertCircleOutline class="size-5 shrink-0" aria-hidden="true" />
         <span class="text-sm font-medium">{{ errorMessage }}</span>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end" :aria-busy="searching">
         <FormTextField
           v-model="barcode"
           :disabled="searching"
-          class="w-[30%]"
+          class="min-w-0 flex-1"
           :label="$t('components.item.product_import.barcode')"
           @keyup.enter="retrieveProductInfo(barcode)"
         />
         <Button
           :variant="searching ? 'destructive' : 'default'"
-          class="mt-auto h-10"
+          class="h-auto min-h-11 whitespace-normal"
           @click="retrieveProductInfo(barcode)"
         >
           <MdiLoading v-if="searching" class="animate-spin" />
@@ -39,15 +37,11 @@
 
       <Separator />
 
-      <BaseCard>
+      <BaseCard class="min-w-0 overflow-hidden">
         <Table class="w-full whitespace-nowrap">
           <TableHeader>
             <TableRow>
-              <TableHead
-                v-for="h in headers"
-                :key="h.value"
-                class="text-no-transform bg-secondary text-sm text-secondary-foreground hover:bg-secondary/90"
-              >
+              <TableHead v-for="h in headers" :key="h.value" class="bg-muted text-sm font-medium text-muted-foreground">
                 <div
                   class="flex items-center gap-1"
                   :class="{
@@ -66,7 +60,7 @@
               v-for="(p, index) in products"
               :key="index"
               class="cursor-pointer"
-              :class="{ selected: selectedRow === index }"
+              :class="{ 'bg-accent text-accent-foreground hover:bg-accent': selectedRow === index }"
               @click="selectProduct(index)"
             >
               <TableCell
@@ -79,15 +73,25 @@
                 <template v-if="h.type === 'name'">
                   <div class="flex items-center space-x-4">
                     <img :src="p.imageBase64" class="w-16 rounded object-fill shadow-sm" alt="Product's photo" />
-                    <span class="text-sm font-medium">
+                    <button
+                      type="button"
+                      class="hb-focus min-h-11 text-left text-sm font-medium underline underline-offset-4"
+                      :aria-pressed="selectedRow === index"
+                      :aria-label="$t('components.item.product_import.select_product', { name: p.item.name })"
+                      @click.stop="selectProduct(index)"
+                    >
                       {{ p.item.name }}
-                    </span>
+                    </button>
                   </div>
                 </template>
                 <template v-else-if="h.type === 'url'">
-                  <NuxtLink class="underline" :to="'https://' + extractValue(p, h.value)" target="_blank">{{
-                    extractValue(p, h.value)
-                  }}</NuxtLink>
+                  <NuxtLink
+                    class="hb-focus underline"
+                    :to="'https://' + extractValue(p, h.value)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ extractValue(p, h.value) }}</NuxtLink
+                  >
                 </template>
 
                 <slot v-else :name="cell(h)">
@@ -253,14 +257,3 @@
     selectedRow.value = index;
   }
 </script>
-
-<style>
-  tr.selected {
-    background-color: hsl(var(--primary));
-    color: hsl(var(--background));
-  }
-
-  tr:hover.selected {
-    background-color: hsl(var(--primary));
-  }
-</style>

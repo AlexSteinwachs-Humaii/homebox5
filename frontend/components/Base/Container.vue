@@ -12,7 +12,7 @@
     },
   });
 
-  const cmpClass = computed(() => cn("container mx-auto my-4 max-w-7xl px-4", props.class));
+  const cmpClass = computed(() => cn("container mx-auto my-section-gap max-w-7xl px-page-gutter", props.class));
 </script>
 
 <template>

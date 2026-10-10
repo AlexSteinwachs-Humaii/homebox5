@@ -1,5 +1,6 @@
 import type { ComputedRef } from "vue";
 import type { DaisyTheme } from "~~/lib/data/themes";
+import { applyThemeToElement } from "~~/lib/data/apply-theme";
 
 export interface UseTheme {
   theme: ComputedRef<DaisyTheme>;
@@ -16,15 +17,7 @@ export function useTheme(): UseTheme {
       return;
     }
 
-    htmlEl.value.setAttribute("data-theme", newTheme);
-
-    const prefixedThemeClasses = Array.from(htmlEl.value.classList).filter(className => className.startsWith("theme-"));
-    if (prefixedThemeClasses.length > 0) {
-      htmlEl.value.classList.remove(...prefixedThemeClasses);
-    }
-
-    htmlEl.value.classList.remove(...themes);
-    htmlEl.value.classList.add("theme-" + newTheme);
+    applyThemeToElement(htmlEl.value, newTheme);
   };
 
   const setTheme = (newTheme: DaisyTheme) => {
@@ -53,6 +46,7 @@ export function useIsThemeInList(list: DaisyTheme[]) {
 
 export const themes = [
   "dark",
+  "theme-cinematic",
   "theme-aqua",
   "theme-black",
   "theme-bumblebee",

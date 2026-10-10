@@ -1,6 +1,11 @@
 <template>
-  <BaseModal :dialog-id="DialogID.JoinCollection" :title="$t('components.collection.join_modal.title')" hide-footer>
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="join()">
+  <BaseModal
+    keyboard-focus
+    :dialog-id="DialogID.JoinCollection"
+    :title="$t('components.collection.join_modal.title')"
+    hide-footer
+  >
+    <form class="flex min-w-0 flex-col gap-4" @submit.prevent="join()">
       <FormTextField
         v-model="form.inviteCode"
         :trigger-focus="focused"
@@ -13,19 +18,35 @@
         <span class="text-sm text-muted-foreground">
           {{ $t("components.collection.join_modal.invites_should_look_like") }}
         </span>
-        <div>
-          <Badge variant="outline"> AYQ4W4K5MT4CZOPB2PZRCZ4PTY </Badge>
-          <Badge variant="outline"> {{ `${domain}?token=AYQ4W4K5MT4CZOPB2PZRCZ4PTY` }} </Badge>
+        <div class="mt-2 flex min-w-0 flex-col items-start gap-2">
+          <Badge variant="outline" class="max-w-full break-all font-mono"> AYQ4W4K5MT4CZOPB2PZRCZ4PTY </Badge>
+          <Badge variant="outline" class="max-w-full break-all font-mono">
+            {{ `${domain}?token=AYQ4W4K5MT4CZOPB2PZRCZ4PTY` }}
+          </Badge>
         </div>
       </div>
 
-      <Button type="button" class="mt-2" variant="outline" @click="openDialog(DialogID.CreateCollection)">
+      <Button
+        type="button"
+        class="mt-2 h-auto min-h-10 whitespace-normal text-start"
+        variant="outline"
+        @click="openDialog(DialogID.CreateCollection)"
+      >
         {{ $t("components.collection.join_modal.no_invite_code_create_one") }}
       </Button>
 
-      <div class="mt-2 flex flex-row-reverse">
-        <Button :disabled="loading" type="submit">{{ $t("components.collection.join_modal.join") }}</Button>
+      <div class="mt-4 flex min-w-0 flex-wrap justify-end gap-2 border-t pt-4">
+        <Button :disabled="loading" class="h-auto min-h-10 max-w-full whitespace-normal" type="submit">{{
+          $t("components.collection.join_modal.join")
+        }}</Button>
       </div>
+      <p
+        v-if="errorMessage"
+        role="alert"
+        class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+      >
+        {{ errorMessage }}
+      </p>
     </form>
   </BaseModal>
 </template>
@@ -47,6 +68,12 @@
   const { activeDialog, closeDialog, openDialog, registerOpenDialogCallback } = useDialog();
 
   const loading = ref(false);
+  const errorMessage = ref("");
+
+  function reportError(message: string) {
+    errorMessage.value = message;
+    toast.error(message);
+  }
   const focused = ref(false);
 
   const form = reactive({ inviteCode: "" });
@@ -75,6 +102,7 @@
       if (active && active === DialogID.JoinCollection) {
         form.inviteCode = pendingInviteCode.value;
         pendingInviteCode.value = "";
+        errorMessage.value = "";
         focused.value = true;
       }
     }
@@ -82,12 +110,12 @@
 
   async function join() {
     if (loading.value) {
-      toast.error(t("components.collection.join_modal.toast.already_joining"));
+      reportError(t("components.collection.join_modal.toast.already_joining"));
       return;
     }
 
     if (!form.inviteCode || form.inviteCode.trim().length === 0) {
-      toast.error(t("components.collection.join_modal.toast.please_enter_valid_join_code"));
+      reportError(t("components.collection.join_modal.toast.please_enter_valid_join_code"));
       return;
     }
 
@@ -97,17 +125,18 @@
       : form.inviteCode.trim();
 
     if (!code || code.length !== 26) {
-      toast.error(t("components.collection.join_modal.toast.please_enter_valid_join_code"));
+      reportError(t("components.collection.join_modal.toast.please_enter_valid_join_code"));
       return;
     }
 
+    errorMessage.value = "";
     loading.value = true;
 
     const { data, error } = await api.group.acceptInvitation(code);
 
     if (error) {
       loading.value = false;
-      toast.error(t("components.collection.join_modal.toast.join_failed"));
+      reportError(t("components.collection.join_modal.toast.join_failed"));
       return;
     }
 

@@ -32,6 +32,7 @@
   const searchLocked = ref(false);
   const queryParamsInitialized = ref(false);
   const initialSearch = ref(true);
+  const searchFailed = ref(false);
 
   const api = useUserApi();
   const loading = useMinLoader(500);
@@ -262,6 +263,7 @@
     }
 
     loading.value = true;
+    searchFailed.value = false;
 
     const fields = [];
 
@@ -330,6 +332,7 @@
 
     if (error) {
       resetItems();
+      searchFailed.value = true;
       toast.error(t("items.toast.failed_search_items"));
       return;
     }
@@ -388,61 +391,72 @@
 
 <template>
   <BaseContainer>
-    <div v-if="locations && tags">
-      <div class="flex flex-wrap items-end gap-4 md:flex-nowrap">
-        <div class="w-full">
-          <Input v-model:model-value="query" :placeholder="$t('global.search')" class="h-12" />
-          <div v-if="byAssetId" class="pl-2 pt-2 text-sm">
+    <div v-if="locations && tags" class="hb-panel mb-4 min-w-0 space-y-3 p-4 sm:p-6" data-inventory-search>
+      <div class="flex flex-wrap items-end gap-3 md:flex-nowrap">
+        <div class="min-w-0 flex-1 basis-full md:basis-auto">
+          <Label for="inventory-query" class="mb-2 block">{{ $t("global.search") }}</Label>
+          <Input
+            id="inventory-query"
+            v-model:model-value="query"
+            type="search"
+            :placeholder="$t('global.search')"
+            :aria-describedby="byAssetId ? 'inventory-asset-query' : undefined"
+            class="h-12"
+          />
+          <div v-if="byAssetId" id="inventory-asset-query" role="status" class="break-words pt-2 text-sm">
             <p>{{ $t("items.query_id", { id: parsedAssetId }) }}</p>
           </div>
         </div>
-        <Button class="mb-auto h-12 w-full md:w-auto" @click.prevent="submit">
+        <Button class="h-auto min-h-12 w-full whitespace-normal md:w-auto" @click.prevent="submit">
           <MdiLoading v-if="loading" class="animate-spin" />
           <MdiMagnify v-else />
           {{ $t("global.search") }}
         </Button>
       </div>
 
-      <div class="flex w-full flex-wrap gap-2 py-2 md:flex-nowrap">
+      <div class="flex min-w-0 flex-wrap items-center gap-2">
         <SearchFilter v-model="selectedLocations" :label="$t('global.locations')" :options="locationFlatTree" />
         <SearchFilter v-model="selectedTags" :label="$t('global.tags')" :options="tags" />
         <Popover>
           <PopoverTrigger as-child>
-            <Button size="sm" variant="outline"> {{ $t("items.options") }}</Button>
+            <Button size="sm" variant="outline" class="h-auto min-h-9 whitespace-normal">
+              {{ $t("items.options") }}</Button
+            >
           </PopoverTrigger>
-          <PopoverContent class="z-40 flex flex-col gap-2">
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="includeArchived" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.include_archive") }} </span>
+          <PopoverContent
+            class="z-40 flex max-h-[70vh] w-80 max-w-[calc(100vw-2rem)] flex-col gap-3 overflow-y-auto break-words"
+            align="start"
+          >
+            <Label for="inventory-archived" class="flex cursor-pointer items-center gap-3">
+              <Switch id="inventory-archived" v-model="includeArchived" class="shrink-0" />
+              <span class="min-w-0">{{ $t("items.include_archive") }}</span>
             </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="fieldSelector" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.field_selector") }} </span>
+            <Label for="inventory-fields" class="flex cursor-pointer items-center gap-3">
+              <Switch id="inventory-fields" v-model="fieldSelector" class="shrink-0" />
+              <span class="min-w-0">{{ $t("items.field_selector") }}</span>
             </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="negateTags" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.negate_tags") }} </span>
+            <Label for="inventory-negate-tags" class="flex cursor-pointer items-center gap-3">
+              <Switch id="inventory-negate-tags" v-model="negateTags" class="shrink-0" />
+              <span class="min-w-0">{{ $t("items.negate_tags") }}</span>
             </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="onlyWithoutPhoto" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.only_without_photo") }} </span>
+            <Label for="inventory-without-photo" class="flex cursor-pointer items-center gap-3">
+              <Switch id="inventory-without-photo" v-model="onlyWithoutPhoto" class="shrink-0" />
+              <span class="min-w-0">{{ $t("items.only_without_photo") }}</span>
             </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="onlyWithPhoto" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.only_with_photo") }} </span>
+            <Label for="inventory-with-photo" class="flex cursor-pointer items-center gap-3">
+              <Switch id="inventory-with-photo" v-model="onlyWithPhoto" class="shrink-0" />
+              <span class="min-w-0">{{ $t("items.only_with_photo") }}</span>
             </Label>
-            <Label class="flex cursor-pointer flex-col gap-2">
+            <Label for="inventory-order" class="flex flex-col gap-2">
               <span class="text-right">
                 <span class="text-right"> {{ $t("items.order_by") }} </span>
               </span>
 
               <Select v-model="orderBy">
-                <SelectTrigger>
+                <SelectTrigger
+                  id="inventory-order"
+                  class="h-auto min-h-10 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:break-words"
+                >
                   <SelectValue :placeholder="$t('items.order_by')" />
                 </SelectTrigger>
                 <SelectContent>
@@ -453,15 +467,20 @@
               </Select>
             </Label>
             <Separator />
-            <Button @click="reset"> {{ $t("items.reset_search") }} </Button>
+            <Button class="h-auto min-h-9 whitespace-normal" @click="reset"> {{ $t("items.reset_search") }} </Button>
           </PopoverContent>
         </Popover>
         <div class="grow" />
         <Popover>
           <PopoverTrigger as-child>
-            <Button size="sm" variant="outline"> {{ $t("items.tips") }}</Button>
+            <Button size="sm" variant="outline" class="h-auto min-h-9 whitespace-normal">
+              {{ $t("items.tips") }}</Button
+            >
           </PopoverTrigger>
-          <PopoverContent class="z-40 w-[325px]" align="end">
+          <PopoverContent
+            class="z-40 max-h-[70vh] w-[325px] max-w-[calc(100vw-2rem)] overflow-y-auto break-words"
+            align="end"
+          >
             <p class="text-base">{{ $t("items.tips_sub") }}</p>
             <ul class="mt-1 list-disc pl-6 text-sm">
               <li>
@@ -477,13 +496,16 @@
           </PopoverContent>
         </Popover>
       </div>
-      <div v-if="fieldSelector" class="flex flex-col gap-2 pb-2">
-        <p>{{ $t("items.custom_fields") }}</p>
+      <div v-if="fieldSelector" class="flex min-w-0 flex-col gap-3 border-t pt-4">
+        <p class="hb-section-title">{{ $t("items.custom_fields") }}</p>
         <div v-for="(f, idx) in fieldTuples" :key="idx" class="flex flex-wrap gap-2">
-          <div class="flex w-full flex-col gap-1 md:w-auto md:grow">
-            <Label> {{ $t("items.field") }} </Label>
+          <div class="flex min-w-0 flex-1 basis-full flex-col gap-1 md:basis-0">
+            <Label :for="`inventory-field-${idx}`"> {{ $t("items.field") }} </Label>
             <Select v-model="fieldTuples[idx]![0]" @update:model-value="fetchValues(f[0])">
-              <SelectTrigger>
+              <SelectTrigger
+                :id="`inventory-field-${idx}`"
+                class="h-auto min-h-10 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:break-words"
+              >
                 <SelectValue :placeholder="$t('items.select_field')" />
               </SelectTrigger>
               <SelectContent>
@@ -491,10 +513,13 @@
               </SelectContent>
             </Select>
           </div>
-          <div class="flex w-full flex-col gap-1 md:w-auto md:grow">
-            <Label> {{ $t("items.field_value") }} </Label>
+          <div class="flex min-w-0 flex-1 basis-full flex-col gap-1 md:basis-0">
+            <Label :for="`inventory-field-value-${idx}`"> {{ $t("items.field_value") }} </Label>
             <Select v-model="fieldTuples[idx]![1]">
-              <SelectTrigger>
+              <SelectTrigger
+                :id="`inventory-field-value-${idx}`"
+                class="h-auto min-h-10 [&>span]:min-w-0 [&>span]:whitespace-normal [&>span]:break-words"
+              >
                 <SelectValue :placeholder="$t('items.select_value')" />
               </SelectTrigger>
               <SelectContent>
@@ -504,18 +529,38 @@
               </SelectContent>
             </Select>
           </div>
-          <Button variant="destructive" type="button" size="icon" class="my-auto" @click="fieldTuples.splice(idx, 1)">
+          <Button
+            variant="destructive"
+            type="button"
+            size="icon"
+            class="my-auto shrink-0"
+            :aria-label="$t('global.delete')"
+            @click="fieldTuples.splice(idx, 1)"
+          >
             <MdiDelete />
           </Button>
         </div>
-        <Button type="button" size="sm" class="mt-2" @click="() => fieldTuples.push(['', ''])">
+        <Button
+          type="button"
+          size="sm"
+          class="mt-2 h-auto min-h-9 whitespace-normal"
+          @click="() => fieldTuples.push(['', ''])"
+        >
           {{ $t("items.add") }}
         </Button>
       </div>
     </div>
 
-    <section>
+    <section :aria-busy="loading">
+      <p v-if="loading" role="status" class="hb-panel mb-3 flex items-center gap-2 p-4">
+        <MdiLoading class="shrink-0 animate-spin" aria-hidden="true" />
+        {{ $t("global.loading") }}
+      </p>
+      <p v-else-if="searchFailed" role="alert" class="hb-panel mb-3 break-words border-destructive p-4">
+        {{ $t("items.toast.failed_search_items") }}
+      </p>
       <ItemViewSelectable
+        v-show="items.length > 0 || (!loading && !searchFailed)"
         :items="items"
         :location-flat-tree="locationFlatTree"
         :pagination="pagination"

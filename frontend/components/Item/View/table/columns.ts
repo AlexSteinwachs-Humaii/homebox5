@@ -3,7 +3,7 @@ import { h } from "vue";
 import DropdownAction from "./data-table-dropdown.vue";
 import { ArrowDown, ArrowUpDown, Check, X } from "lucide-vue-next";
 import Button from "~/components/ui/button/Button.vue";
-import Checkbox from "~/components/Form/Checkbox.vue";
+import Checkbox from "~/components/ui/checkbox/Checkbox.vue";
 import type { EntitySummary } from "~/lib/api/types/data-contracts";
 
 import Currency from "~/components/global/Currency.vue";
@@ -47,19 +47,21 @@ export function makeColumns({
       id: "select",
       header: ({ table }) =>
         h(Checkbox, {
+          class: "size-5",
           modelValue: table.getIsAllPageRowsSelected()
             ? true
             : table.getSelectedRowModel().rows.length > 0
-              ? ("indeterminate" as unknown as boolean) // :)
+              ? "indeterminate"
               : false,
-          "onUpdate:modelValue": (value: boolean) => table.toggleAllPageRowsSelected(!!value),
-          ariaLabel: t("components.item.view.selectable.select_all"),
+          "onUpdate:modelValue": (value: boolean | "indeterminate") => table.toggleAllPageRowsSelected(!!value),
+          "aria-label": t("components.item.view.selectable.select_all"),
         }),
       cell: ({ row }) =>
         h(Checkbox, {
+          class: "size-5",
           modelValue: row.getIsSelected(),
-          "onUpdate:modelValue": (value: boolean) => row.toggleSelected(!!value),
-          ariaLabel: t("components.item.view.selectable.select_row"),
+          "onUpdate:modelValue": (value: boolean | "indeterminate") => row.toggleSelected(!!value),
+          "aria-label": `${t("components.item.view.selectable.select_row")}: ${row.original.name}`,
         }),
       enableHiding: false,
     },
@@ -71,6 +73,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.asset_id")
@@ -85,11 +88,17 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.name")
         ),
-      cell: ({ row }) => h("span", { class: "text-sm font-medium" }, row.getValue("name")),
+      cell: ({ row }) =>
+        h(
+          "span",
+          { class: "block min-w-40 max-w-sm whitespace-normal break-words text-sm font-medium" },
+          row.getValue("name")
+        ),
     },
     {
       id: "quantity",
@@ -99,6 +108,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.quantity")
@@ -113,6 +123,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.insured")
@@ -121,8 +132,10 @@ export function makeColumns({
         const val = row.getValue("insured");
         return h(
           "div",
-          { class: "block mx-auto w-min" },
-          val ? h(Check, { class: "h-4 w-4 text-green-500" }) : h(X, { class: "h-4 w-4 text-destructive" })
+          { class: "block mx-auto w-min", role: "img", "aria-label": t(val ? "global.yes" : "global.no") },
+          val
+            ? h(Check, { class: "h-4 w-4 text-primary", "aria-hidden": "true" })
+            : h(X, { class: "h-4 w-4 text-foreground", "aria-hidden": "true" })
         );
       },
     },
@@ -134,6 +147,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.purchase_price")
@@ -149,6 +163,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.location")
@@ -157,7 +172,14 @@ export function makeColumns({
         const item = row.original as EntitySummary;
         const loc = (item.location || item.parent) as { id: string; name: string } | null;
         if (loc) {
-          return h("a", { href: `/location/${loc.id}`, class: "hover:underline text-sm" }, loc.name);
+          return h(
+            "a",
+            {
+              href: `/location/${loc.id}`,
+              class: "hb-focus block min-w-32 max-w-xs whitespace-normal break-words hover:underline text-sm",
+            },
+            loc.name
+          );
         }
         return h("div", { class: "text-sm text-muted-foreground" }, "");
       },
@@ -170,6 +192,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.archived")
@@ -178,8 +201,10 @@ export function makeColumns({
         const val = row.getValue("archived");
         return h(
           "div",
-          { class: "block mx-auto w-min" },
-          val ? h(Check, { class: "h-4 w-4 text-green-500" }) : h(X, { class: "h-4 w-4 text-destructive" })
+          { class: "block mx-auto w-min", role: "img", "aria-label": t(val ? "global.yes" : "global.no") },
+          val
+            ? h(Check, { class: "h-4 w-4 text-primary", "aria-hidden": "true" })
+            : h(X, { class: "h-4 w-4 text-foreground", "aria-hidden": "true" })
         );
       },
     },
@@ -191,6 +216,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.created_at")
@@ -210,6 +236,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.updated_at")
@@ -236,6 +263,7 @@ export function makeColumns({
           },
           [
             h(DropdownAction, {
+              disabled: selectedCount === 0,
               multi: {
                 items: table.getSelectedRowModel().rows,
                 columns: table.getAllColumns(),
@@ -251,13 +279,13 @@ export function makeColumns({
               h(
                 "span",
                 {
-                  class: "-right-1 -top-1 absolute flex size-4",
+                  class: "-right-2 -top-2 absolute flex min-w-5",
                 },
                 h(
                   "span",
                   {
                     class:
-                      "relative flex size-4 items-center justify-center rounded-full bg-primary p-1 text-primary-foreground text-xs pointer-events-none whitespace-nowrap",
+                      "relative flex min-w-5 h-5 items-center justify-center rounded-full bg-primary px-1 text-primary-foreground text-xs pointer-events-none whitespace-nowrap",
                   },
                   String(selectedCount)
                 )

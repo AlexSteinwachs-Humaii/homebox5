@@ -102,14 +102,14 @@
     <Dialog :dialog-id="DialogID.PrintLabel">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle class="font-editorial text-2xl font-normal tracking-tight">
             {{ $t("components.global.label_maker.print") }}
           </DialogTitle>
           <DialogDescription>
             {{ $t("components.global.label_maker.confirm_description") }}
           </DialogDescription>
         </DialogHeader>
-        <img :src="getLabelUrl(false)" />
+        <img :src="getLabelUrl(false)" :alt="$t('components.global.label_maker.titles')" class="max-w-full bg-white" />
         <DialogFooter>
           <ButtonGroup>
             <Button v-if="status?.labelPrinting || false" type="submit" :disabled="serverPrinting" @click="serverPrint">
@@ -132,7 +132,7 @@
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="icon" @click="downloadLabel">
+            <Button size="icon" :aria-label="$t('components.global.label_maker.download')" @click="downloadLabel">
               <MdiFileDownload name="mdi-file-download" />
             </Button>
           </TooltipTrigger>
@@ -143,7 +143,11 @@
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="icon" @click="openDialog(DialogID.PrintLabel)">
+            <Button
+              size="icon"
+              :aria-label="$t('components.global.label_maker.browser_print')"
+              @click="openDialog(DialogID.PrintLabel)"
+            >
               <MdiPrinterPos name="mdi-printer-pos" />
             </Button>
           </TooltipTrigger>

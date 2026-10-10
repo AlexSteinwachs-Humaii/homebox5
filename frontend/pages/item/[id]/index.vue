@@ -613,7 +613,11 @@
       return;
     }
 
-    toast.success(t("components.template.toast.saved_as_template", { name: templateData.name }));
+    toast.success(
+      t("components.template.toast.saved_as_template", {
+        name: templateData.name,
+      })
+    );
     navigateTo(`/template/${data.id}`);
   }
 
@@ -653,22 +657,22 @@
     </Dialog>
 
     <section>
-      <Card class="p-3">
+      <Card class="hb-panel p-4 sm:p-6">
         <header :class="{ 'mb-2': item.description }">
-          <div class="flex flex-wrap items-end gap-2">
+          <div class="flex flex-wrap items-start gap-4">
             <div
-              class="mb-auto flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+              class="flex size-12 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-muted-foreground"
             >
               <MdiPackageVariant class="size-7" />
             </div>
-            <div>
+            <div class="min-w-0 flex-1 basis-48">
               <Breadcrumb v-if="fullpath && fullpath.length > 0">
                 <BreadcrumbList>
                   <BreadcrumbItem v-for="(part, idx) in fullpath" :key="part.id">
                     <BreadcrumbLink
                       v-if="idx < fullpath.length - 1"
                       as-child
-                      class="text-foreground/70 hover:underline"
+                      class="hb-focus text-muted-foreground hover:underline"
                     >
                       <NuxtLink :to="`/${part.type}/${part.id}`">
                         {{ part.name }}
@@ -681,13 +685,13 @@
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-              <h1 class="text-wrap pb-1 text-2xl">
+              <h1 class="break-words pb-2 font-editorial text-3xl leading-tight tracking-tight sm:text-4xl">
                 {{ item ? item.name : "" }}
               </h1>
               <div class="flex flex-wrap gap-2 pb-1">
                 <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
               </div>
-              <div class="flex flex-wrap gap-1 text-wrap text-xs">
+              <div class="flex flex-wrap gap-1 text-xs text-muted-foreground">
                 <div>
                   {{ $t("items.created_at") }}
                   <DateTime :date="item?.createdAt" />
@@ -699,7 +703,7 @@
                 </div>
               </div>
             </div>
-            <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-2">
+            <div class="ml-auto flex max-w-full flex-wrap items-center gap-2">
               <LabelMaker
                 v-if="typeof item.assetId === 'string' && item.assetId != ''"
                 :id="item.assetId"
@@ -738,19 +742,20 @@
           </div>
         </header>
         <Separator v-if="item.description" />
-        <div v-if="item.description" class="prose max-w-full p-1">
+        <div v-if="item.description" class="min-w-0 pt-4">
           <Markdown class="text-base" :source="item.description" />
         </div>
       </Card>
 
-      <div class="mb-6 mt-3 flex flex-wrap items-center justify-between">
-        <ButtonGroup>
+      <div class="my-section-gap flex min-w-0 flex-wrap items-center gap-2">
+        <ButtonGroup class="max-w-full flex-wrap gap-y-2">
           <Button
             v-for="tab in tabs"
             :key="tab.id"
             as-child
             :variant="tab.to === currentPath ? 'default' : 'outline'"
             size="sm"
+            class="h-auto min-h-9 whitespace-normal py-2 text-start"
           >
             <NuxtLink :to="tab.to">
               {{ $t(tab.name) }}
@@ -761,7 +766,7 @@
     </section>
 
     <section>
-      <div class="space-y-6">
+      <div class="space-y-section-gap">
         <!-- this renders the other pages content -->
         <NuxtPage :item="item" :page-key="itemId" />
 
@@ -783,13 +788,23 @@
             <template #quantity="{ detail }">
               <div class="flex items-center">
                 {{ detail.text }}
-                <span
-                  class="my-0 ml-4 inline-flex gap-2 opacity-10 transition-opacity duration-75 group-hover:opacity-100"
-                >
-                  <Button size="icon" variant="outline" class="size-8 rounded-full" @click="adjustQuantity(-1)">
+                <span class="my-0 ml-4 inline-flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    class="size-9"
+                    :aria-label="$t('items.decrease_quantity')"
+                    @click="adjustQuantity(-1)"
+                  >
                     <MdiMinus class="size-3" />
                   </Button>
-                  <Button size="icon" variant="outline" class="size-8 rounded-full" @click="adjustQuantity(1)">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    class="size-9"
+                    :aria-label="$t('items.increase_quantity')"
+                    @click="adjustQuantity(1)"
+                  >
                     <MdiPlus class="size-3" />
                   </Button>
                 </span>
@@ -800,11 +815,25 @@
 
         <!-- anything in this is not rendered if on another page -->
         <template v-if="!hasNested">
-          <BaseCard v-if="photos && photos.length > 0">
+          <BaseCard>
             <template #title> {{ $t("items.photos") }} </template>
-            <div class="scroll-bg container mx-auto flex max-h-[500px] flex-wrap gap-2 overflow-y-scroll border-t p-4">
-              <button v-for="(img, i) in photos" :key="i" @click="openImageDialog(img, item.id)">
-                <img class="max-h-[200px] rounded" :src="img.thumbnailSrc" :alt="$t('items.photo')" loading="lazy" />
+            <p v-if="!photos.length" class="border-t p-4 text-muted-foreground">{{ $t("items.no_photos") }}</p>
+            <div
+              v-else
+              class="scroll-bg container mx-auto flex max-h-[500px] flex-wrap gap-2 overflow-y-auto border-t p-4"
+            >
+              <button
+                v-for="(img, i) in photos"
+                :key="i"
+                class="max-w-full rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                @click="openImageDialog(img, item.id)"
+              >
+                <img
+                  class="max-h-[200px] max-w-full rounded object-contain"
+                  :src="img.thumbnailSrc"
+                  :alt="$t('items.photo')"
+                  loading="lazy"
+                />
               </button>
             </div>
           </BaseCard>
@@ -842,7 +871,9 @@
               </template>
             </DetailsSection>
             <div v-else>
-              <p class="px-6 pb-4 text-foreground/70">{{ $t("items.no_attachments") }}</p>
+              <p class="px-6 pb-4 text-muted-foreground">
+                {{ $t("items.no_attachments") }}
+              </p>
             </div>
           </BaseCard>
 

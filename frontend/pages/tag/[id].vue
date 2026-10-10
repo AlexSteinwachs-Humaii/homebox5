@@ -161,6 +161,7 @@
   }
 
   async function update() {
+    if (updating.value) return;
     if (!updateData.name || updateData.name.trim().length === 0) {
       toast.error(t("components.tag.create_modal.toast.tag_name_too_long"));
       return;
@@ -226,7 +227,7 @@
         <DialogTitle> {{ $t("tags.update_tag") }} </DialogTitle>
       </DialogHeader>
 
-      <form v-if="tag" class="flex flex-col gap-2" @submit.prevent="update">
+      <form v-if="tag" class="flex min-w-0 flex-col gap-4" @submit.prevent="update">
         <FormTextField
           v-model="updateData.name"
           :autofocus="true"
@@ -252,7 +253,9 @@
         />
         <IconSelector v-model="updateData.icon" :label="$t('components.tag.create_modal.tag_icon')" />
         <DialogFooter>
-          <Button type="submit" :loading="updating"> {{ $t("global.update") }} </Button>
+          <Button type="submit" :disabled="updating">
+            {{ updating ? $t("global.loading") : $t("global.update") }}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>
@@ -262,11 +265,11 @@
     <!-- set page title -->
     <Title>{{ tag.name }}</Title>
 
-    <Card class="p-3">
+    <Card class="hb-panel p-4 sm:p-6">
       <header :class="{ 'mb-2': tag.description }">
         <div class="flex flex-wrap items-end gap-2">
           <div
-            class="mb-auto flex size-12 items-center justify-center rounded-full"
+            class="mb-auto flex size-12 shrink-0 items-center justify-center rounded-full"
             :style="
               tag.color
                 ? { backgroundColor: tag.color, color: getContrastTextColor(tag.color) }
@@ -275,28 +278,30 @@
           >
             <component :is="tagIcon" class="size-7" />
           </div>
-          <div>
+          <div class="min-w-0 flex-1 basis-[calc(100%-4rem)] sm:basis-0">
             <div v-if="tag?.parentId" class="flex flex-wrap items-center gap-2">
               <template v-for="parent in getBreadcrumbPath()" :key="parent.id">
                 <TagChip :tag="parent" size="sm" />
-                <span class="text-foreground/40">/</span>
+                <span class="text-muted-foreground">/</span>
               </template>
               <TagChip :tag="tag" size="sm" hide-icon />
             </div>
-            <h1 class="flex items-center gap-3 pb-1 text-2xl">
+            <h1
+              class="flex flex-wrap items-center gap-3 break-words pb-1 text-2xl font-medium tracking-tight [overflow-wrap:anywhere]"
+            >
               {{ tag ? tag.name : "" }}
-              <Badge v-if="items && items.totalPrice" variant="secondary" class="ml-2">
+              <Badge v-if="items && items.totalPrice" variant="secondary" class="shrink-0 whitespace-nowrap">
                 <Currency :amount="items.totalPrice" />
               </Badge>
             </h1>
-            <div class="flex flex-wrap gap-1 text-xs">
+            <div class="flex flex-wrap gap-1 text-xs text-muted-foreground">
               <div>
                 {{ $t("global.created") }}
                 <DateTime :date="tag?.createdAt" />
               </div>
             </div>
           </div>
-          <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-3">
+          <div class="ml-auto mt-2 flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
             <PageQRCode />
             <Button @click="openUpdate">
               <MdiPencil />
@@ -310,7 +315,11 @@
         </div>
       </header>
       <Separator v-if="tag && tag.description" />
-      <Markdown v-if="tag && tag.description" class="mt-3 text-base" :source="tag.description" />
+      <Markdown
+        v-if="tag && tag.description"
+        class="mt-4 min-w-0 break-words text-sm [overflow-wrap:anywhere]"
+        :source="tag.description"
+      />
     </Card>
     <section v-if="tag && items">
       <ItemViewSelectable :items="items.items" @refresh="refreshItemList" />

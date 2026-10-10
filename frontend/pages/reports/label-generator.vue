@@ -404,10 +404,10 @@
 </script>
 
 <template>
-  <div class="print:hidden">
+  <div class="hb-label-settings bg-background text-foreground print:hidden">
     <Toaster />
-    <div class="container prose mx-auto max-w-4xl p-4 pt-6">
-      <h1>HomeBox {{ $t("reports.label_generator.title") }}</h1>
+    <div class="container mx-auto max-w-4xl space-y-4 p-4 pt-6">
+      <h1 class="hb-display break-words">HomeBox {{ $t("reports.label_generator.title") }}</h1>
       <p>
         {{ $t("reports.label_generator.instruction_1") }}
       </p>
@@ -415,20 +415,28 @@
         {{ $t("reports.label_generator.instruction_2") }}
       </p>
       <p v-html="DOMPurify.sanitize($t('reports.label_generator.instruction_3'))" />
-      <h2>{{ $t("reports.label_generator.tips") }}</h2>
-      <ul>
+      <h2 class="hb-section-title">{{ $t("reports.label_generator.tips") }}</h2>
+      <ul class="list-disc space-y-2 pl-6 text-muted-foreground">
         <li v-html="DOMPurify.sanitize($t('reports.label_generator.tip_1'))" />
         <li v-html="DOMPurify.sanitize($t('reports.label_generator.tip_2'))" />
         <li v-html="DOMPurify.sanitize($t('reports.label_generator.tip_3'))" />
       </ul>
       <div class="flex flex-wrap gap-2">
-        <NuxtLink href="/collection/tools">{{ $t("collection.tabs.tools") }}</NuxtLink>
-        <NuxtLink href="/home">{{ $t("menu.home") }}</NuxtLink>
+        <NuxtLink
+          class="hb-focus inline-flex min-h-11 items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent"
+          href="/collection/tools"
+          >{{ $t("collection.tabs.tools") }}</NuxtLink
+        >
+        <NuxtLink
+          class="hb-focus inline-flex min-h-11 items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent"
+          href="/home"
+          >{{ $t("menu.home") }}</NuxtLink
+        >
       </div>
     </div>
     <Separator class="mx-auto max-w-4xl" />
     <div class="container mx-auto max-w-4xl p-4">
-      <div class="mx-auto grid grid-cols-2 gap-3">
+      <div class="hb-panel mx-auto grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
         <div v-for="(prop, i) in propertyInputs" :key="i" class="flex w-full max-w-xs flex-col">
           <Label :for="`input-${prop.ref}`">
             {{ prop.label }}
@@ -448,8 +456,8 @@
           <Label for="select-replaceHomeboxBehavior">
             {{ $t("reports.label_generator.replace_homebox_behavior") }}
           </Label>
-          <Select id="select-replaceHomeboxBehavior" v-model="replaceHomeboxBehavior" class="w-full max-w-xs">
-            <SelectTrigger>
+          <Select v-model="replaceHomeboxBehavior" class="w-full max-w-xs">
+            <SelectTrigger id="select-replaceHomeboxBehavior" class="h-auto min-h-10 whitespace-normal text-left">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -507,69 +515,71 @@
       </div>
     </div>
   </div>
-  <div class="flex flex-col items-center">
-    <section
-      v-for="(page, pi) in pages"
-      :key="pi"
-      class="border-2 print:border-none"
-      :style="{
-        paddingTop: `${out.page.pt}${out.measure}`,
-        paddingBottom: `${out.page.pb}${out.measure}`,
-        paddingLeft: `${out.page.pl}${out.measure}`,
-        paddingRight: `${out.page.pr}${out.measure}`,
-        width: `${out.page.width}${out.measure}`,
-        background: `white`,
-        color: `black`,
-      }"
-    >
-      <div
-        v-for="(row, ri) in page.rows"
-        :key="ri"
-        class="flex break-inside-avoid"
+  <div class="hb-label-preview">
+    <div class="hb-label-output flex flex-col items-center">
+      <section
+        v-for="(page, pi) in pages"
+        :key="pi"
+        class="border-2 print:border-none"
         :style="{
-          columnGap: `${out.gapX}${out.measure}`,
-          rowGap: `${out.gapY}${out.measure}`,
+          paddingTop: `${out.page.pt}${out.measure}`,
+          paddingBottom: `${out.page.pb}${out.measure}`,
+          paddingLeft: `${out.page.pl}${out.measure}`,
+          paddingRight: `${out.page.pr}${out.measure}`,
+          width: `${out.page.width}${out.measure}`,
+          background: `white`,
+          color: `black`,
         }"
       >
         <div
-          v-for="(item, idx) in row.items"
-          :key="idx"
-          class="flex border-2"
-          :class="{
-            'border-black': bordered && !!item,
-            'border-transparent': !bordered || !item,
-          }"
+          v-for="(row, ri) in page.rows"
+          :key="ri"
+          class="flex break-inside-avoid"
           :style="{
-            height: `${out.card.height}${out.measure}`,
-            width: `${out.card.width}${out.measure}`,
+            columnGap: `${out.gapX}${out.measure}`,
+            rowGap: `${out.gapY}${out.measure}`,
           }"
         >
-          <template v-if="item">
-            <div class="flex items-center">
-              <img
-                :src="item.url"
-                :style="{
-                  minWidth: `${out.card.height * 0.9}${out.measure}`,
-                  width: `${out.card.height * 0.9}${out.measure}`,
-                  height: `${out.card.height * 0.9}${out.measure}`,
-                }"
-              />
-            </div>
-            <div class="ml-2 flex flex-col justify-center">
-              <div class="font-bold">{{ item.assetID }}</div>
-              <div
-                v-if="getHomeBoxLineText(item)"
-                class="text-xs"
-                :class="{ 'font-light italic': getHomeBoxLineText(item) !== labelBlankLine }"
-              >
-                {{ getHomeBoxLineText(item) }}
+          <div
+            v-for="(item, idx) in row.items"
+            :key="idx"
+            class="flex border-2"
+            :class="{
+              'border-black': bordered && !!item,
+              'border-transparent': !bordered || !item,
+            }"
+            :style="{
+              height: `${out.card.height}${out.measure}`,
+              width: `${out.card.width}${out.measure}`,
+            }"
+          >
+            <template v-if="item">
+              <div class="flex items-center">
+                <img
+                  :src="item.url"
+                  :style="{
+                    minWidth: `${out.card.height * 0.9}${out.measure}`,
+                    width: `${out.card.height * 0.9}${out.measure}`,
+                    height: `${out.card.height * 0.9}${out.measure}`,
+                  }"
+                />
               </div>
-              <div class="overflow-hidden text-wrap text-xs">{{ item.name }}</div>
-              <div v-if="printLocationRow" class="text-xs">{{ item.location }}</div>
-            </div>
-          </template>
+              <div class="ml-2 flex flex-col justify-center">
+                <div class="font-bold">{{ item.assetID }}</div>
+                <div
+                  v-if="getHomeBoxLineText(item)"
+                  class="text-xs"
+                  :class="{ 'font-light italic': getHomeBoxLineText(item) !== labelBlankLine }"
+                >
+                  {{ getHomeBoxLineText(item) }}
+                </div>
+                <div class="overflow-hidden text-wrap text-xs">{{ item.name }}</div>
+                <div v-if="printLocationRow" class="text-xs">{{ item.location }}</div>
+              </div>
+            </template>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 </template>

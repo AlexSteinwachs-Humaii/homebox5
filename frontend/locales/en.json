@@ -187,8 +187,11 @@
                 "entity_description": "{type} Description",
                 "entity_photo": "{type} Photo 📷",
                 "upload_photos": "Upload Photos",
+                "retry_photos": "Retry Photos",
+                "retry_photos_and_add": "Retry Photos and Add Another",
                 "uploaded": "Uploaded Photo",
                 "toast": {
+                    "record_created_photos_pending": "The record was created, but some photos could not be uploaded. Your remaining photos are retained. Retry or remove them to continue; record details are already saved.",
                     "already_creating": "Already creating an {type}",
                     "create_failed": "Couldn't create {type}",
                     "create_success": "{type} created",
@@ -226,6 +229,7 @@
                 "error_not_found": "No product found with given barcode.",
                 "import_selected": "Import selected",
                 "search_item": "Search product",
+                "select_product": "Select product: {name}",
                 "title": "Import product"
             },
             "selector": {
@@ -282,6 +286,8 @@
                     "rows_per_page": "Rows per page",
                     "selected_rows": "{selected} of {total} rows selected.",
                     "table_settings": "Table Settings",
+                    "move_column_up": "Move {column} up",
+                    "move_column_down": "Move {column} down",
                     "view_item": "View Item"
                 }
             }
@@ -305,7 +311,8 @@
         },
         "search": {
             "filter": {
-                "search_placeholder": "Search…"
+                "search_placeholder": "Search…",
+                "no_results": "No Results Found"
             }
         },
         "tag": {
@@ -443,6 +450,7 @@
         "build": "Build: { build }",
         "cancel": "Cancel",
         "close": "Close",
+        "toggle_sidebar": "Toggle sidebar",
         "confirm": "Confirm",
         "create": "Create",
         "create_and_add": "Create and Add Another",
@@ -465,8 +473,10 @@
         "items": "Items",
         "join_discord": "Join the Discord",
         "loading": "Loading…",
+        "retry": "Retry",
         "locations": "Locations",
         "maintenance": "Maintenance",
+        "more_actions": "More actions",
         "name": "Name",
         "navigate": "Navigate",
         "no": "No",
@@ -497,6 +507,12 @@
         "entity_type": "Entity Type"
     },
     "home": {
+        "hero": {
+            "eyebrow": "Your collection / Overview",
+            "title": "A place for {everything}.",
+            "everything": "everything",
+            "description": "Your belongings, organized. Your home, at a glance."
+        },
         "quick_statistics": "Quick Statistics",
         "recently_added": "Recently Added",
         "storage_locations": "Storage Locations",
@@ -615,6 +631,9 @@
         "pages": "Page { page } of { totalPages }",
         "parent_item": "Parent Item",
         "photo": "Photo",
+        "no_photos": "No photos added",
+        "photo_unavailable": "Photo could not be loaded. You can still download or open the original.",
+        "view_original_photo": "Open original photo to zoom",
         "photos": "Photos",
         "prev_page": "Previous Page",
         "purchase_date": "Purchase Date",
@@ -622,6 +641,8 @@
         "purchase_price": "Purchase Price",
         "purchased_from": "Purchased From",
         "quantity": "Quantity",
+        "decrease_quantity": "Decrease quantity",
+        "increase_quantity": "Increase quantity",
         "query_id": "Querying Asset ID Number: { id }",
         "receipt": "Receipt",
         "receipts": "Receipts",
@@ -732,6 +753,8 @@
         "update_location": "Update Location"
     },
     "maintenance": {
+        "empty": "No maintenance entries match this status.",
+        "failed_load": "Unable to load maintenance entries. Please try again.",
         "filter": {
             "both": "Both",
             "completed": "Completed",
@@ -924,12 +947,16 @@
         "items_in_location": "{count, plural, one {item} other {items}}",
         "more": "more",
         "not_found": "Item not found",
+        "open_result": "Open result: {name}",
         "qty": "Qty",
         "retry": "Retry",
         "scanning": "Scanning",
         "switch_camera": "Switch Camera",
         "title": "AR Scanner",
         "unsupported": "AR scanning is not supported in this browser"
+    },
+    "organization": {
+        "failed_load": "Unable to load this hierarchy. Please reload to try again."
     },
     "tags": {
         "no_results": "No Tags Found",

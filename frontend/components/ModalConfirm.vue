@@ -1,6 +1,6 @@
 <template>
   <AlertDialog :open="isRevealed">
-    <AlertDialogContent>
+    <AlertDialogContent @escape-key-down="cancel(false)" @close-auto-focus="restoreFocus">
       <AlertDialogHeader>
         <AlertDialogTitle>{{ $t("global.confirm") }}</AlertDialogTitle>
         <AlertDialogDescription>
@@ -39,11 +39,21 @@
 
   const { text, href, isRevealed, confirm, cancel } = useConfirm();
   const { addAlert, removeAlert } = useDialog();
+  let opener: HTMLElement | null = null;
+
+  function restoreFocus(event: Event) {
+    if (opener?.isConnected) {
+      event.preventDefault();
+      opener.focus();
+    }
+    opener = null;
+  }
 
   watch(
     isRevealed,
     val => {
       if (val) {
+        opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         addAlert("confirm-modal");
       } else {
         removeAlert("confirm-modal");

@@ -47,7 +47,6 @@
   <div class="w-full" :class="{ 'p-5 pt-0': expanded }">
     <Label v-if="expanded" for="language"> {{ $t("profile.language") }} </Label>
     <Select
-      id="language"
       v-model="$i18n.locale"
       @update:model-value="
         event => {
@@ -55,7 +54,11 @@
         }
       "
     >
-      <SelectTrigger>
+      <SelectTrigger
+        id="language"
+        :aria-label="$t('profile.language')"
+        class="h-auto min-h-10 whitespace-normal text-start"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -67,7 +70,6 @@
     <template v-if="expanded">
       <Label for="overrideLocale"> {{ $t("profile.override_locale") }} </Label>
       <Select
-        id="overrideLocale"
         :model-value="preferences.overrideFormatLocale"
         @update:model-value="
           val => {
@@ -75,7 +77,7 @@
           }
         "
       >
-        <SelectTrigger>
+        <SelectTrigger id="overrideLocale" class="h-auto min-h-10 whitespace-normal text-start">
           <SelectValue :placeholder="$t('profile.no_override')" />
         </SelectTrigger>
         <SelectContent>

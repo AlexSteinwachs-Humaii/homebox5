@@ -34,6 +34,23 @@
   const entityTypeStore = useEntityTypeStore();
 
   const entityTypes = computed(() => entityTypeStore.allTypes);
+  const loading = ref(false);
+  const loadError = ref<string | null>(null);
+  const formError = ref<string | null>(null);
+
+  async function loadTypes() {
+    loading.value = true;
+    loadError.value = null;
+    try {
+      await entityTypeStore.refresh();
+    } catch {
+      loadError.value = t("errors.api_failure");
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  onMounted(loadTypes);
 
   // Create form
   const createForm = reactive({
@@ -51,8 +68,10 @@
   }
 
   async function create() {
+    formError.value = null;
     if (!createForm.name.trim()) {
-      toast.error(t("components.entityTypes.toasts.name_required"));
+      formError.value = t("components.entityTypes.toasts.name_required");
+      toast.error(formError.value);
       return;
     }
 
@@ -65,14 +84,15 @@
 
     const { error } = await api.entityTypes.create(payload);
     if (error) {
-      toast.error(t("components.entityTypes.toasts.create_failed"));
+      formError.value = t("components.entityTypes.toasts.create_failed");
+      toast.error(formError.value);
       return;
     }
 
     toast.success(t("components.entityTypes.toasts.create_success"));
     resetCreateForm();
     closeDialog(DialogID.CreateEntityType);
-    entityTypeStore.refresh();
+    await loadTypes();
   }
 
   // Update form
@@ -86,6 +106,7 @@
   const updateTemplate = ref<EntityTemplateSummary | null>(null);
 
   function openEdit(et: EntityTypeSummary) {
+    formError.value = null;
     updateForm.id = et.id;
     updateForm.name = et.name;
     updateForm.icon = et.icon;
@@ -102,8 +123,10 @@
   }
 
   async function update() {
+    formError.value = null;
     if (!updateForm.name.trim()) {
-      toast.error(t("components.entityTypes.toasts.name_required"));
+      formError.value = t("components.entityTypes.toasts.name_required");
+      toast.error(formError.value);
       return;
     }
 
@@ -122,13 +145,14 @@
 
     const { error } = await api.entityTypes.update(updateForm.id, payload);
     if (error) {
-      toast.error(t("components.entityTypes.toasts.update_failed"));
+      formError.value = t("components.entityTypes.toasts.update_failed");
+      toast.error(formError.value);
       return;
     }
 
     toast.success(t("components.entityTypes.toasts.update_success"));
     closeDialog(DialogID.UpdateEntityType);
-    entityTypeStore.refresh();
+    await loadTypes();
   }
 
   async function deleteEntityType(et: EntityTypeSummary) {
@@ -144,15 +168,15 @@
     }
 
     toast.success(t("components.entityTypes.toasts.delete_success"));
-    entityTypeStore.refresh();
+    await loadTypes();
   }
 </script>
 
 <template>
-  <div>
+  <div class="min-w-0 space-y-4">
     <!-- Create Dialog -->
     <Dialog :dialog-id="DialogID.CreateEntityType">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle>{{ t("components.entityTypes.create_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -170,6 +194,13 @@
           />
           <TemplateSelector v-if="!createForm.isLocation" v-model="createTemplate" />
 
+          <p
+            v-if="formError"
+            role="alert"
+            class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
+            {{ formError }}
+          </p>
           <DialogFooter>
             <Button type="submit">{{ t("components.entityTypes.create_dialog.button") }}</Button>
           </DialogFooter>
@@ -179,7 +210,7 @@
 
     <!-- Update Dialog -->
     <Dialog :dialog-id="DialogID.UpdateEntityType">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle>{{ t("components.entityTypes.update_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -197,6 +228,13 @@
           />
           <TemplateSelector v-if="!updateForm.isLocation" v-model="updateTemplate" />
 
+          <p
+            v-if="formError"
+            role="alert"
+            class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
+            {{ formError }}
+          </p>
           <DialogFooter>
             <Button type="submit">{{ t("components.entityTypes.update_dialog.button") }}</Button>
           </DialogFooter>
@@ -205,17 +243,36 @@
     </Dialog>
 
     <!-- Page Content -->
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-lg font-medium">{{ t("components.entityTypes.page.title") }}</h3>
-      <Button size="sm" @click="openDialog(DialogID.CreateEntityType)">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="hb-section-title">
+        {{ t("components.entityTypes.page.title") }}
+      </h2>
+      <Button
+        size="sm"
+        class="h-auto min-h-10 whitespace-normal text-start"
+        @click="
+          formError = null;
+          openDialog(DialogID.CreateEntityType);
+        "
+      >
         <MdiPlus class="mr-1 size-4" />
         {{ t("components.entityTypes.page.create") }}
       </Button>
     </div>
 
-    <div v-if="entityTypes && entityTypes.length > 0" class="flex flex-col gap-2">
-      <Card v-for="et in entityTypes" :key="et.id" class="p-4">
-        <div class="flex items-center gap-3">
+    <p v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
+      {{ t("global.loading") }}
+    </p>
+    <p
+      v-else-if="loadError"
+      role="alert"
+      class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+    >
+      {{ loadError }}
+    </p>
+    <div v-else-if="entityTypes && entityTypes.length > 0" class="flex flex-col gap-2">
+      <Card v-for="et in entityTypes" :key="et.id" class="hb-panel min-w-0 p-4 sm:p-6">
+        <div class="flex flex-wrap items-center gap-3">
           <div
             class="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
           >
@@ -223,15 +280,22 @@
             <MdiPackageVariantClosed v-else class="size-5" />
           </div>
 
-          <div class="mr-auto min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-medium">{{ t(et.name) }}</span>
+          <div class="mr-auto min-w-0 flex-1 basis-32">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="break-words font-medium [overflow-wrap:anywhere]">{{ t(et.name) }}</span>
               <Badge v-if="et.isLocation" variant="secondary" class="text-xs">
                 {{ t("components.entityTypes.card.badge_container") }}
               </Badge>
             </div>
-            <p v-if="et.defaultTemplate && !et.isLocation" class="text-xs text-muted-foreground">
-              {{ t("components.entityTypes.card.default_template", { name: et.defaultTemplate.name }) }}
+            <p
+              v-if="et.defaultTemplate && !et.isLocation"
+              class="break-words text-sm text-muted-foreground [overflow-wrap:anywhere]"
+            >
+              {{
+                t("components.entityTypes.card.default_template", {
+                  name: et.defaultTemplate.name,
+                })
+              }}
             </p>
           </div>
 
@@ -239,7 +303,13 @@
             <div class="flex gap-1">
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-8" @click="openEdit(et)">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-10"
+                    :aria-label="t('components.entityTypes.card.tooltip.edit')"
+                    @click="openEdit(et)"
+                  >
                     <MdiPencil class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -247,7 +317,13 @@
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-8 text-destructive" @click="deleteEntityType(et)">
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    class="size-10"
+                    :aria-label="t('components.entityTypes.card.tooltip.delete')"
+                    @click="deleteEntityType(et)"
+                  >
                     <MdiDelete class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -259,9 +335,16 @@
       </Card>
     </div>
 
-    <div v-else class="flex flex-col items-center justify-center py-12 text-center">
-      <p class="mb-4 text-muted-foreground">{{ t("components.entityTypes.page.empty_title") }}</p>
-      <Button @click="openDialog(DialogID.CreateEntityType)">
+    <div v-else role="status" class="hb-panel flex flex-col items-center justify-center p-6 text-center">
+      <p class="mb-4 text-muted-foreground">
+        {{ t("components.entityTypes.page.empty_title") }}
+      </p>
+      <Button
+        @click="
+          formError = null;
+          openDialog(DialogID.CreateEntityType);
+        "
+      >
         <MdiPlus class="mr-2" />
         {{ t("components.entityTypes.page.empty_button") }}
       </Button>

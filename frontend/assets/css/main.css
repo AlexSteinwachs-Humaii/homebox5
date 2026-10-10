@@ -3,11 +3,18 @@
 @tailwind utilities;
 
 @layer base {
-  :root,.homebox {
+  :root {
+    --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-editorial: Georgia, "Times New Roman", serif;
+    --page-gutter: clamp(1rem, 3vw, 2rem);
+    --section-gap: 1.5rem;
+  }
+
+  :root,.homebox,.theme-homebox {
     --background: 0 0% 100%;
     --background-accent: 0 0% 81%;
     --foreground: 0 0% 20%;
-    --primary: 139 16% 43%;
+    --primary: 139 16% 33%;
     --primary-foreground: 139 100% 89%;
     --secondary: 77 8% 17%;
     --secondary-foreground: 76 18% 83%;
@@ -21,17 +28,17 @@
     --popover-foreground: 0 0% 20%;
     --destructive: 0 91% 71%;
     --destructive-foreground: 0 100% 14%;
-    --input: 0 0% 81%;
+    --input: 0 0% 47%;
     --border: 0 0% 81%;
-    --ring: 139 16% 43%;
+    --ring: 139 16% 33%;
     --sidebar-background: 0 0% 90%;
     --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 139 16% 43%;
+    --sidebar-primary: 139 16% 33%;
     --sidebar-primary-foreground: 139 100% 89%;
     --sidebar-accent: 0 0% 81%;
     --sidebar-accent-foreground: 0 0% 20%;
     --sidebar-border: 0 0% 81%;
-    --sidebar-ring: 0 0% 81%;
+    --sidebar-ring: 139 16% 33%;
 
     --radius: 0.5rem;
 }
@@ -51,6 +58,41 @@
   */
 
   
+  /* Revision-3 cinematic hierarchy. Only this theme owns the dark palette.
+     Input/focus colors are brighter than decorative borders for WCAG AA. */
+  .theme-cinematic {
+    color-scheme: dark;
+    --background: 140 21% 5%;
+    --background-accent: 137 16% 14%;
+    --foreground: 60 20% 92%;
+    --card: 137 16% 11%;
+    --card-foreground: 60 20% 92%;
+    --popover: 137 16% 11%;
+    --popover-foreground: 60 20% 92%;
+    --primary: 137 52% 80%;
+    --primary-foreground: 140 30% 12%;
+    --secondary: 137 16% 18%;
+    --secondary-foreground: 60 20% 92%;
+    --accent: 137 20% 18%;
+    --accent-foreground: 137 52% 85%;
+    --muted: 137 16% 14%;
+    --muted-foreground: 80 10% 72%;
+    --border: 137 12% 23%;
+    --input: 137 9% 47%;
+    --ring: 137 52% 80%;
+    --destructive: 0 75% 74%;
+    --destructive-foreground: 0 40% 12%;
+    --sidebar-background: 137 20% 8%;
+    --sidebar-foreground: 80 10% 72%;
+    --sidebar-primary: 137 52% 80%;
+    --sidebar-primary-foreground: 140 30% 12%;
+    --sidebar-accent: 137 20% 18%;
+    --sidebar-accent-foreground: 137 52% 85%;
+    --sidebar-border: 137 12% 23%;
+    --sidebar-ring: 137 52% 80%;
+    --radius: 0.75rem;
+  }
+
   .theme-aqua {
     --background: 219 53% 43%;
     --background-accent: 219 53% 35%;
@@ -477,7 +519,7 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 219 14% 28%;
     --secondary-foreground: 0 0% 100%;
-    --accent: 314 100% 47%;
+    --accent: 314 100% 40%;
     --accent-foreground: 0 0% 100%;
     --muted: 0 0% 95%;
     --muted-foreground: 215 28% 17%;
@@ -487,7 +529,7 @@
     --popover-foreground: 215 28% 17%;
     --destructive: 0 91% 71%;
     --destructive-foreground: 0 100% 14%;
-    --input: 180 2% 90%;
+    --input: 0 0% 47%;
     --border: 180 2% 90%;
     --ring: 259 94% 51%;
     --sidebar-background: 0 0% 95%;
@@ -497,7 +539,7 @@
     --sidebar-accent: 180 2% 90%;
     --sidebar-accent-foreground: 215 28% 17%;
     --sidebar-border: 180 2% 90%;
-    --sidebar-ring: 180 2% 90%;
+    --sidebar-ring: 259 94% 51%;
 
     --radius: 0.5rem;
   }
@@ -958,7 +1000,7 @@
     @apply border-border;
   }
   html, body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
     width: 100%;
     overflow-x: hidden;
   }
@@ -966,6 +1008,36 @@
 
 .text-no-transform {
     text-transform: none !important;
+}
+
+/* Shared geometry and typography intentionally use the active theme's tokens. */
+@layer components {
+  .hb-tree-row {
+    @apply flex min-w-0 items-center gap-2 rounded-md py-2 pr-2 hover:bg-accent/50;
+  }
+  .hb-panel {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+  /* Opaque camera surfaces keep text legible against any live preview. */
+  .hb-scanner-surface {
+    @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
+  }
+  .hb-scanner-feedback {
+    @apply flex min-w-0 items-start gap-3 rounded-lg border border-border bg-muted p-4 text-foreground;
+    overflow-wrap: anywhere;
+  }
+  .hb-section-title {
+    @apply text-lg font-medium leading-snug tracking-tight;
+  }
+  .hb-display {
+    @apply font-editorial text-4xl font-normal leading-tight tracking-tight sm:text-6xl;
+  }
+  .hb-eyebrow {
+    @apply text-xs font-medium uppercase tracking-widest text-muted-foreground;
+  }
+  .hb-focus {
+    @apply rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
 }
 
 /* transparent subtle scrollbar */
@@ -1076,4 +1148,35 @@ h6 {
   overflow-wrap: anywhere;
   word-break: normal;
   hyphens: auto;
+}
+
+/* Screen decoration never enters the printable label tree. */
+.hb-label-settings a:not(.hb-focus) {
+  text-decoration: underline;
+}
+.hb-label-output {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: black;
+}
+@media screen {
+  .hb-label-preview {
+    overflow-x: auto;
+    padding: 1rem;
+  }
+  .hb-label-output {
+    min-width: max-content;
+  }
+}
+@media print {
+  html:has(.hb-label-output),
+  body:has(.hb-label-output) {
+    background: white !important;
+    color: black !important;
+  }
 }

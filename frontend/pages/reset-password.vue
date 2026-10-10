@@ -59,17 +59,17 @@
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center p-6">
-    <div class="mb-6 flex items-center gap-2 text-3xl font-bold tracking-tight">
+  <div class="flex min-h-dvh flex-col items-center justify-center px-page-gutter py-10">
+    <h1 class="mb-8 flex items-center gap-2 text-3xl font-semibold tracking-tight">
       HomeB
       <AppLogo class="-mb-2 w-10" />
       x
-    </div>
+    </h1>
 
-    <Card class="md:w-[460px]">
+    <Card class="hb-panel w-full min-w-0 max-w-[460px]">
       <CardHeader>
-        <CardTitle class="flex items-center gap-2">
-          <MdiLockReset class="size-6" />
+        <CardTitle class="flex items-center gap-2 leading-snug">
+          <MdiLockReset class="size-6 shrink-0" />
           {{ $t("index.reset_password_title") }}
         </CardTitle>
       </CardHeader>
@@ -92,10 +92,15 @@
       </CardContent>
 
       <CardFooter class="flex flex-col gap-2">
-        <Button form="reset-password-form" type="submit" class="w-full" :disabled="loading || !passwordValid || !token">
+        <Button
+          form="reset-password-form"
+          type="submit"
+          class="h-auto min-h-9 w-full whitespace-normal break-words"
+          :disabled="loading || !passwordValid || !token"
+        >
           {{ $t("index.reset_password_set") }}
         </Button>
-        <NuxtLink to="/" class="text-sm text-muted-foreground hover:underline">
+        <NuxtLink to="/" class="hb-focus text-sm text-primary hover:underline">
           <span class="inline-flex items-center gap-1">
             <MdiArrowLeft class="size-4" />
             {{ $t("index.back_to_login") }}

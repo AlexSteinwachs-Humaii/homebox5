@@ -1,31 +1,35 @@
 <template>
-  <div v-if="!inline" class="flex w-full flex-col gap-1.5">
-    <Label :for="id" class="flex w-full px-1">
-      <span>{{ label }}</span>
+  <div v-if="!inline" class="flex w-full min-w-0 flex-col gap-1.5">
+    <Label :for="id" class="flex w-full flex-wrap gap-x-2 gap-y-1 px-1">
+      <span class="min-w-0 break-words">{{ label }}</span>
       <span class="grow" />
-      <span :class="{ 'text-destructive': isLengthInvalid }">
+      <span :id="`${id}-length`" aria-hidden="true" :class="{ 'text-destructive': isLengthInvalid }">
         {{ lengthIndicator }}
       </span>
     </Label>
     <Textarea
       :id="id"
       v-model="value"
+      :aria-invalid="isLengthInvalid || undefined"
+      :aria-describedby="lengthIndicator ? `${id}-length` : undefined"
       :placeholder="placeholder"
       class="min-h-[112px] w-full resize-none"
       @keydown="handleKeyDown"
     />
   </div>
-  <div v-else class="sm:grid sm:grid-cols-4 sm:items-start sm:gap-4">
-    <Label :for="id" class="flex w-full px-1 py-2">
-      <span>{{ label }}</span>
+  <div v-else class="min-w-0 sm:grid sm:grid-cols-4 sm:items-start sm:gap-4">
+    <Label :for="id" class="flex w-full flex-wrap gap-x-2 gap-y-1 px-1 py-2">
+      <span class="min-w-0 break-words">{{ label }}</span>
       <span class="grow" />
-      <span :class="{ 'text-destructive': isLengthInvalid }">
+      <span :id="`${id}-length`" aria-hidden="true" :class="{ 'text-destructive': isLengthInvalid }">
         {{ lengthIndicator }}
       </span>
     </Label>
     <Textarea
       :id="id"
       v-model="value"
+      :aria-invalid="isLengthInvalid || undefined"
+      :aria-describedby="lengthIndicator ? `${id}-length` : undefined"
       autosize
       :placeholder="placeholder"
       class="col-span-3 mt-2 w-full resize-none"

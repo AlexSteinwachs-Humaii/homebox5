@@ -4,10 +4,10 @@
     <video ref="videoEl" class="size-full object-cover" autoplay muted playsinline poster="data:image/gif,AAAA" />
 
     <!-- Error state -->
-    <div v-if="error" class="absolute inset-0 flex items-center justify-center bg-background/90 p-6">
-      <div class="flex max-w-sm flex-col items-center gap-4 text-center">
-        <MdiAlertCircleOutline class="size-12 text-destructive" />
-        <p class="text-sm text-foreground">{{ t(error) }}</p>
+    <div v-if="error" class="absolute inset-0 flex items-center justify-center bg-background p-6">
+      <div class="hb-scanner-surface flex max-w-sm flex-col items-center gap-4 p-6 text-center">
+        <MdiAlertCircleOutline class="size-12 shrink-0" aria-hidden="true" />
+        <p class="break-words text-sm" role="alert">{{ t(error) }}</p>
         <Button variant="outline" @click="startCamera">
           {{ t("scanner_ar.retry") }}
         </Button>

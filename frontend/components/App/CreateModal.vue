@@ -1,8 +1,8 @@
 <template>
   <Dialog v-if="isDesktop" :dialog-id="dialogId">
-    <DialogScrollContent>
+    <DialogScrollContent @keydown.esc.capture="onEscape">
       <DialogHeader>
-        <div class="mr-4 flex place-items-center justify-between">
+        <div class="mr-6 flex min-w-0 flex-wrap items-center justify-between gap-2">
           <DialogTitle>
             <slot name="title">
               {{ title }}
@@ -18,7 +18,7 @@
         <i18n-t
           keypath="components.app.create_modal.createAndAddAnother"
           tag="span"
-          class="flex items-center gap-1 text-sm"
+          class="flex flex-wrap items-center gap-1 text-sm"
         >
           <template #shiftKey>
             <Shortcut size="sm" :keys="[$t('components.app.create_modal.shift')]" />
@@ -32,7 +32,12 @@
   </Dialog>
 
   <Drawer v-else :dialog-id="dialogId">
-    <DrawerContent class="max-h-[90%]">
+    <DrawerContent
+      class="max-h-[90%]"
+      :trap-focus="keyboardFocus || undefined"
+      @open-auto-focus="onDrawerOpen"
+      @keydown.esc.capture="keyboardFocus && onEscape($event)"
+    >
       <DrawerHeader>
         <DrawerTitle>
           <slot name="title">
@@ -44,7 +49,7 @@
         <slot name="header-actions" />
       </div>
 
-      <div class="m-2 overflow-y-auto p-2">
+      <div class="m-2 min-h-0 overflow-y-auto p-2">
         <slot />
       </div>
     </DrawerContent>
@@ -57,12 +62,32 @@
   import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
   import { Dialog, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle } from "@/components/ui/dialog";
   import { Shortcut } from "@/components/ui/shortcut";
+  import { useDialog } from "~/components/ui/dialog-provider";
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  defineProps<{
+  const props = defineProps<{
     dialogId: DialogID;
     title?: string;
     hideFooter?: boolean;
+    keyboardFocus?: boolean;
   }>();
+  const { closeDialog } = useDialog();
+  function onDrawerOpen(event: Event) {
+    if (!props.keyboardFocus) return;
+    const content = event.target as HTMLElement;
+    void nextTick(() => {
+      content.querySelector<HTMLElement>("input:not([disabled]), button:not([disabled])")?.focus();
+    });
+  }
+
+  function onEscape(event: KeyboardEvent) {
+    const content = event.currentTarget as HTMLElement;
+    // Leave Escape to an expanded nested selector; otherwise close the global
+    // dialog even if an unmounted menu/selector retains Reka's layer priority.
+    if (content.querySelector('[aria-haspopup][aria-expanded="true"]')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeDialog(props.dialogId);
+  }
 </script>

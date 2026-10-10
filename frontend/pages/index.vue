@@ -79,20 +79,6 @@
     }
   });
 
-  const isEvilAccentTheme = useIsThemeInList([
-    "bumblebee",
-    "corporate",
-    "forest",
-    "pastel",
-    "wireframe",
-    "black",
-    "dracula",
-    "autumn",
-    "acid",
-  ]);
-  const isEvilForegroundTheme = useIsThemeInList(["light", "aqua", "fantasy", "autumn", "night"]);
-  const isLofiTheme = useIsThemeInList(["lofi"]);
-
   const route = useRoute();
   const router = useRouter();
 
@@ -221,50 +207,30 @@
 </script>
 
 <template>
-  <div class="relative flex min-h-screen flex-col">
-    <div class="pointer-events-none absolute top-0 z-0 min-w-full fill-primary">
-      <div class="flex min-h-[20vh] flex-col bg-primary" />
-      <svg
-        class="fill-primary drop-shadow-xl"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 1440 320"
-        preserveAspectRatio="none"
-      >
-        <path
-          fill-opacity="1"
-          d="M0,32L80,69.3C160,107,320,181,480,181.3C640,181,800,107,960,117.3C1120,128,1280,224,1360,272L1440,320L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
-        />
-      </svg>
-    </div>
-    <div class="relative z-10">
+  <div class="relative flex min-h-dvh flex-col bg-background text-foreground">
+    <div class="relative">
       <header
-        class="mx-auto p-4 sm:flex sm:items-end sm:p-6 lg:p-14"
-        :class="{
-          'text-accent': !isEvilAccentTheme,
-          'text-white': isLofiTheme,
-        }"
+        class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 border-b border-border px-page-gutter py-8 sm:py-12"
       >
-        <div class="z-10">
-          <h2 class="mt-1 flex text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+        <div class="min-w-0">
+          <h1 class="flex items-center text-4xl font-semibold tracking-tight sm:text-5xl">
             HomeB
-            <AppLogo class="-mb-4 w-12" />
+            <AppLogo class="w-12" />
             x
-          </h2>
-          <p
-            class="ml-1 text-lg"
-            :class="{
-              'text-foreground': !isEvilForegroundTheme,
-              'text-white': isLofiTheme,
-            }"
-          >
-            {{ $t("index.tagline") }}
-          </p>
+          </h1>
+          <p class="mt-3 text-lg text-muted-foreground">{{ $t("index.tagline") }}</p>
         </div>
         <TooltipProvider :delay-duration="0">
-          <div class="z-10 ml-auto mt-6 flex items-center gap-4 sm:mt-0">
+          <div class="flex flex-wrap items-center gap-4 text-muted-foreground">
             <Tooltip>
               <TooltipTrigger as-child>
-                <a href="https://github.com/sysadminsmedia/homebox" target="_blank" rel="noopener noreferrer">
+                <a
+                  class="hb-focus hover:text-foreground"
+                  :aria-label="$t('global.github')"
+                  href="https://github.com/sysadminsmedia/homebox"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MdiGithub class="size-8" />
                 </a>
               </TooltipTrigger>
@@ -273,7 +239,13 @@
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <a href="https://noc.social/@sysadminszone" target="_blank" rel="noopener noreferrer">
+                <a
+                  class="hb-focus hover:text-foreground"
+                  :aria-label="$t('global.follow_dev')"
+                  href="https://noc.social/@sysadminszone"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MdiMastodon class="size-8" />
                 </a>
               </TooltipTrigger>
@@ -282,7 +254,13 @@
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <a href="https://discord.gg/aY4DCkpNA9" target="_blank" rel="noopener noreferrer">
+                <a
+                  class="hb-focus hover:text-foreground"
+                  :aria-label="$t('global.join_discord')"
+                  href="https://discord.gg/aY4DCkpNA9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MdiDiscord class="size-8" />
                 </a>
               </TooltipTrigger>
@@ -291,25 +269,31 @@
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <a href="https://homebox.software/en/" target="_blank" rel="noopener noreferrer">
+                <a
+                  class="hb-focus hover:text-foreground"
+                  :aria-label="$t('global.read_docs')"
+                  href="https://homebox.software/en/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MdiFolder class="size-8" />
                 </a>
               </TooltipTrigger>
               <TooltipContent>{{ $t("global.read_docs") }}</TooltipContent>
             </Tooltip>
 
-            <LanguageSelector class="z-10 text-primary" :expanded="false" />
+            <LanguageSelector class="text-foreground" :expanded="false" />
           </div>
         </TooltipProvider>
       </header>
-      <div class="grid min-h-[50vh] p-6 sm:place-items-center">
-        <div>
+      <div class="grid min-h-[50vh] place-items-center px-page-gutter py-10">
+        <div class="w-full min-w-0 max-w-[500px]">
           <Transition name="slide-fade">
             <form v-if="registerForm" id="register-form" name="register" method="post" @submit.prevent="registerUser">
-              <Card class="md:w-[500px]">
+              <Card class="hb-panel w-full">
                 <CardHeader>
-                  <CardTitle class="flex items-center gap-2">
-                    <MdiAccount class="mr-1 size-7" />
+                  <CardTitle class="flex items-center gap-2 leading-snug">
+                    <MdiAccount class="mr-1 size-7 shrink-0" />
                     {{ $t("index.register") }}
                   </CardTitle>
                 </CardHeader>
@@ -355,7 +339,7 @@
                 <CardFooter>
                   <Button
                     data-testid="confirm-register-button"
-                    class="w-full"
+                    class="h-auto min-h-9 w-full whitespace-normal break-words"
                     type="submit"
                     :class="loading ? 'loading' : ''"
                     :disabled="loading || !canRegister"
@@ -366,10 +350,10 @@
               </Card>
             </form>
             <form v-else id="login-form" name="login" method="post" @submit.prevent="login">
-              <Card class="md:w-[500px]">
+              <Card class="hb-panel w-full">
                 <CardHeader>
-                  <CardTitle class="flex items-center gap-2">
-                    <MdiAccount class="mr-1 size-7" />
+                  <CardTitle class="flex items-center gap-2 leading-snug">
+                    <MdiAccount class="mr-1 size-7 shrink-0" />
                     {{ $t("index.login") }}
                   </CardTitle>
                 </CardHeader>
@@ -401,11 +385,11 @@
                     autocomplete="current-password"
                     :required="true"
                   />
-                  <div class="flex items-center justify-between">
-                    <div class="max-w-[140px]">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="min-w-0">
                       <FormCheckbox v-model="remember" :label="$t('index.remember_me')" />
                     </div>
-                    <NuxtLink to="/forgot-password" class="text-sm hover:underline">
+                    <NuxtLink to="/forgot-password" class="hb-focus text-sm text-primary hover:underline">
                       {{ $t("index.forgot_password") }}
                     </NuxtLink>
                   </div>
@@ -413,7 +397,7 @@
                 <CardFooter class="flex flex-col gap-2">
                   <Button
                     v-if="status?.oidc?.allowLocal !== false"
-                    class="w-full"
+                    class="h-auto min-h-9 w-full whitespace-normal break-words"
                     type="submit"
                     :class="loading ? 'loading' : ''"
                     :disabled="loading"
@@ -434,7 +418,7 @@
                     v-if="status?.oidc?.enabled"
                     type="button"
                     variant="outline"
-                    class="w-full"
+                    class="h-auto min-h-9 w-full whitespace-normal break-words"
                     @click="loginWithOIDC"
                   >
                     {{ status.oidc.buttonText || "Sign in with OIDC" }}
@@ -446,7 +430,7 @@
           <div class="mt-6 text-center">
             <Button
               v-if="status && status.allowRegistration && status?.oidc?.allowLocal !== false"
-              class="group"
+              class="group h-auto min-h-9 max-w-full whitespace-normal break-words"
               variant="link"
               data-testid="register-button"
               @click="() => toggleLogin()"
@@ -470,7 +454,7 @@
         </div>
       </div>
     </div>
-    <footer v-if="status" class="bottom-0 mt-auto w-full pb-4 text-center">
+    <footer v-if="status" class="mt-auto w-full break-words px-page-gutter pb-6 text-center text-muted-foreground">
       <p class="text-center text-sm">
         {{ $t("global.version", { version: status.build.version }) }} ~
         {{ $t("global.build", { build: status.build.commit }) }}
