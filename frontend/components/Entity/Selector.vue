@@ -1,6 +1,6 @@
 <template>
   <Select :model-value="selectedEntityType" @update:model-value="id => onEntityTypeChanged(id as string)">
-    <SelectTrigger :class="{ 'h-7 p-1': size === 'sm' }">
+    <SelectTrigger :aria-label="$t('global.entity_type')" class="min-w-0" :class="{ 'h-7 p-1': size === 'sm' }">
       <SelectValue :class="{ 'text-xl': size === 'sm' }" :placeholder="$t('components.entity.selector.placeholder')" />
     </SelectTrigger>
     <SelectContent>

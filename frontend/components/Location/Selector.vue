@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-1">
+  <div class="flex min-w-0 flex-col gap-1">
     <Label :for="id" class="px-1">
       {{ $t("components.location.selector.parent_location") }}
     </Label>

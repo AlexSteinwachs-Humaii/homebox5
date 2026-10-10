@@ -61,20 +61,20 @@
     <div class="mb-2 grid grid-cols-1 items-center gap-2 md:grid-cols-4">
       <div class="min-w-0">
         <Label :for="id" class="flex min-w-0 items-center gap-2 px-1">
-          <span class="truncate" :title="props.label ?? ''">{{ props.label }}</span>
+          <span class="min-w-0 break-words" :title="props.label ?? ''">{{ props.label }}</span>
           <span class="grow" />
           <span class="ml-2 text-sm" :class="{ 'text-destructive': isLengthInvalid }">{{ lengthIndicator }}</span>
         </Label>
       </div>
 
       <div class="col-span-1 flex items-center justify-start gap-2 md:col-span-3 md:justify-end">
-        <label class="text-xs text-foreground/70">{{ $t("global.preview") }}</label>
-        <Checkbox v-model="showPreview" />
+        <label class="text-xs text-muted-foreground" :for="`${id}-preview`">{{ $t("global.preview") }}</label>
+        <Checkbox :id="`${id}-preview`" v-model="showPreview" />
       </div>
     </div>
 
     <div class="flex w-full flex-col gap-4">
-      <Textarea :id="id" v-model="local" autosize class="resize-none" />
+      <Textarea :id="id" v-model="local" :aria-invalid="isLengthInvalid || undefined" autosize class="resize-none" />
 
       <div v-if="showPreview">
         <Markdown :source="local" />

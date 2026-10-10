@@ -1,12 +1,12 @@
 <template>
-  <div class="flex flex-col gap-1">
+  <div class="flex min-w-0 flex-col gap-1">
     <Label :for="id" class="px-1">
       {{ label }}
     </Label>
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <Button :id="id" variant="outline" role="combobox" :aria-expanded="open" class="w-full justify-between">
-          <span class="truncate text-left">
+          <span class="min-w-0 flex-auto truncate text-left">
             <slot name="display" v-bind="{ item: value }">
               {{ displayValue(value) || localizedPlaceholder }}
             </slot>

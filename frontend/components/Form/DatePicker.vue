@@ -1,11 +1,29 @@
 <template>
-  <div v-if="!inline" class="flex w-full flex-col">
-    <Label class="cursor-pointer"> {{ label }} </Label>
-    <VueDatePicker v-model="selected" :enable-time-picker="false" clearable :dark="isDark" :format="formatDate" />
+  <div v-if="!inline" data-entity-datepicker class="flex w-full min-w-0 flex-col gap-1.5">
+    <Label :for="`dp-input-${id}`" class="cursor-pointer"> {{ label }} </Label>
+    <VueDatePicker
+      v-model="selected"
+      class="min-w-0 sm:col-span-3"
+      :uid="id"
+      :aria-labels="{ input: label }"
+      :enable-time-picker="false"
+      clearable
+      :dark="isDark"
+      :format="formatDate"
+    />
   </div>
-  <div v-else class="sm:flex sm:items-start sm:gap-4">
-    <Label class="flex w-full cursor-pointer px-1 py-2"> {{ label }} </Label>
-    <VueDatePicker v-model="selected" :enable-time-picker="false" clearable :dark="isDark" :format="formatDate" />
+  <div v-else data-entity-datepicker class="min-w-0 sm:grid sm:grid-cols-4 sm:items-start sm:gap-4">
+    <Label :for="`dp-input-${id}`" class="flex w-full cursor-pointer px-1 py-2"> {{ label }} </Label>
+    <VueDatePicker
+      v-model="selected"
+      class="min-w-0 sm:col-span-3"
+      :uid="id"
+      :aria-labels="{ input: label }"
+      :enable-time-picker="false"
+      clearable
+      :dark="isDark"
+      :format="formatDate"
+    />
   </div>
 </template>
 
@@ -33,6 +51,8 @@
       default: "Date",
     },
   });
+
+  const id = useId();
 
   const isDark = useIsThemeInList(darkThemes);
 
@@ -98,8 +118,25 @@
   });
 </script>
 
-<style class="scoped">
-  ::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+<style scoped>
+  [data-entity-datepicker] :deep(.dp__main) {
+    --dp-background-color: hsl(var(--background));
+    --dp-text-color: hsl(var(--foreground));
+    --dp-border-color: hsl(var(--input));
+    --dp-border-color-hover: hsl(var(--ring));
+    --dp-border-color-focus: hsl(var(--ring));
+    --dp-primary-color: hsl(var(--primary));
+    --dp-primary-text-color: hsl(var(--primary-foreground));
+    --dp-secondary-color: hsl(var(--muted-foreground));
+    --dp-icon-color: hsl(var(--muted-foreground));
+    --dp-hover-color: hsl(var(--accent));
+    --dp-hover-text-color: hsl(var(--accent-foreground));
+    --dp-border-radius: var(--radius);
+    --dp-font-family: inherit;
+  }
+
+  [data-entity-datepicker] :deep(.dp__input:focus-visible) {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 </style>

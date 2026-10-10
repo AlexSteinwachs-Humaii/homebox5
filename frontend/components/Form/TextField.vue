@@ -1,9 +1,11 @@
 <template>
-  <div v-if="!inline" v-bind="wrapperAttrs()" class="flex w-full flex-col gap-1.5" :class="wrapperClass()">
-    <Label :for="fieldId" class="flex w-full px-1">
-      <span> {{ label }} </span>
+  <div v-if="!inline" v-bind="wrapperAttrs()" class="flex w-full min-w-0 flex-col gap-1.5" :class="wrapperClass()">
+    <Label :for="fieldId" class="flex w-full flex-wrap gap-x-2 gap-y-1 px-1">
+      <span class="min-w-0 break-words"> {{ label }} </span>
       <span class="grow" />
       <span
+        :id="`${fieldId}-length`"
+        aria-hidden="true"
         :class="{
           'text-destructive': hasLengthError,
         }"
@@ -16,6 +18,8 @@
       :id="fieldId"
       ref="input"
       v-model="value"
+      :aria-invalid="hasLengthError || undefined"
+      :aria-describedby="characterCountText ? `${fieldId}-length` : undefined"
       :name="name"
       :placeholder="placeholder"
       :type="type"
@@ -31,11 +35,18 @@
       @input="markDirty"
     />
   </div>
-  <div v-else v-bind="wrapperAttrs()" class="sm:grid sm:grid-cols-4 sm:items-start sm:gap-4" :class="wrapperClass()">
-    <Label class="flex w-full px-1 py-2" :for="fieldId">
-      <span> {{ label }} </span>
+  <div
+    v-else
+    v-bind="wrapperAttrs()"
+    class="min-w-0 sm:grid sm:grid-cols-4 sm:items-start sm:gap-4"
+    :class="wrapperClass()"
+  >
+    <Label class="flex w-full flex-wrap gap-x-2 gap-y-1 px-1 py-2" :for="fieldId">
+      <span class="min-w-0 break-words"> {{ label }} </span>
       <span class="grow" />
       <span
+        :id="`${fieldId}-length`"
+        aria-hidden="true"
         :class="{
           'text-destructive': hasLengthError,
         }"
@@ -48,6 +59,8 @@
       :id="fieldId"
       ref="input"
       v-model="value"
+      :aria-invalid="hasLengthError || undefined"
+      :aria-describedby="characterCountText ? `${fieldId}-length` : undefined"
       :name="name"
       :placeholder="placeholder"
       :type="type"

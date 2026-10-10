@@ -1,8 +1,8 @@
 <template>
   <BaseModal :dialog-id="DialogID.CreateEntity">
     <template #title>
-      <div class="flex items-center gap-2 text-nowrap">
-        <span>Create</span>
+      <div class="flex min-w-0 flex-wrap items-center gap-2">
+        <span>{{ $t("global.create") }}</span>
         <EntitySelector
           :selected-entity-type="selectedEntityType?.id"
           :entity-types="subItemCreate ? entityTypes.filter(t => !t.isLocation) : entityTypes"
@@ -16,7 +16,7 @@
         <TooltipProvider :delay-duration="0">
           <!-- Template selector button -->
           <Tooltip v-if="!selectedEntityType?.isLocation">
-            <TooltipTrigger>
+            <TooltipTrigger as-child>
               <TemplateSelector v-model="selectedTemplate" compact @template-selected="handleTemplateSelected" />
             </TooltipTrigger>
             <TooltipContent>
@@ -26,8 +26,15 @@
 
           <ButtonGroup>
             <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="start" @click="openQrScannerPage()">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  :disabled="loading"
+                  size="icon"
+                  data-pos="start"
+                  :aria-label="$t('components.entity.create_modal.product_tooltip_scan_barcode')"
+                  @click="openQrScannerPage()"
+                >
                   <MdiBarcodeScan class="size-5" />
                 </Button>
               </TooltipTrigger>
@@ -36,8 +43,15 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="end" @click="openBarcodeDialog()">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  :disabled="loading"
+                  size="icon"
+                  data-pos="end"
+                  :aria-label="$t('components.entity.create_modal.product_tooltip_input_barcode')"
+                  @click="openBarcodeDialog()"
+                >
                   <MdiBarcode class="size-5" />
                 </Button>
               </TooltipTrigger>
@@ -50,21 +64,22 @@
       </div>
     </template>
 
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
+    <form class="flex min-w-0 flex-col gap-5" :aria-busy="loading" @submit.prevent="create()">
       <LocationSelector v-model="form.location" />
 
       <!-- Template Info Display - Collapsible banner with distinct styling -->
-      <div v-if="templateData" class="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
+      <div v-if="templateData" class="hb-panel min-w-0 break-words border-l-4 border-l-primary p-4">
         <div class="flex items-start justify-between gap-2">
-          <div class="flex flex-1 items-start gap-2">
+          <div class="flex min-w-0 flex-1 items-start gap-2">
             <MdiFileDocumentOutline class="mt-0.5 size-4 shrink-0 text-primary" />
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <h4 class="text-sm font-medium text-foreground">
                 {{ $t("components.template.using_template", { name: templateData.name }) }}
               </h4>
               <button
                 type="button"
                 class="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                :aria-expanded="showTemplateDetails"
                 @click="showTemplateDetails = !showTemplateDetails"
               >
                 <span v-if="!showTemplateDetails">{{ $t("components.template.show_defaults") }}</span>
@@ -89,7 +104,7 @@
         <div v-if="showTemplateDetails" class="mt-3 border-t border-primary/20 pt-3">
           <div class="flex flex-col gap-2 text-xs text-muted-foreground">
             <p v-if="templateData.description" class="text-foreground/80">{{ templateData.description }}</p>
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
               <div v-if="templateData.defaultName">
                 <span class="font-medium">{{ $t("global.name") }}:</span> {{ templateData.defaultName }}
               </div>
@@ -194,23 +209,14 @@
         :existing-count="form.photos.length"
         @selected="appendPhotos"
       />
-      <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit" class="group">
-            <div class="relative mx-2">
-              <div
-                class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
-              >
-                <MdiPackageVariant class="size-5 group-hover:hidden" />
-                <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
-              </div>
-            </div>
-            {{ $t("global.create") }}
-          </Button>
-          <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
-            {{ $t("global.create_and_add") }}
-          </Button>
-        </ButtonGroup>
+      <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <Button :disabled="loading" type="submit">
+          <MdiLoading v-if="loading" class="size-5 animate-spin" aria-hidden="true" />
+          {{ $t("global.create") }}
+        </Button>
+        <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
+          {{ $t("global.create_and_add") }}
+        </Button>
       </div>
 
       <PhotoUploaderPreview
@@ -240,8 +246,7 @@
   import { useLocationStore } from "~~/stores/locations";
   import MdiBarcode from "~icons/mdi/barcode";
   import MdiBarcodeScan from "~icons/mdi/barcode-scan";
-  import MdiPackageVariant from "~icons/mdi/package-variant";
-  import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
+  import MdiLoading from "~icons/mdi/loading";
   import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
   import MdiChevronDown from "~icons/mdi/chevron-down";
   import MdiClose from "~icons/mdi/close";
