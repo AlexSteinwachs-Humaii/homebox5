@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"testing"
 	"time"
 
@@ -51,6 +52,7 @@ func TestCSVCompleteCatalogueDispatch(t *testing.T) {
 			out, err := svc.Load(ctx, tUser.ID, r)
 			require.NoError(t, err)
 			require.Equal(t, spec.Columns, out.Columns)
+			require.NoError(t, WriteCanonicalCSV(io.Discard, out))
 			for _, row := range out.Rows {
 				require.Len(t, row, len(spec.Columns))
 			}

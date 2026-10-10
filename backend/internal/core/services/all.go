@@ -16,6 +16,7 @@ type AllServices struct {
 	Entities          *EntityService
 	BackgroundService *BackgroundService
 	Exports           *ExportService
+	CSVExports        *CSVExportService
 	Currencies        *currencies.CurrencyRegistry
 }
 
@@ -31,6 +32,7 @@ type options struct {
 	pubSubConn           string
 	dialect              string
 	mailer               *mailer.Mailer
+	csvBoundaries        CSVBoundaryAuthority
 }
 
 func WithAutoIncrementAssetID(v bool) func(*options) {
@@ -68,6 +70,12 @@ func WithExportPlumbing(bus *eventbus.EventBus, db *ent.Client, storage config.S
 // WithMailer hands the SMTP mailer to services that send mail (currently only
 // password reset). A nil or unconfigured mailer disables those code paths
 // rather than panicking.
+// WithCSVBoundaryAuthority supplies trusted selector/recent provenance. Without
+// it those captures fail closed; ordinary sources remain independently usable.
+func WithCSVBoundaryAuthority(a CSVBoundaryAuthority) OptionsFunc {
+	return func(o *options) { o.csvBoundaries = a }
+}
+
 func WithMailer(m *mailer.Mailer) func(*options) {
 	return func(o *options) {
 		o.mailer = m
@@ -126,6 +134,7 @@ func New(repos *repo.AllRepos, opts ...OptionsFunc) *AllServices {
 			pubSubConn: options.pubSubConn,
 			dialect:    options.dialect,
 		},
+		CSVExports: NewCSVExportService(options.db, repos, options.csvBoundaries),
 		Currencies: currencies.NewCurrencyService(options.currencies),
 	}
 }

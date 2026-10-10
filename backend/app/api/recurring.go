@@ -18,6 +18,22 @@ import (
 
 func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runner) {
 	runner.AddFunc("eventbus", app.bus.Run)
+	// SQL is the durable CSV queue. Scan immediately on startup as well as on
+	// every tick; unlike the ZIP memory subscription, no message can be lost.
+	runner.AddFunc("csv-generation", func(ctx context.Context) error {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for {
+			if err := app.services.CSVExports.Reconcile(ctx); err != nil && ctx.Err() == nil {
+				log.Error().Err(err).Msg("CSV generation reconciliation failed")
+			}
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-ticker.C:
+			}
+		}
+	})
 
 	runner.AddFunc("seed_database", func(ctx context.Context) error {
 		if cfg.Demo {
