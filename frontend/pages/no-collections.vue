@@ -13,11 +13,11 @@
 </script>
 
 <template>
-  <BaseContainer class="flex justify-center">
-    <div class="w-full">
+  <BaseContainer class="flex justify-center py-10">
+    <div class="w-full min-w-0 max-w-2xl">
       <BaseCard>
         <template #title>
-          <h2 class="text-center text-xl font-semibold tracking-tight">
+          <h2 class="hb-display break-words text-center text-3xl sm:text-4xl">
             {{ $t("collection.no_collections.title") }}
           </h2>
         </template>
@@ -29,7 +29,7 @@
 
           <div class="flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button
-              class="w-full sm:w-auto"
+              class="h-auto min-h-9 w-full whitespace-normal break-words sm:w-auto"
               @click="
                 openDialog(DialogID.CreateCollection, {
                   params: {
@@ -41,7 +41,7 @@
               {{ $t("collection.no_collections.create") }}
             </Button>
             <Button
-              class="w-full sm:w-auto"
+              class="h-auto min-h-9 w-full whitespace-normal break-words sm:w-auto"
               variant="secondary"
               @click="
                 openDialog(DialogID.JoinCollection, {

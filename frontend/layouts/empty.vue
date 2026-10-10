@@ -1,9 +1,6 @@
-<script setup lang="ts">
-  import { Toaster } from "~/components/ui/sonner";
-</script>
 <template>
-  <div>
-    <Toaster />
+  <!-- Theme initialization and the singleton toaster live in app.vue. -->
+  <div class="min-h-dvh bg-background text-foreground">
     <slot />
   </div>
 </template>
