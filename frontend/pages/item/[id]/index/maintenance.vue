@@ -9,7 +9,7 @@
 </script>
 
 <template>
-  <BaseContainer class="flex flex-col gap-8">
+  <BaseContainer class="flex min-w-0 flex-col gap-6">
     <MaintenanceListView :current-item-id="props.item.id" />
   </BaseContainer>
 </template>

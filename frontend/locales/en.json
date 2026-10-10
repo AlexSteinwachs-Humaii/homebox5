@@ -752,6 +752,8 @@
         "update_location": "Update Location"
     },
     "maintenance": {
+        "empty": "No maintenance entries match this status.",
+        "failed_load": "Unable to load maintenance entries. Please try again.",
         "filter": {
             "both": "Both",
             "completed": "Completed",

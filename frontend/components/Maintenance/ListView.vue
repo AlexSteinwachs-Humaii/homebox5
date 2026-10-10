@@ -8,7 +8,7 @@
   import MdiEdit from "~icons/mdi/edit";
   import MdiCalendar from "~icons/mdi/calendar";
   import MdiPlus from "~icons/mdi/plus";
-  import MdiWrenchClock from "~icons/mdi/wrench-clock";
+
   import MdiContentDuplicate from "~icons/mdi/content-duplicate";
   import MaintenanceEditModal from "~~/components/Maintenance/EditModal.vue";
   import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,22 +39,29 @@
     },
   });
 
-  const { data: maintenanceDataList, refresh: refreshList } = useAsyncData(
+  const loadFailed = ref(false);
+  const toolbar = ref<HTMLElement | null>(null);
+  const {
+    data: maintenanceDataList,
+    refresh: refreshList,
+    status,
+  } = useAsyncData(
     async () => {
-      const { data } =
+      const { data, error } =
         props.currentItemId !== undefined
           ? await api.items.maintenance.getLog(props.currentItemId, { status: maintenanceFilterStatus.value })
           : await api.maintenance.getAll({ status: maintenanceFilterStatus.value });
-      console.log(data);
-      return data;
+      loadFailed.value = !!error;
+      return error ? [] : data;
     },
     {
       watch: [maintenanceFilterStatus],
     }
   );
 
+  const pending = computed(() => status.value === "pending");
+
   const stats = computed(() => {
-    console.log(maintenanceDataList);
     if (!maintenanceDataList.value) return [];
 
     const count = maintenanceDataList.value ? maintenanceDataList.value.length || 0 : 0;
@@ -88,18 +95,21 @@
   });
 
   async function deleteEntry(id: string) {
-    const result = await confirm.open(t("maintenance.modal.delete_confirmation"));
-    if (result.isCanceled) {
-      return;
+    const trigger = document.activeElement as HTMLElement | null;
+    try {
+      const result = await confirm.open(t("maintenance.modal.delete_confirmation"));
+      if (result.isCanceled) return;
+      const { error } = await api.maintenance.delete(id);
+      if (error) {
+        toast.error(t("maintenance.toast.failed_to_delete"));
+        return;
+      }
+      await refreshList();
+    } finally {
+      await nextTick();
+      if (trigger?.isConnected) trigger.focus();
+      else toolbar.value?.querySelector<HTMLButtonElement>("button")?.focus();
     }
-
-    const { error } = await api.maintenance.delete(id);
-
-    if (error) {
-      toast.error(t("maintenance.toast.failed_to_delete"));
-      return;
-    }
-    refreshList();
   }
 
   async function completeEntry(maintenanceEntry: MaintenanceEntry) {
@@ -120,14 +130,15 @@
 </script>
 
 <template>
-  <section class="space-y-6">
+  <section class="min-w-0 space-y-6">
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
       <StatCard v-for="stat in stats" :key="stat.id" :title="stat.title" :value="stat.value" :type="stat.type" />
     </div>
-    <div class="flex">
-      <ButtonGroup>
+    <div ref="toolbar" class="flex flex-wrap items-center gap-3">
+      <ButtonGroup class="flex flex-wrap gap-2">
         <Button
           size="sm"
+          :aria-pressed="maintenanceFilterStatus === MaintenanceFilterStatus.MaintenanceFilterStatusScheduled"
           :variant="
             maintenanceFilterStatus == MaintenanceFilterStatus.MaintenanceFilterStatusScheduled ? 'default' : 'outline'
           "
@@ -140,6 +151,7 @@
           :variant="
             maintenanceFilterStatus == MaintenanceFilterStatus.MaintenanceFilterStatusCompleted ? 'default' : 'outline'
           "
+          :aria-pressed="maintenanceFilterStatus === MaintenanceFilterStatus.MaintenanceFilterStatusCompleted"
           @click="maintenanceFilterStatus = MaintenanceFilterStatus.MaintenanceFilterStatusCompleted"
         >
           {{ $t("maintenance.filter.completed") }}
@@ -149,6 +161,7 @@
           :variant="
             maintenanceFilterStatus == MaintenanceFilterStatus.MaintenanceFilterStatusBoth ? 'default' : 'outline'
           "
+          :aria-pressed="maintenanceFilterStatus === MaintenanceFilterStatus.MaintenanceFilterStatusBoth"
           @click="maintenanceFilterStatus = MaintenanceFilterStatus.MaintenanceFilterStatusBoth"
         >
           {{ $t("maintenance.filter.both") }}
@@ -174,20 +187,27 @@
       </Button>
     </div>
   </section>
-  <section>
+  <section class="min-w-0" :aria-busy="pending">
     <!-- begin -->
     <MaintenanceEditModal ref="maintenanceEditModal" @changed="refreshList" />
-    <div class="container space-y-6">
-      <BaseCard v-for="e in maintenanceDataList" :key="e.id">
-        <BaseSectionHeader class="border-b p-6">
-          <span class="mb-2">
+    <div v-if="pending && !maintenanceDataList?.length" class="hb-panel p-6" role="status">
+      {{ $t("global.loading") }}
+    </div>
+    <div v-else-if="loadFailed" class="hb-panel space-y-3 p-6" role="alert">
+      <p>{{ $t("maintenance.failed_load") }}</p>
+      <Button variant="outline" @click="refreshList()">{{ $t("global.retry") }}</Button>
+    </div>
+    <div v-else class="space-y-6">
+      <BaseCard v-for="e in maintenanceDataList" :key="e.id" class="hb-panel min-w-0">
+        <BaseSectionHeader class="border-b p-4 sm:p-6">
+          <span class="mb-2 min-w-0 break-words [overflow-wrap:anywhere]">
             <span v-if="!props.currentItemId">
               <NuxtLink class="hover:underline" :to="`/item/${(e as MaintenanceEntryWithDetails).itemID}/maintenance`">
                 {{ (e as MaintenanceEntryWithDetails).itemName }}
               </NuxtLink>
               -
             </span>
-            {{ e.name }}
+            <span>{{ e.name }}</span>
           </span>
           <template #description>
             <div class="flex flex-wrap gap-2">
@@ -201,8 +221,8 @@
               </Badge>
               <TooltipProvider :delay-duration="0">
                 <Tooltip>
-                  <TooltipTrigger>
-                    <Badge>
+                  <TooltipTrigger as-child>
+                    <Badge tabindex="0" :aria-label="$t('maintenance.modal.cost')">
                       <Currency :amount="e.cost" />
                     </Badge>
                   </TooltipTrigger>
@@ -212,10 +232,10 @@
             </div>
           </template>
         </BaseSectionHeader>
-        <div :class="{ 'p-6': e.description }">
+        <div :class="{ 'break-words p-4 [overflow-wrap:anywhere] sm:p-6': e.description }">
           <Markdown :source="e.description" />
         </div>
-        <ButtonGroup class="flex flex-wrap justify-end p-4">
+        <ButtonGroup class="flex flex-wrap justify-end gap-2 p-4">
           <Button
             size="sm"
             @click="
@@ -241,7 +261,11 @@
             variant="outline"
             @click="
               openDialog(DialogID.EditMaintenance, {
-                params: { type: 'duplicate', maintenanceEntry: e, itemId: props.currentItemId! },
+                params: {
+                  type: 'duplicate',
+                  maintenanceEntry: e,
+                  itemId: props.currentItemId ?? (e as MaintenanceEntryWithDetails).itemID,
+                },
                 onClose: result => {
                   if (result) {
                     refreshList();
@@ -259,10 +283,12 @@
           </Button>
         </ButtonGroup>
       </BaseCard>
-      <div v-if="props.currentItemId" class="hidden first:block">
-        <button
-          type="button"
-          class="relative block w-full rounded-lg border-2 border-dashed p-12 text-center"
+      <div v-if="!maintenanceDataList?.length" class="hb-panel space-y-4 p-6 text-center">
+        <p class="text-muted-foreground">{{ $t("maintenance.empty") }}</p>
+        <Button
+          v-if="props.currentItemId"
+          variant="outline"
+          class="h-auto whitespace-normal"
           @click="
             openDialog(DialogID.EditMaintenance, {
               params: { type: 'create', itemId: props.currentItemId },
@@ -274,11 +300,11 @@
             })
           "
         >
-          <MdiWrenchClock class="inline size-16" />
+          <MdiPlus />
           <span class="mt-2 block text-sm font-medium text-foreground">
             {{ $t("maintenance.list.create_first") }}
           </span>
-        </button>
+        </Button>
       </div>
     </div>
   </section>

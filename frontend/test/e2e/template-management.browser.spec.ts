@@ -240,7 +240,7 @@ test("template list failed load has retry, then empty create and retained failed
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
   await dialog.getByRole("textbox", { name: "Field Name", exact: true }).fill("Custom default");
   await dialog.getByRole("textbox", { name: "Default Value", exact: true }).fill("Custom value");
-  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  await dialog.getByRole("button", { name: "Create", exact: true }).press("Enter");
   await expect(dialog.getByRole("button", { name: "Loading…", exact: true })).toBeDisabled();
   await expect(dialog.locator("form")).toHaveAttribute("aria-busy", "true");
   releaseCreate();
@@ -254,7 +254,7 @@ test("template list failed load has retry, then empty create and retained failed
     fields: [{ id: nil, name: "Custom default", type: "text", textValue: "Custom value" }],
   });
   failCreate = false;
-  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  await dialog.getByRole("button", { name: "Create", exact: true }).press("Enter");
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "New template", exact: true })).toBeVisible();
 });
