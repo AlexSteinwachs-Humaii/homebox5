@@ -2,7 +2,13 @@
   <TooltipProvider :delay-duration="0">
     <Tooltip>
       <TooltipTrigger as-child>
-        <Button size="icon" variant="outline" class="relative" @click="copyText">
+        <Button
+          size="icon"
+          variant="outline"
+          class="relative"
+          :aria-label="tooltip || $t('profile.api_key_copy')"
+          @click="copyText"
+        >
           <div
             :data-copied="copied"
             class="group absolute inset-0 flex items-center justify-center transition-transform duration-300 data-[copied=true]:rotate-[360deg]"

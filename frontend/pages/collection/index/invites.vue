@@ -60,7 +60,6 @@
         toast.error(msg);
       } else {
         invites.value = (res.data || []) as Invitation[];
-        console.log("Loaded invites:", invites.value);
       }
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
@@ -76,8 +75,6 @@
     openDialog(DialogID.CreateGroupInvite, {
       onClose: (result?: InvitationResult) => {
         if (!result) return;
-
-        console.log("Created invite:", result);
 
         const localInvite: Invitation = {
           ...(result as InvitationResult),
@@ -122,13 +119,17 @@
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="min-w-0 space-y-4">
+    <h2 class="hb-section-title">{{ $t("collection.tabs.invites") }}</h2>
+    <p v-if="error" role="alert" class="hb-panel break-words p-4 text-sm text-destructive">
+      {{ error }}
+    </p>
     <Teleport to="#collection-header-actions" defer>
       <TooltipProvider :delay-duration="0">
         <Tooltip>
           <TooltipTrigger as-child>
             <Button
-              class="size-8"
+              class="size-10"
               variant="outline"
               size="icon"
               :aria-label="$t('collection.create_invite')"
@@ -145,20 +146,20 @@
       </TooltipProvider>
     </Teleport>
 
-    <div v-if="loading" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+    <div v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
       {{ $t("global.loading") }}
     </div>
 
     <div v-else class="space-y-3">
-      <div v-if="localInvites.length" class="rounded-md bg-secondary p-3 text-xs font-bold text-secondary-foreground">
+      <div v-if="localInvites.length" role="status" class="hb-panel p-4 text-sm font-medium">
         {{ $t("collection.invite_token_warning") }}
       </div>
 
-      <div v-if="!allInvites.length" class="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+      <div v-if="!allInvites.length && !error" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
         {{ $t("collection.no_invites") }}
       </div>
 
-      <div v-else class="scroll-bg overflow-x-auto rounded-md border bg-card">
+      <div v-if="allInvites.length" class="hb-panel scroll-bg min-w-0 overflow-x-auto">
         <Table class="min-w-[640px]">
           <TableHeader>
             <TableRow>
@@ -170,7 +171,7 @@
           </TableHeader>
           <TableBody>
             <TableRow v-for="inv in allInvites" :key="inv.id || inv.token">
-              <TableCell>
+              <TableCell class="max-w-64">
                 <span class="break-all font-mono text-xs">
                   <template v-if="inv.token">
                     {{ inv.token }}

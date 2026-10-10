@@ -57,8 +57,16 @@
 
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
-        <Button :id="id" variant="outline" role="combobox" :aria-expanded="open" class="w-full justify-between">
-          {{ value && value.name ? value.name : $t("components.template.selector.select") }}
+        <Button
+          :id="id"
+          variant="outline"
+          role="combobox"
+          :aria-expanded="open"
+          class="h-auto min-h-10 w-full justify-between whitespace-normal text-start"
+        >
+          <span class="min-w-0 break-words [overflow-wrap:anywhere]">
+            {{ value && value.name ? value.name : $t("components.template.selector.select") }}
+          </span>
           <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
