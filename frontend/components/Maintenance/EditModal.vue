@@ -14,10 +14,11 @@
         <FormTextArea v-model="entry.description" :label="$t('maintenance.modal.notes')" />
         <FormTextField v-model="entry.cost" :label="$t('maintenance.modal.cost')" />
 
+        <p v-if="saveError" role="alert" class="rounded-md border border-destructive p-3 text-popover-foreground">
+          {{ saveError }}
+        </p>
+
         <DialogFooter>
-          <p v-if="saveError" role="alert" class="rounded-md border border-destructive p-3 text-popover-foreground">
-            {{ saveError }}
-          </p>
           <Button type="submit" :disabled="saving">
             <MdiPost />
             {{

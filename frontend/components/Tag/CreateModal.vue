@@ -23,7 +23,9 @@
       <IconSelector v-model="form.icon" :label="$t('components.tag.create_modal.tag_icon')" />
       <div class="mt-4 flex flex-row-reverse">
         <ButtonGroup class="flex-wrap gap-y-2">
-          <Button :loading="loading" type="submit">{{ $t("global.create") }}</Button>
+          <Button :disabled="loading" type="submit">
+            {{ loading ? $t("global.loading") : $t("global.create") }}
+          </Button>
           <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
             {{ $t("global.create_and_add") }}
           </Button>

@@ -29,7 +29,7 @@
 
   const loadFailed = ref(false);
 
-  const { data: tree } = useAsyncData(async () => {
+  const { data: tree, refresh } = useAsyncData(async () => {
     const { data, error } = await api.items.getTree({
       withItems: true,
     });
@@ -175,9 +175,12 @@
     </div>
     <BaseCard>
       <div class="p-3 sm:p-5">
-        <p v-if="loadFailed" role="alert" class="py-6 text-center text-sm text-destructive">
-          {{ $t("organization.failed_load") }}
-        </p>
+        <div v-if="loadFailed" role="alert" class="flex flex-col items-center gap-4 py-6 text-center">
+          <p class="rounded-md border border-destructive px-4 py-3 text-sm text-card-foreground">
+            {{ $t("organization.failed_load") }}
+          </p>
+          <Button variant="outline" type="button" @click="refresh()">{{ $t("global.retry") }}</Button>
+        </div>
         <LocationTreeRoot
           v-if="!loadFailed && tree && Array.isArray(tree)"
           :locs="tree"

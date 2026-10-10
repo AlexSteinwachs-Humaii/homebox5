@@ -61,7 +61,9 @@
       {{ $t("global.loading") }}
     </p>
     <div v-else-if="loadFailed" role="alert" class="hb-panel flex flex-col items-center gap-4 p-6 text-center">
-      <p class="text-destructive">{{ $t("components.template.toast.load_failed") }}</p>
+      <p class="rounded-md border border-destructive px-4 py-3 text-card-foreground">
+        {{ $t("components.template.toast.load_failed") }}
+      </p>
       <Button variant="outline" @click="handleRefresh">{{ $t("global.retry") }}</Button>
     </div>
     <div v-else-if="templates && templates.length > 0" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

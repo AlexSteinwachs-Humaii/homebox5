@@ -161,6 +161,7 @@
   }
 
   async function update() {
+    if (updating.value) return;
     if (!updateData.name || updateData.name.trim().length === 0) {
       toast.error(t("components.tag.create_modal.toast.tag_name_too_long"));
       return;
@@ -252,7 +253,9 @@
         />
         <IconSelector v-model="updateData.icon" :label="$t('components.tag.create_modal.tag_icon')" />
         <DialogFooter>
-          <Button type="submit" :loading="updating"> {{ $t("global.update") }} </Button>
+          <Button type="submit" :disabled="updating">
+            {{ updating ? $t("global.loading") : $t("global.update") }}
+          </Button>
         </DialogFooter>
       </form>
     </DialogContent>
