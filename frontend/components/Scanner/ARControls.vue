@@ -1,7 +1,9 @@
 <template>
   <div class="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between">
     <!-- Top bar -->
-    <div class="pointer-events-auto flex items-center gap-3 bg-background/60 p-3 backdrop-blur-sm">
+    <div
+      class="pointer-events-auto flex flex-wrap items-center gap-3 border-b border-border bg-card p-3 text-card-foreground"
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -11,17 +13,19 @@
       >
         <MdiArrowLeft class="size-5" />
       </Button>
-      <span class="text-sm font-semibold text-foreground">{{ t("scanner_ar.title") }}</span>
+      <span class="min-w-0 break-words font-editorial text-lg">{{ t("scanner_ar.title") }}</span>
       <div class="grow" />
-      <div v-if="isScanning" class="flex items-center gap-1.5">
-        <span class="size-2 animate-pulse rounded-full bg-green-500" />
+      <div v-if="isScanning" class="flex items-center gap-1.5" role="status">
+        <span class="size-2 rounded-full bg-primary" aria-hidden="true" />
         <span class="text-xs text-muted-foreground">{{ t("scanner_ar.scanning") }}</span>
       </div>
     </div>
 
     <!-- Bottom bar -->
-    <div class="pointer-events-auto flex items-center justify-center gap-4 bg-background/60 p-3 backdrop-blur-sm">
-      <Button variant="outline" size="sm" @click="$emit('switchCamera')">
+    <div
+      class="pointer-events-auto flex flex-wrap items-center justify-center gap-4 border-t border-border bg-card p-3 text-card-foreground"
+    >
+      <Button variant="outline" class="h-auto min-h-11 whitespace-normal" @click="$emit('switchCamera')">
         <MdiCameraFlip class="mr-1.5 size-4" />
         {{ t("scanner_ar.switch_camera") }}
       </Button>

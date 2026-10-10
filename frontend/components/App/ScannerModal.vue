@@ -2,24 +2,16 @@
   <Dialog :dialog-id="DialogID.Scanner">
     <DialogScrollContent>
       <DialogHeader>
-        <DialogTitle>{{ t("scanner.title") }}</DialogTitle>
+        <DialogTitle class="font-editorial text-2xl font-normal">{{ t("scanner.title") }}</DialogTitle>
       </DialogHeader>
       <div>
-        <div
-          v-if="errorMessage"
-          class="mb-5 flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 p-4 text-destructive"
-          role="alert"
-        >
-          <MdiAlertCircleOutline class="text-destructive" />
+        <div v-if="errorMessage" class="hb-scanner-feedback mb-5" role="alert">
+          <MdiAlertCircleOutline class="size-5 shrink-0" aria-hidden="true" />
           <span class="text-sm font-medium">{{ errorMessage }}</span>
         </div>
-        <div
-          v-if="detectedBarcode"
-          class="mb-5 flex flex-col items-center gap-2 rounded-md border border-accent-foreground bg-accent p-4 text-accent-foreground"
-          role="alert"
-        >
-          <div class="flex">
-            <MdiBarcode class="mr-2" />
+        <div v-if="detectedBarcode" class="hb-scanner-feedback mb-5 flex-col items-center" role="status">
+          <div class="flex min-w-0 items-start">
+            <MdiBarcode class="mr-2 shrink-0" aria-hidden="true" />
             <span class="flex-1 text-center text-sm font-medium">
               {{ detectedBarcodeType }} {{ $t("scanner.barcode_detected_message") }}:
               <strong>{{ detectedBarcode }}</strong>
@@ -27,7 +19,12 @@
           </div>
 
           <ButtonGroup>
-            <Button :disabled="loading" type="submit" @click="handleButtonClick">
+            <Button
+              :disabled="loading"
+              class="h-auto min-h-11 whitespace-normal"
+              type="submit"
+              @click="handleButtonClick"
+            >
               {{ $t("scanner.barcode_fetch_data") }}
             </Button>
           </ButtonGroup>
@@ -35,8 +32,9 @@
         <!-- eslint-disable-next-line tailwindcss/no-custom-classname -->
         <video ref="video" class="aspect-video w-full rounded-lg bg-muted shadow" poster="data:image/gif,AAAA" />
         <div class="mt-4 flex flex-col gap-3">
+          <label for="scanner-source" class="text-sm font-medium">{{ t("scanner.select_video_source") }}</label>
           <Select v-model="selectedSource">
-            <SelectTrigger class="w-full">
+            <SelectTrigger id="scanner-source" class="w-full">
               <SelectValue :placeholder="t('scanner.select_video_source')" />
             </SelectTrigger>
             <SelectContent>

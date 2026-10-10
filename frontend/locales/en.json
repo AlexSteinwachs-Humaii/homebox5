@@ -229,6 +229,7 @@
                 "error_not_found": "No product found with given barcode.",
                 "import_selected": "Import selected",
                 "search_item": "Search product",
+                "select_product": "Select product: {name}",
                 "title": "Import product"
             },
             "selector": {
@@ -946,6 +947,7 @@
         "items_in_location": "{count, plural, one {item} other {items}}",
         "more": "more",
         "not_found": "Item not found",
+        "open_result": "Open result: {name}",
         "qty": "Qty",
         "retry": "Retry",
         "scanning": "Scanning",

@@ -2,12 +2,15 @@
   <Dialog :dialog-id="DialogID.Import">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>{{ $t("components.app.import_dialog.title") }}</DialogTitle>
+        <DialogTitle class="font-editorial text-2xl font-normal">{{
+          $t("components.app.import_dialog.title")
+        }}</DialogTitle>
         <DialogDescription> {{ $t("components.app.import_dialog.description") }} </DialogDescription>
       </DialogHeader>
 
-      <div class="flex gap-2 rounded bg-destructive p-2 text-destructive-foreground shadow-lg">
+      <div class="hb-scanner-feedback" role="note">
         <svg
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           class="mb-auto size-6 shrink-0 stroke-current"
           fill="none"
@@ -26,7 +29,13 @@
       </div>
 
       <form class="flex flex-col gap-4" @submit.prevent="submitCsvFile">
-        <Input ref="importRef" type="file" accept=".csv,.tsv" @change="setFile" />
+        <Input
+          ref="importRef"
+          type="file"
+          :aria-label="$t('components.app.import_dialog.title')"
+          accept=".csv,.tsv"
+          @change="setFile"
+        />
 
         <DialogFooter>
           <Button type="submit" :disabled="!importCsv"> {{ $t("global.submit") }} </Button>
