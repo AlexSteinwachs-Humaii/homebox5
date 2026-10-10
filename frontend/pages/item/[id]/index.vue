@@ -815,11 +815,25 @@
 
         <!-- anything in this is not rendered if on another page -->
         <template v-if="!hasNested">
-          <BaseCard v-if="photos && photos.length > 0">
+          <BaseCard>
             <template #title> {{ $t("items.photos") }} </template>
-            <div class="scroll-bg container mx-auto flex max-h-[500px] flex-wrap gap-2 overflow-y-scroll border-t p-4">
-              <button v-for="(img, i) in photos" :key="i" @click="openImageDialog(img, item.id)">
-                <img class="max-h-[200px] rounded" :src="img.thumbnailSrc" :alt="$t('items.photo')" loading="lazy" />
+            <p v-if="!photos.length" class="border-t p-4 text-muted-foreground">{{ $t("items.no_photos") }}</p>
+            <div
+              v-else
+              class="scroll-bg container mx-auto flex max-h-[500px] flex-wrap gap-2 overflow-y-auto border-t p-4"
+            >
+              <button
+                v-for="(img, i) in photos"
+                :key="i"
+                class="max-w-full rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                @click="openImageDialog(img, item.id)"
+              >
+                <img
+                  class="max-h-[200px] max-w-full rounded object-contain"
+                  :src="img.thumbnailSrc"
+                  :alt="$t('items.photo')"
+                  loading="lazy"
+                />
               </button>
             </div>
           </BaseCard>

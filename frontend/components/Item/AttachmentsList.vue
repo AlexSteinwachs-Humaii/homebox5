@@ -3,13 +3,13 @@
     <li
       v-for="attachment in attachments"
       :key="attachment.id"
-      class="flex items-center justify-between py-3 pl-3 pr-4 text-sm"
+      class="flex min-w-0 flex-wrap items-center justify-between gap-3 p-3 text-sm"
     >
       <template v-if="isExternalURLAttachment(attachment)">
         <div class="flex w-0 flex-1 items-center">
-          <MdiLinkVariant class="size-5 shrink-0 text-foreground/50" aria-hidden="true" />
+          <MdiLinkVariant class="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <a
-            class="ml-2 w-0 flex-1 truncate text-primary underline"
+            class="ml-2 min-w-0 flex-1 break-words text-primary underline [overflow-wrap:anywhere]"
             :href="attachment.path"
             target="_blank"
             rel="noopener noreferrer"
@@ -24,6 +24,7 @@
                 <a
                   :class="buttonVariants({ size: 'icon' })"
                   :href="attachment.path"
+                  :aria-label="$t('components.item.attachments_list.open_new_tab') + ': ' + attachment.title"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -37,8 +38,8 @@
       </template>
       <template v-else>
         <div class="flex w-0 flex-1 items-center">
-          <MdiPaperclip class="size-5 shrink-0 text-foreground/50" aria-hidden="true" />
-          <span class="ml-2 w-0 flex-1 truncate"> {{ attachment.title }}</span>
+          <MdiPaperclip class="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span class="ml-2 min-w-0 flex-1 break-words [overflow-wrap:anywhere]"> {{ attachment.title }}</span>
         </div>
         <div class="ml-4 flex shrink-0 gap-2">
           <TooltipProvider :delay-duration="0">
@@ -48,6 +49,7 @@
                   :class="buttonVariants({ size: 'icon' })"
                   :href="attachmentURL(attachment.id)"
                   :download="attachment.title"
+                  :aria-label="$t('components.item.attachments_list.download') + ': ' + attachment.title"
                 >
                   <MdiDownload />
                 </a>
@@ -56,7 +58,13 @@
             </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
-                <a :class="buttonVariants({ size: 'icon' })" :href="attachmentURL(attachment.id)" target="_blank">
+                <a
+                  :class="buttonVariants({ size: 'icon' })"
+                  :href="attachmentURL(attachment.id)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :aria-label="$t('components.item.attachments_list.open_new_tab') + ': ' + attachment.title"
+                >
                   <MdiOpenInNew />
                 </a>
               </TooltipTrigger>

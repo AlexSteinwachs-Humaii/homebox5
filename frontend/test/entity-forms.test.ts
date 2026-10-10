@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { compileTemplate, parse } from "vue/compiler-sfc";
 import ts from "typescript";
+import type { PhotoPreview } from "../components/Form/photo-uploader";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const create = read("components/Entity/CreateModal.vue");
@@ -34,6 +35,7 @@ function createContext() {
       photos: [],
       color: "",
     },
+    pendingCreatedEntity: { value: null },
     selectedEntityType: { value: { id: "item-type", isLocation: false } },
     templateData: { value: null as null | { id: string } },
     selectedTemplate: { value: null },
@@ -59,6 +61,41 @@ function createContext() {
 }
 
 describe("entity form presentation and unchanged behavior", () => {
+  it("retains only failed photos and retries the saved record without creating it again", async () => {
+    const original = createContext();
+    const first = { photoName: "one.png", fileBase64: "original-one", primary: true } as PhotoPreview;
+    const second = { photoName: "two.png", fileBase64: "original-two", primary: false } as PhotoPreview;
+    const upload = vi.fn().mockResolvedValueOnce({}).mockResolvedValueOnce({ error: "offline" }).mockResolvedValue({});
+    const c = {
+      ...original,
+      pendingCreatedEntity: { value: null as { id: string } | null },
+      form: { ...original.form, photos: [first, second] },
+      api: { ...original.api, items: { ...original.api.items, attachments: { add: upload } } },
+      toast: { ...original.toast, info: vi.fn(), warning: vi.fn() },
+      AttachmentTypes: { Photo: "photo" },
+    };
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const createRecord = handler(create, "create", c);
+      await createRecord(false);
+      expect(c.api.items.create).toHaveBeenCalledTimes(1);
+      expect(c.pendingCreatedEntity.value).toEqual({ id: "created" });
+      expect(c.form.photos).toEqual([second]);
+      expect(c.form.name).toBe("Draft");
+      expect(c.loading.value).toBe(false);
+      expect(c.closeDialog).not.toHaveBeenCalled();
+      await createRecord(false);
+      expect(c.api.items.create).toHaveBeenCalledTimes(1);
+      expect(upload).toHaveBeenCalledTimes(3);
+      expect(upload.mock.calls.map(args => args[2])).toEqual(["one.png", "two.png", "two.png"]);
+      expect(c.pendingCreatedEntity.value).toBeNull();
+      expect(c.form.photos).toEqual([]);
+      expect(c.form.name).toBe("");
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it.each([
     create,
     item,

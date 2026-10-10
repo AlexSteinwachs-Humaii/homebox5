@@ -12,7 +12,7 @@
   import MdiImageOutline from "~icons/mdi/image-outline";
   import MdiOpenInNew from "~icons/mdi/open-in-new";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-  import { Button } from "@/components/ui/button";
+  import { Button, buttonVariants } from "@/components/ui/button";
   import { useDialog } from "@/components/ui/dialog-provider";
   import { Checkbox } from "@/components/ui/checkbox";
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -471,7 +471,15 @@
     value,
   }));
 
+  const attachmentEditorOpener = ref<HTMLElement | null>(null);
+
+  function restoreAttachmentEditorFocus(event: Event) {
+    event.preventDefault();
+    if (attachmentEditorOpener.value?.isConnected) attachmentEditorOpener.value.focus();
+  }
+
   function openAttachmentEditDialog(attachment: ItemAttachment) {
+    attachmentEditorOpener.value = document.activeElement as HTMLElement;
     editState.id = attachment.id;
     editState.title = attachment.title;
     editState.type = attachment.type;
@@ -490,7 +498,8 @@
     });
 
     if (error) {
-      toast.error(t("items.toast.failed_delete_attachment"));
+      editState.loading = false;
+      toast.error(t("items.toast.failed_update_attachment"));
       return;
     }
 
@@ -608,7 +617,7 @@
 <template>
   <div v-if="item" class="min-w-0 pb-8" :aria-busy="saving || !!requestPending">
     <Dialog :dialog-id="DialogID.AttachmentEdit">
-      <DialogContent>
+      <DialogContent @close-auto-focus="restoreAttachmentEditorFocus">
         <DialogHeader>
           <DialogTitle>{{ $t("items.edit.edit_attachment_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -616,8 +625,8 @@
         <FormTextField v-model="editState.title" :label="$t('items.edit.edit_attachment_dialog.attachment_title')" />
         <div>
           <Label for="attachment-type"> {{ $t("items.edit.edit_attachment_dialog.attachment_type") }} </Label>
-          <Select id="attachment-type" v-model:model-value="editState.type">
-            <SelectTrigger>
+          <Select v-model:model-value="editState.type">
+            <SelectTrigger id="attachment-type">
               <SelectValue :placeholder="$t('items.edit.edit_attachment_dialog.select_type')" />
             </SelectTrigger>
             <SelectContent>
@@ -800,7 +809,7 @@
 
         <Card
           ref="attDropZone"
-          class="overflow-visible shadow-xl"
+          class="hb-panel overflow-visible"
           @dragover.prevent
           @drop.prevent="handleAttachmentCardDrop"
         >
@@ -809,7 +818,7 @@
             <p class="text-xs">{{ $t("items.changes_persisted_immediately") }}</p>
           </div>
           <div class="border-t p-4">
-            <div v-if="attDropZoneActive" class="grid grid-cols-4 gap-4">
+            <div v-if="attDropZoneActive" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <DropZone data-link-type="photo" @drop="dropPhoto"> {{ $t("items.photos") }} </DropZone>
               <DropZone data-link-type="warranty" @drop="dropWarranty"> {{ $t("items.warranty") }} </DropZone>
               <DropZone data-link-type="manual" @drop="dropManual"> {{ $t("items.manuals") }} </DropZone>
@@ -832,12 +841,12 @@
               <li
                 v-for="attachment in item.attachments"
                 :key="attachment.id"
-                class="grid grid-cols-6 justify-between py-3 pl-3 pr-4 text-sm"
+                class="flex min-w-0 flex-wrap items-center gap-3 p-3 text-sm"
               >
-                <p class="col-span-4 my-auto">
+                <p class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                   {{ attachment.title }}
                 </p>
-                <p class="my-auto">
+                <p class="text-muted-foreground">
                   {{ $t(`items.${attachment.type}`) }}
                 </p>
                 <div class="flex justify-end gap-2">
@@ -846,6 +855,7 @@
                       <Button
                         variant="outline"
                         size="icon"
+                        :aria-label="$t('items.photo') + ': ' + attachment.title"
                         @click="
                           openDialog(DialogID.ItemImage, {
                             params: {
@@ -876,10 +886,14 @@
                     "
                   >
                     <TooltipTrigger as-child>
-                      <a :href="attachment.path" target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="icon">
-                          <MdiOpenInNew />
-                        </Button>
+                      <a
+                        :href="attachment.path"
+                        :class="buttonVariants({ variant: 'outline', size: 'icon' })"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        :aria-label="$t('components.item.attachments_list.open_new_tab') + ': ' + attachment.title"
+                      >
+                        <MdiOpenInNew />
                       </a>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -888,7 +902,12 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button variant="destructive" size="icon" @click="deleteAttachment(attachment.id)">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        :aria-label="$t('global.delete') + ': ' + attachment.title"
+                        @click="deleteAttachment(attachment.id)"
+                      >
                         <MdiDelete />
                       </Button>
                     </TooltipTrigger>
@@ -896,7 +915,11 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" @click="openAttachmentEditDialog(attachment)">
+                      <Button
+                        size="icon"
+                        :aria-label="$t('global.edit') + ': ' + attachment.title"
+                        @click="openAttachmentEditDialog(attachment)"
+                      >
                         <MdiPencil />
                       </Button>
                     </TooltipTrigger>
