@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
+
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@
   });
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   useHead({ title: `HomeBox | ${t("collection.tabs.notifiers")}` });
 
@@ -200,6 +204,7 @@
         </div>
       </header>
 
+      <RecordListExport :request="administrationExport('notifiers', exportLabel)" />
       <p v-if="notifiers.status.value === 'pending'" role="status" class="py-4 text-sm text-muted-foreground">
         {{ $t("global.loading") }}
       </p>

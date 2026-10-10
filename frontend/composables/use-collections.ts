@@ -51,7 +51,10 @@ export const useCollections = () => {
         const route = useRoute();
         if (collections.value.length === 0) {
           console.warn("[useCollections] No collections available for user");
-          if (import.meta.client && route.path !== "/no-collections" && route.path !== "/") {
+          // Account metadata and private CSV exports do not require a tenant.
+          // Keep profile reachable even when the shell loads an empty group list.
+          const path = route.path.replace(/\/+$/, "") || "/";
+          if (import.meta.client && !["/no-collections", "/", "/profile"].includes(path)) {
             console.log("[useCollections] Navigating to /no-collections (no available collections)");
             void navigateTo("/no-collections");
           }

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
+
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type {
@@ -25,6 +28,7 @@
   import { useEntityTypeStore } from "~/stores/entityTypes";
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   useHead({ title: `HomeBox | ${t("collection.tabs.entity_types")}` });
 
@@ -260,6 +264,7 @@
       </Button>
     </div>
 
+    <RecordListExport :request="administrationExport('entity-types', exportLabel)" />
     <p v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
       {{ t("global.loading") }}
     </p>

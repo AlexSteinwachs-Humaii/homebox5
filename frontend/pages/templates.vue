@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import MdiPlus from "~icons/mdi/plus";
@@ -15,6 +17,7 @@
   });
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   useHead({
     title: computed(() => `HomeBox | ${t("pages.templates.title")}`),
@@ -55,6 +58,7 @@
       </Button>
     </div>
 
+    <RecordListExport :request="administrationExport('templates', exportLabel)" />
     <TemplateCreateModal @created="handleRefresh" />
 
     <p v-if="pending" role="status" class="hb-panel p-6 text-center text-muted-foreground">

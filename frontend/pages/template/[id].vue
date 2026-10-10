@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { templateFieldsExport, administrationLabelKeys } from "~/lib/exports/administration";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import MdiPencil from "~icons/mdi/pencil";
@@ -37,6 +39,7 @@
   const templateId = computed<string>(() => route.params.id as string);
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   const { data: template, refresh } = useAsyncData(templateId.value, async () => {
     const { data, error } = await api.templates.get(templateId.value);
@@ -351,8 +354,9 @@
             </div>
           </dl>
         </div>
-        <div v-if="template.fields.length > 0">
+        <div>
           <h3 class="mb-2 font-medium">{{ $t("components.template.form.custom_fields") }}</h3>
+          <RecordListExport :request="templateFieldsExport(templateId, exportLabel)" />
           <dl class="flex flex-col gap-1">
             <div v-for="field in template.fields" :key="field.id" class="grid min-w-0 grid-cols-2 gap-3 py-1">
               <dt class="min-w-0 break-words text-muted-foreground">{{ field.name }}</dt>

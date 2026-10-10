@@ -64,6 +64,7 @@
             {{ $t("tools.backups_set.create_sub") }}
             <template #button> {{ $t("tools.backups_set.create_button") }} </template>
           </DetailAction>
+          <RecordListExport :request="administrationExport('zip-history', exportLabel)" />
           <div class="overflow-x-auto py-3">
             <table v-if="backups.length > 0" class="w-full text-sm">
               <thead>
@@ -132,6 +133,9 @@
           </DetailAction>
         </div>
       </BaseCard>
+      <div class="hb-panel p-4">
+        <HistoryListExport scope="collection" />
+      </div>
       <BaseCard>
         <template #title>
           <BaseSectionHeader>
@@ -185,6 +189,9 @@
 </template>
 
 <script setup lang="ts">
+  import HistoryListExport from "~/components/Export/HistoryListExport.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
   import DOMPurify from "dompurify";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
@@ -205,6 +212,7 @@
   import { Button } from "@/components/ui/button";
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
   const prefs = useViewPreferences();
 
   definePageMeta({

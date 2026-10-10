@@ -29,3 +29,24 @@ it("downloads the retained artifact without parsing CSV into JSON or regeneratin
   expect(fetch).toHaveBeenCalledOnce();
   expect(fetch.mock.calls[0]![0]).toBe("/api/v1/group/csv-exports/artifact/download");
 });
+
+it("routes account metadata creation, history and download only through private endpoints", async () => {
+  const fetch = vi.fn().mockImplementation(() =>
+    Promise.resolve(
+      new Response(JSON.stringify({ items: [], id: "private-artifact" }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    )
+  );
+  vi.stubGlobal("fetch", fetch);
+  const api = new CsvExportsAPI(new Requests("", "", { "X-Tenant": "unrelated-collection" }));
+  const { administrationExport } = await import("../../exports/administration");
+  await api.create(administrationExport("api-keys", id => id));
+  expect((await api.list("private")).data.items).toEqual([]);
+  await api.download("private", "private-artifact");
+  expect(fetch.mock.calls.map(call => call[0])).toEqual([
+    "/api/v1/user/csv-exports",
+    "/api/v1/user/csv-exports",
+    "/api/v1/user/csv-exports/private-artifact/download",
+  ]);
+});

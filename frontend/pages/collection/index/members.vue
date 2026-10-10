@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
+
   import { useI18n } from "vue-i18n";
   import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
   import { Button } from "@/components/ui/button";
@@ -12,6 +15,7 @@
   });
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   useHead({ title: `HomeBox | ${t("collection.tabs.members")}` });
 
@@ -92,6 +96,7 @@
 <template>
   <div class="min-w-0 space-y-4">
     <h2 class="hb-section-title">{{ $t("collection.tabs.members") }}</h2>
+    <RecordListExport :request="administrationExport('members', exportLabel)" :disabled="loading || !!error" />
     <p v-if="error" role="alert" class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground">
       {{ error }}
     </p>

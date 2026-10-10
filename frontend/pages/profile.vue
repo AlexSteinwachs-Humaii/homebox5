@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import HistoryListExport from "~/components/Export/HistoryListExport.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { administrationExport, administrationLabelKeys } from "~/lib/exports/administration";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type { Detail } from "~~/components/global/DetailsSection/types";
@@ -28,6 +31,7 @@
   import type { APIKeyOut } from "~~/lib/api/types/data-contracts";
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   definePageMeta({
     middleware: ["auth"],
@@ -448,6 +452,10 @@
           <p v-if="apiKeysLoading" role="status" class="mb-3 text-sm text-muted-foreground">
             {{ $t("global.loading") }}
           </p>
+          <RecordListExport
+            :request="administrationExport('api-keys', exportLabel)"
+            :disabled="apiKeysLoading || !!apiKeysError"
+          />
           <div class="mx-1 divide-y rounded-md border">
             <p v-if="!apiKeysLoading && !apiKeysError && apiKeys.length === 0" class="p-2 text-center text-sm">
               {{ $t("profile.no_api_keys") }}
@@ -495,6 +503,9 @@
         </div>
       </BaseCard>
 
+      <div class="hb-panel p-4">
+        <HistoryListExport scope="private" />
+      </div>
       <!-- TODO: Remove this notice once users are familiar with the collection-based settings. -->
       <BaseCard>
         <template #title>

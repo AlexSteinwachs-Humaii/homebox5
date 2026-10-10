@@ -140,7 +140,7 @@
     "sources": [
       "maintenance"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 global/per-item status + entity descriptor; native source ordering"
   },
   {
     "path": "components/Scanner/AROverlayCard.vue",
@@ -227,7 +227,7 @@
       "entity-types",
       "templates"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 entity-type cards; template selectors remain S6"
   },
   {
     "path": "pages/collection/index/invites.vue",
@@ -235,21 +235,21 @@
       "invitations",
       "invitation-visible"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 active complete explicit invitation IDs, metadata only; tokens excluded"
   },
   {
     "path": "pages/collection/index/members.vue",
     "sources": [
       "members"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 member-readable name/email; no action column"
   },
   {
     "path": "pages/collection/index/notifiers.vue",
     "sources": [
       "notifiers"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 requester-member name/active/created; credential URL excluded"
   },
   {
     "path": "pages/collection/index/settings.vue",
@@ -261,7 +261,7 @@
       "zip-history",
       "collection-csv-history"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 ZIP metadata + collection CSV history export-only snapshot; history management remains S8"
   },
   {
     "path": "pages/collection/index.vue",
@@ -340,7 +340,7 @@
       "api-keys",
       "private-csv-history"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 private API-key metadata + private CSV history export-only snapshot; history management/settings remain S8"
   },
   {
     "path": "pages/reports/label-generator.vue",
@@ -372,13 +372,21 @@
       "locations",
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 saved template fields; draft fields/selectors remain S6"
   },
   {
     "path": "pages/templates.vue",
     "sources": [
       "templates"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S5 template cards: name/description, full source"
+  },
+  {
+    "path": "components/Export/HistoryListExport.vue",
+    "sources": [
+      "collection-csv-history",
+      "private-csv-history"
+    ],
+    "integration": "S5 export-only explicit pre-generation authorized history IDs; S8 can reuse csvHistoryExport for its display"
   }
 ]

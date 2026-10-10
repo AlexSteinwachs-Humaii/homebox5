@@ -1064,6 +1064,13 @@
         }
     },
   "csv_export": {
+    "history_snapshot": "Export the current authorized history records captured before generation. This export will not include itself.",
+    "source": "Source",
+    "completed_at": "Completed",
+    "history_export": "Export CSV history metadata",
+    "private_history_export": "Export private CSV history metadata",
+    "history_load_failed": "CSV history could not be loaded. Retry to capture its records.",
+    "invitation_metadata": "Export active invitation metadata only; invitation tokens are excluded.",
     "action": "Export CSV",
     "all_matching": "Export all matching records, not just the current page or selected rows.",
     "recent": "Export the latest {limit} records in this section (not the entire inventory).",

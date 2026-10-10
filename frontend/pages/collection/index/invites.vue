@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { invitationsExport, administrationLabelKeys } from "~/lib/exports/administration";
+
   import { useI18n } from "vue-i18n";
   import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
   import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@
   type InvitationResult = GroupInvitation & { id: string; group?: Group };
 
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
 
   useHead({ title: `HomeBox | ${t("collection.tabs.invites")}` });
 
@@ -121,6 +125,11 @@
 <template>
   <div class="min-w-0 space-y-4">
     <h2 class="hb-section-title">{{ $t("collection.tabs.invites") }}</h2>
+    <RecordListExport
+      :request="invitationsExport(allInvites, exportLabel)"
+      :scope-label="$t('csv_export.invitation_metadata')"
+      :disabled="loading || !!error"
+    />
     <p v-if="error" role="alert" class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground">
       {{ error }}
     </p>

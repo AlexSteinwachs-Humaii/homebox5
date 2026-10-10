@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { maintenanceExport, administrationLabelKeys } from "~/lib/exports/administration";
   import { useI18n } from "vue-i18n";
   import type { MaintenanceEntry, MaintenanceEntryWithDetails } from "~~/lib/api/types/data-contracts";
   import { MaintenanceFilterStatus } from "~~/lib/api/types/data-contracts";
@@ -29,6 +31,7 @@
 
   const api = useUserApi();
   const { t } = useI18n();
+  const exportLabel = (id: string) => t(administrationLabelKeys[id] ?? `global.${id}`);
   const confirm = useConfirm();
   const { openDialog } = useDialog();
 
@@ -167,6 +170,7 @@
           {{ $t("maintenance.filter.both") }}
         </Button>
       </ButtonGroup>
+      <RecordListExport :request="maintenanceExport(maintenanceFilterStatus, props.currentItemId, exportLabel)" />
       <Button
         v-if="props.currentItemId"
         class="ml-auto"

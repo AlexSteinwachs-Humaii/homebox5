@@ -14,6 +14,12 @@ export class CsvExportsAPI extends BaseAPI {
     });
   }
 
+  list(scope: CsvRequest["scope"]) {
+    return this.http.get<{ items: CsvArtifact[] }>({
+      url: route(this.path(scope)),
+    });
+  }
+
   get(scope: CsvRequest["scope"], id: string) {
     return this.http.get<CsvArtifact>({
       url: route(`${this.path(scope)}/${encodeURIComponent(id)}`),

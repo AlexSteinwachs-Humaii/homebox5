@@ -251,7 +251,8 @@ export const csvSources = {
   "invitations": {
     "access": "member",
     "boundaries": [
-      "all"
+      "all",
+      "explicit"
     ],
     "columns": [
       "id",
