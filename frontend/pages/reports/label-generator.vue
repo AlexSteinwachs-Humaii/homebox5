@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { referencedExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import DOMPurify from "dompurify";
   import { route } from "../../lib/api/base";
@@ -198,6 +200,7 @@
   });
 
   type LabelData = {
+    recordId?: string;
     url: string;
     name: string;
     assetID: string;
@@ -227,12 +230,18 @@
 
   function getItem(
     n: number,
-    item: { assetId: string; name: string; parent?: { name: string } | null } | null
+    item: {
+      id?: string;
+      assetId: string;
+      name: string;
+      parent?: { name: string } | null;
+    } | null
   ): LabelData {
     // format n into - seperated string with leading zeros
     const assetID = fmtAssetID(item?.assetId ?? n + 1);
 
     return {
+      recordId: item?.id,
       url: getQRCodeUrl(assetID),
       assetID: item?.assetId ?? assetID,
       name: item?.name ?? labelBlankLine,
@@ -398,6 +407,20 @@
     pages.value = calc;
   }
 
+  // Capture the GENERATED record output, not pending range/layout edits.
+  // Blank pre-printable positions have no recordId and never enter the request.
+  const labelExport = computed(() => {
+    const request = referencedExport(
+      "label-records",
+      pages.value.flatMap(page =>
+        page.rows.flatMap(row => row.items.flatMap(item => (item?.recordId ? [item.recordId] : [])))
+      ),
+      id => t(`csv_export.fields.${id}`)
+    );
+    if (!printLocationRow.value) request.columns = request.columns.filter(c => c.id !== "location");
+    return request;
+  });
+
   onMounted(() => {
     calcPages();
   });
@@ -405,6 +428,7 @@
 
 <template>
   <div class="hb-label-settings bg-background text-foreground print:hidden">
+    <RecordListExport :request="labelExport" />
     <Toaster />
     <div class="container mx-auto max-w-4xl space-y-4 p-4 pt-6">
       <h1 class="hb-display break-words">HomeBox {{ $t("reports.label_generator.title") }}</h1>
@@ -508,7 +532,10 @@
       </div>
 
       <div>
-        <p>{{ $t("reports.label_generator.qr_code_example") }} {{ displayProperties.baseURL }}/a/{asset_id}</p>
+        <p>
+          {{ $t("reports.label_generator.qr_code_example") }}
+          {{ displayProperties.baseURL }}/a/{asset_id}
+        </p>
         <Button size="lg" class="my-4 w-full" @click="calcPages">
           {{ $t("reports.label_generator.generate_page") }}
         </Button>
@@ -569,12 +596,18 @@
                 <div
                   v-if="getHomeBoxLineText(item)"
                   class="text-xs"
-                  :class="{ 'font-light italic': getHomeBoxLineText(item) !== labelBlankLine }"
+                  :class="{
+                    'font-light italic': getHomeBoxLineText(item) !== labelBlankLine,
+                  }"
                 >
                   {{ getHomeBoxLineText(item) }}
                 </div>
-                <div class="overflow-hidden text-wrap text-xs">{{ item.name }}</div>
-                <div v-if="printLocationRow" class="text-xs">{{ item.location }}</div>
+                <div class="overflow-hidden text-wrap text-xs">
+                  {{ item.name }}
+                </div>
+                <div v-if="printLocationRow" class="text-xs">
+                  {{ item.location }}
+                </div>
               </div>
             </template>
           </div>

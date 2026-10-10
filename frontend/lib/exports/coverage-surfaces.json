@@ -20,7 +20,7 @@
     "sources": [
       "collections"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Entity/CreateModal.vue",
@@ -32,14 +32,14 @@
       "tags",
       "draft-fields"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Entity/Selector.vue",
     "sources": [
       "entity-types"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Form/IconSelector.vue",
@@ -50,36 +50,36 @@
     "sources": [
       "draft-photos"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/AttachmentsList.vue",
     "sources": [
       "attachments"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/BarcodeModal.vue",
     "sources": [
       "product-results"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/Card.vue",
     "sources": [
       "entities",
-      "entity-tags"
+      "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/Selector.vue",
     "sources": [
       "entities"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/View/table/card-view.vue",
@@ -96,9 +96,9 @@
     "path": "components/Item/View/table/data-table-expanded-row.vue",
     "sources": [
       "entities",
-      "entity-tags"
+      "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Item/View/table/data-table.vue",
@@ -119,7 +119,7 @@
     "sources": [
       "locations"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Location/Tree/Node.vue",
@@ -147,35 +147,36 @@
     "sources": [
       "scanner-results"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 ARView header exports complete matched entity references including child records; private, server revalidated; no camera frames"
   },
   {
     "path": "components/Scanner/ARView.vue",
     "sources": [
       "scanner-results"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 ARView header exports complete matched entity references including child records; private, server revalidated; no camera frames"
   },
   {
     "path": "components/Search/Filter.vue",
     "sources": [
-      "entity-fields"
+      "locations",
+      "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Tag/Selector.vue",
     "sources": [
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Tag/SingleSelector.vue",
     "sources": [
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Tag/Tree/Node.vue",
@@ -198,21 +199,21 @@
       "locations",
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/Template/Selector.vue",
     "sources": [
       "templates"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 explicit complete eligible IDs / server query descriptors; draft metadata private, max 1000; shared RecordListExport"
   },
   {
     "path": "components/global/DetailsSection/DetailsSection.vue",
     "sources": [
       "entity-fields"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 page-owned entity-fields descriptor on item/location details; other detail arrays describe a single record, not record lists"
   },
   {
     "path": "pages/assets/[id].vue",
@@ -286,7 +287,7 @@
       "draft-fields",
       "attachments"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/item/[id]/index.vue",
@@ -296,7 +297,7 @@
       "entity-tags",
       "entity-path"
     ],
-    "integration": "S4 child inventory; attachments/tags/path remain S6"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/items.vue",
@@ -304,7 +305,7 @@
       "entities",
       "entity-fields"
     ],
-    "integration": "S4 inventory via Item/View/Selectable; field-option records remain S6"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/location/[id]/index/edit.vue",
@@ -315,7 +316,7 @@
       "draft-fields",
       "attachments"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/location/[id]/index/index.vue",
@@ -325,7 +326,7 @@
       "attachments",
       "entity-tags"
     ],
-    "integration": "S4 child items and locations; attachments/tags remain S6"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/locations.vue",
@@ -347,7 +348,7 @@
     "sources": [
       "label-records"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S6 private explicit real label record IDs from active range; blank/skip placeholders excluded; controls outside print"
   },
   {
     "path": "pages/tag/[id].vue",
@@ -355,7 +356,7 @@
       "entities",
       "tags"
     ],
-    "integration": "S4 tag inventory; ancestor context remains S6"
+    "integration": "S4 tag inventory; S6 complete ancestor breadcrumb IDs with path context"
   },
   {
     "path": "pages/tags.vue",
@@ -372,7 +373,7 @@
       "locations",
       "tags"
     ],
-    "integration": "S5 saved template fields; draft fields/selectors remain S6"
+    "integration": "S4/S5 base lists plus S6 section metadata, draft fields and nested selectors; photos/attachments explicit IDs and entity context"
   },
   {
     "path": "pages/templates.vue",

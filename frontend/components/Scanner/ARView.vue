@@ -27,12 +27,17 @@
       :error="detection.error"
     />
 
+    <div class="absolute inset-x-4 bottom-24 z-50 max-w-xl" @keydown.stop>
+      <RecordListExport :request="scannerExport" />
+    </div>
     <!-- Controls -->
     <ScannerARControls :is-scanning="isScanning" @back="handleBack" @switch-camera="switchCamera" />
   </div>
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { referencedExport } from "~/lib/exports/auxiliary";
   import { ref, onMounted, onBeforeUnmount, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useBarcodeDetector } from "@/composables/use-barcode-detector";
@@ -46,6 +51,22 @@
   const container = ref<HTMLDivElement>();
 
   const { isScanning, error, detections, startCamera, stopCamera, switchCamera } = useBarcodeDetector(videoEl);
+
+  const scannerExport = computed(() =>
+    referencedExport(
+      "scanner-results",
+      detections.value
+        .filter(d => d.data && !d.loading && !d.error)
+        .flatMap(d =>
+          [
+            d.data?.item?.id,
+            d.data?.location?.id,
+            ...(d.data?.childItems ?? []).map((i: { id: string }) => i.id),
+          ].filter((id): id is string => !!id)
+        ),
+      id => t(`csv_export.fields.${id}`)
+    )
+  );
 
   let lastDetectionCount = 0;
   watch(detections, val => {

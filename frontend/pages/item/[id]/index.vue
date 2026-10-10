@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { attachmentsExport, entityRecordsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type { AnyDetail, Detail, Details } from "~~/components/global/DetailsSection/types";
@@ -636,6 +638,22 @@
       },
     });
   }
+  const photoExport = computed(() =>
+    attachmentsExport(
+      item.value?.id ?? "",
+      (item.value?.attachments ?? []).filter(a => a.type === "photo").map(a => a.id),
+      id => t(`csv_export.fields.${id}`)
+    )
+  );
+  const fieldsExport = computed(() =>
+    entityRecordsExport("entity-fields", item.value?.id ?? "", id => t(`csv_export.fields.${id}`))
+  );
+  const tagsExport = computed(() =>
+    entityRecordsExport("entity-tags", item.value?.id ?? "", id => t(`csv_export.fields.${id}`))
+  );
+  const pathExport = computed(() =>
+    entityRecordsExport("entity-path", item.value?.id ?? "", id => t(`csv_export.fields.${id}`))
+  );
 </script>
 
 <template>
@@ -791,6 +809,9 @@
               </div>
             </div>
           </template>
+          <RecordListExport :request="fieldsExport" />
+          <RecordListExport :request="tagsExport" />
+          <RecordListExport :request="pathExport" />
           <DetailsSection :details="itemDetails">
             <template #quantity="{ detail }">
               <div class="flex items-center">
@@ -824,6 +845,7 @@
         <template v-if="!hasNested">
           <BaseCard>
             <template #title> {{ $t("items.photos") }} </template>
+            <RecordListExport :request="photoExport" />
             <p v-if="!photos.length" class="border-t p-4 text-muted-foreground">
               {{ $t("items.no_photos") }}
             </p>

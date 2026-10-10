@@ -1,21 +1,39 @@
 <template>
-  <Select :model-value="selectedEntityType" @update:model-value="id => onEntityTypeChanged(id as string)">
-    <SelectTrigger :aria-label="$t('global.entity_type')" class="min-w-0" :class="{ 'h-7 p-1': size === 'sm' }">
-      <SelectValue :class="{ 'text-xl': size === 'sm' }" :placeholder="$t('components.entity.selector.placeholder')" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem v-for="type in entityTypes" :key="type.id" :value="type.id">
-        <div class="flex items-center gap-2">
-          <MdiMapMarkerOutline v-if="type.isLocation" class="size-4" />
-          <MdiPackageVariantClosed v-else class="size-4" />
-          <span>{{ t(type.name) }}</span>
+  <div class="flex min-w-0 flex-col gap-1">
+    <Select :model-value="selectedEntityType" @update:model-value="id => onEntityTypeChanged(id as string)">
+      <SelectTrigger :aria-label="$t('global.entity_type')" class="min-w-0" :class="{ 'h-7 p-1': size === 'sm' }">
+        <SelectValue
+          :class="{ 'text-xl': size === 'sm' }"
+          :placeholder="$t('components.entity.selector.placeholder')"
+        />
+      </SelectTrigger>
+      <SelectContent>
+        <div class="p-2" @keydown.stop>
+          <RecordListExport
+            :request="
+              selectorExport(
+                'entity-types',
+                entityTypes.map(r => r.id),
+                id => $t(`csv_export.fields.${id}`)
+              )
+            "
+          />
         </div>
-      </SelectItem>
-    </SelectContent>
-  </Select>
+        <SelectItem v-for="type in entityTypes" :key="type.id" :value="type.id">
+          <div class="flex items-center gap-2">
+            <MdiMapMarkerOutline v-if="type.isLocation" class="size-4" />
+            <MdiPackageVariantClosed v-else class="size-4" />
+            <span>{{ t(type.name) }}</span>
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import MdiMapMarkerOutline from "~icons/mdi/map-marker-outline";
   import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";

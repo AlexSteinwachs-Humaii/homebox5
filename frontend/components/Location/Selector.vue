@@ -28,6 +28,17 @@
       </PopoverTrigger>
       <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
         <Command :ignore-filter="true">
+          <div class="p-2" @keydown.stop>
+            <RecordListExport
+              :request="
+                selectorExport(
+                  'locations',
+                  filteredLocations.map(r => r.id),
+                  id => $t(`csv_export.fields.${id}`)
+                )
+              "
+            />
+          </div>
           <CommandInput
             v-model="search"
             :placeholder="$t('components.location.selector.search_location')"
@@ -61,6 +72,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { Check, ChevronsUpDown, X } from "lucide-vue-next";
   import fuzzysort from "fuzzysort";
   import { Button } from "~/components/ui/button";

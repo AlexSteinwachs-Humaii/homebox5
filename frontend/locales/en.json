@@ -1071,6 +1071,7 @@
     "private_history_export": "Export private CSV history metadata",
     "history_load_failed": "CSV history could not be loaded. Retry to capture its records.",
     "invitation_metadata": "Export active invitation metadata only; invitation tokens are excluded.",
+    "snapshot_limit": "CSV snapshots support at most 1,000 records. Reduce the list before exporting.",
     "action": "Export CSV",
     "all_matching": "Export all matching records, not just the current page or selected rows.",
     "recent": "Export the latest {limit} records in this section (not the entire inventory).",
@@ -1097,7 +1098,19 @@
       "quantity": "Quantity",
       "purchasePrice": "Purchase price",
       "description": "Description",
-      "tags": "Tags"
+      "tags": "Tags",
+      "childItemCount": "Child items",
+      "locationChildCount": "Child locations",
+      "totalPrice": "Total price",
+      "title": "Title",
+      "type": "Type",
+      "mimeType": "Media type",
+      "sizeBytes": "Size (bytes)",
+      "value": "Value",
+      "isLocation": "Location type",
+      "manufacturer": "Manufacturer",
+      "modelNumber": "Model number",
+      "searchEngineName": "Search engine"
     }
   }
 }

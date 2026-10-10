@@ -37,6 +37,22 @@
 
       <Separator />
 
+      <RecordListExport
+        v-if="(products?.length ?? 0) <= 1000"
+        :request="
+          snapshotExport(
+            'product-results',
+            (products ?? []).map(p => ({
+              name: p.item.name,
+              manufacturer: p.manufacturer,
+              modelNumber: p.modelNumber,
+              searchEngineName: p.search_engine_name,
+            })),
+            id => t(`csv_export.fields.${id}`)
+          )
+        "
+      />
+      <p v-else role="alert">{{ $t("csv_export.snapshot_limit") }}</p>
       <BaseCard class="min-w-0 overflow-hidden">
         <Table class="w-full whitespace-nowrap">
           <TableHeader>
@@ -60,7 +76,9 @@
               v-for="(p, index) in products"
               :key="index"
               class="cursor-pointer"
-              :class="{ 'bg-accent text-accent-foreground hover:bg-accent': selectedRow === index }"
+              :class="{
+                'bg-accent text-accent-foreground hover:bg-accent': selectedRow === index,
+              }"
               @click="selectProduct(index)"
             >
               <TableCell
@@ -77,7 +95,11 @@
                       type="button"
                       class="hb-focus min-h-11 text-left text-sm font-medium underline underline-offset-4"
                       :aria-pressed="selectedRow === index"
-                      :aria-label="$t('components.item.product_import.select_product', { name: p.item.name })"
+                      :aria-label="
+                        $t('components.item.product_import.select_product', {
+                          name: p.item.name,
+                        })
+                      "
                       @click.stop="selectProduct(index)"
                     >
                       {{ p.item.name }}
@@ -113,6 +135,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { snapshotExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { DialogID } from "@/components/ui/dialog-provider/utils";
   import { Button } from "~/components/ui/button";
@@ -152,7 +176,12 @@
     },
     { text: "items.manufacturer", value: "manufacturer", align: "center" },
     { text: "items.model_number", value: "modelNumber", align: "center" },
-    { text: "components.item.product_import.db_source", value: "search_engine_name", align: "center", type: "url" },
+    {
+      text: "components.item.product_import.db_source",
+      value: "search_engine_name",
+      align: "center",
+      type: "url",
+    },
   ] satisfies BarcodeTableHeader[];
 
   // Need for later filtering

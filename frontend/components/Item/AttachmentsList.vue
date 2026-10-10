@@ -1,4 +1,13 @@
 <template>
+  <RecordListExport
+    :request="
+      attachmentsExport(
+        itemId,
+        attachments.map(a => a.id),
+        id => $t(`csv_export.fields.${id}`)
+      )
+    "
+  />
   <ul role="list" class="divide-y rounded-md border">
     <li
       v-for="attachment in attachments"
@@ -31,7 +40,9 @@
                   <MdiOpenInNew />
                 </a>
               </TooltipTrigger>
-              <TooltipContent> {{ $t("components.item.attachments_list.open_new_tab") }} </TooltipContent>
+              <TooltipContent>
+                {{ $t("components.item.attachments_list.open_new_tab") }}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -54,7 +65,9 @@
                   <MdiDownload />
                 </a>
               </TooltipTrigger>
-              <TooltipContent> {{ $t("components.item.attachments_list.download") }} </TooltipContent>
+              <TooltipContent>
+                {{ $t("components.item.attachments_list.download") }}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
@@ -68,7 +81,9 @@
                   <MdiOpenInNew />
                 </a>
               </TooltipTrigger>
-              <TooltipContent> {{ $t("components.item.attachments_list.open_new_tab") }} </TooltipContent>
+              <TooltipContent>
+                {{ $t("components.item.attachments_list.open_new_tab") }}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -78,6 +93,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { attachmentsExport } from "~/lib/exports/auxiliary";
   import type { ItemAttachment } from "~~/lib/api/types/data-contracts";
   import MdiPaperclip from "~icons/mdi/paperclip";
   import MdiLinkVariant from "~icons/mdi/link-variant";

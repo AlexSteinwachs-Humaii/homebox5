@@ -18,7 +18,11 @@
               <span
                 v-if="value?.color"
                 class="shrink-0 rounded-full"
-                :style="{ width: '1rem', height: '1rem', backgroundColor: value.color }"
+                :style="{
+                  width: '1rem',
+                  height: '1rem',
+                  backgroundColor: value.color,
+                }"
               />
               <span class="truncate">
                 {{ value && value.name ? value.name : $t("components.tag.selector.select_tags") }}
@@ -32,6 +36,17 @@
         </PopoverTrigger>
         <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
           <Command :ignore-filter="true">
+            <div class="p-2" @keydown.stop>
+              <RecordListExport
+                :request="
+                  selectorExport(
+                    'tags',
+                    filteredTags.map(r => r.id),
+                    id => $t(`csv_export.fields.${id}`)
+                  )
+                "
+              />
+            </div>
             <CommandInput
               v-model="search"
               :placeholder="$t('components.tag.selector.select_tags')"
@@ -70,6 +85,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { Check, ChevronsUpDown, X } from "lucide-vue-next";
   import fuzzysort from "fuzzysort";
   import { Button } from "~/components/ui/button";

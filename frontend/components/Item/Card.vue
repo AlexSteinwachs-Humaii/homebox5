@@ -95,6 +95,15 @@
           </div>
         </dl>
         <Markdown v-if="!compact" class="mb-2 line-clamp-3 text-ellipsis" :source="item.description" />
+        <RecordListExport
+          :request="
+            selectorExport(
+              'tags',
+              itemTags.map(r => r.id),
+              id => $t(`csv_export.fields.${id}`)
+            )
+          "
+        />
         <div class="-mr-1 mt-auto flex flex-wrap justify-end gap-2">
           <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
         </div>
@@ -104,6 +113,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import type { EntityOut, EntitySummary } from "~~/lib/api/types/data-contracts";
   import MdiShieldCheck from "~icons/mdi/shield-check";
   import Currency from "@/components/global/Currency.vue";

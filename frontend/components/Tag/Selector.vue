@@ -14,7 +14,9 @@
           <span
             v-if="props.tags.find(t => t.id === item)?.color"
             class="ml-2 size-4 shrink-0 rounded-full"
-            :style="{ backgroundColor: props.tags.find(t => t.id === item)?.color }"
+            :style="{
+              backgroundColor: props.tags.find(t => t.id === item)?.color,
+            }"
           />
           <TagsInputItemText class="py-0.5" />
           <TagsInputItemDelete />
@@ -22,6 +24,17 @@
       </div>
 
       <ComboboxRoot v-model="modelValue" v-model:open="open" class="w-full" :ignore-filter="true">
+        <div @keydown.stop>
+          <RecordListExport
+            :request="
+              selectorExport(
+                'tags',
+                filteredTags.filter(r => r.value !== 'create-item').map(r => r.value),
+                id => $t(`csv_export.fields.${id}`)
+              )
+            "
+          />
+        </div>
         <ComboboxAnchor as-child>
           <ComboboxInput v-model="searchTerm" :placeholder="$t('components.tag.selector.select_tags')" as-child>
             <TagsInputInput
@@ -62,8 +75,12 @@
                 >
                   <span
                     class="mr-2 size-4 shrink-0 rounded-full align-middle"
-                    :class="{ border: props.tags.find(t => t.id === tag.value)?.color }"
-                    :style="{ backgroundColor: props.tags.find(t => t.id === tag.value)?.color }"
+                    :class="{
+                      border: props.tags.find(t => t.id === tag.value)?.color,
+                    }"
+                    :style="{
+                      backgroundColor: props.tags.find(t => t.id === tag.value)?.color,
+                    }"
                   />
                   <div class="flex flex-col gap-1">
                     <span>{{ tag.label }}</span>
@@ -79,6 +96,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { ComboboxAnchor, ComboboxContent, ComboboxInput, ComboboxPortal, ComboboxRoot } from "reka-ui";
   import { computed, ref } from "vue";
@@ -159,7 +178,11 @@
       const hasExactMatch = props.tags.some(tag => tag.name.toLowerCase() === trimmedSearchTerm.toLowerCase());
 
       if (!hasExactMatch) {
-        filtered.push({ value: "create-item", label: `${t("global.create")} ${searchTerm.value}`, ancestors: "" });
+        filtered.push({
+          value: "create-item",
+          label: `${t("global.create")} ${searchTerm.value}`,
+          ancestors: "",
+        });
       }
     }
 

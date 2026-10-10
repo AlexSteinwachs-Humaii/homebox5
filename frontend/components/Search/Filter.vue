@@ -7,6 +7,17 @@
       </Button>
     </PopoverTrigger>
     <PopoverContent class="z-40 w-80 max-w-[calc(100vw-2rem)] p-0" align="start">
+      <div v-if="exportSource" class="p-2">
+        <RecordListExport
+          :request="
+            selectorExport(
+              exportSource,
+              [...selectedView, ...unselected].map(r => r.id),
+              id => $t(`csv_export.fields.${id}`)
+            )
+          "
+        />
+      </div>
       <div class="p-4 shadow-sm">
         <Input
           v-model="search"
@@ -66,6 +77,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import MdiChevronDown from "~icons/mdi/chevron-down";
   import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
   import { Button } from "@/components/ui/button";
@@ -75,6 +88,7 @@
 
   type Props = {
     label?: string;
+    exportSource?: "locations" | "tags";
     options: {
       name: string;
       id: string;
@@ -93,6 +107,7 @@
   const emit = defineEmits(["update:modelValue"]);
   const props = withDefaults(defineProps<Props>(), {
     label: "",
+    exportSource: undefined,
     modelValue: () => [],
   });
 

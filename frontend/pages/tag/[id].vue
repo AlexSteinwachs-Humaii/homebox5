@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import MdiPencil from "~icons/mdi/pencil";
@@ -286,6 +288,15 @@
             <component :is="tagIcon" class="size-7" />
           </div>
           <div class="min-w-0 flex-1 basis-[calc(100%-4rem)] sm:basis-0">
+            <RecordListExport
+              :request="
+                selectorExport(
+                  'tags',
+                  getBreadcrumbPath().map(r => r.id),
+                  id => $t(`csv_export.fields.${id}`)
+                )
+              "
+            />
             <div v-if="tag?.parentId" class="flex flex-wrap items-center gap-2">
               <template v-for="parent in getBreadcrumbPath()" :key="parent.id">
                 <TagChip :tag="parent" size="sm" />

@@ -41,6 +41,17 @@
       ]"
     >
       <Command :ignore-filter="true">
+        <div class="p-2" @keydown.stop>
+          <RecordListExport
+            :request="
+              selectorExport(
+                'collections',
+                filteredCollections.map(r => r.id),
+                id => $t(`csv_export.fields.${id}`)
+              )
+            "
+          />
+        </div>
         <CommandGroup>
           <CommandItem
             value="create-collection"
@@ -103,6 +114,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { Check, ChevronsUpDown, Plus, UserPlus, Settings } from "lucide-vue-next";
   import MdiHomeGroup from "~icons/mdi/home-group";
   import fuzzysort from "fuzzysort";

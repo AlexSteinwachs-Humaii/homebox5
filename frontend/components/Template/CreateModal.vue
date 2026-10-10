@@ -15,7 +15,9 @@
       />
 
       <Separator class="my-2" />
-      <h3 class="text-sm font-medium">{{ $t("components.template.form.default_item_values") }}</h3>
+      <h3 class="text-sm font-medium">
+        {{ $t("components.template.form.default_item_values") }}
+      </h3>
       <div class="flex min-w-0 flex-col gap-2">
         <FormTextField v-model="form.defaultName" :label="$t('components.template.form.item_name')" :max-length="255" />
         <FormTextArea
@@ -63,12 +65,19 @@
 
       <Separator class="my-2" />
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium">{{ $t("components.template.form.custom_fields") }}</h3>
+        <h3 class="text-sm font-medium">
+          {{ $t("components.template.form.custom_fields") }}
+        </h3>
         <Button type="button" size="sm" variant="outline" @click="addField">
           <MdiPlus class="mr-1 size-4" />
           {{ $t("global.add") }}
         </Button>
       </div>
+      <RecordListExport
+        v-if="form.fields.length <= 1000"
+        :request="draftFieldsExport(form.fields, id => $t(`csv_export.fields.${id}`))"
+      />
+      <p v-else role="alert">{{ $t("csv_export.snapshot_limit") }}</p>
       <div v-if="form.fields.length > 0" class="flex flex-col gap-2">
         <div v-for="(field, idx) in form.fields" :key="idx" class="hb-panel flex min-w-0 flex-wrap items-end gap-3 p-3">
           <FormTextField
@@ -93,7 +102,9 @@
           </Button>
         </div>
       </div>
-      <p v-else class="text-sm text-muted-foreground">{{ $t("components.template.form.no_custom_fields") }}</p>
+      <p v-else class="text-sm text-muted-foreground">
+        {{ $t("components.template.form.no_custom_fields") }}
+      </p>
 
       <div class="mt-4 flex justify-end">
         <Button type="submit" :disabled="loading">
@@ -105,6 +116,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { draftFieldsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import MdiPlus from "~icons/mdi/plus";
@@ -148,7 +161,12 @@
     includeWarrantyFields: false,
     includePurchaseFields: false,
     includeSoldFields: false,
-    fields: [] as Array<{ id: string; name: string; type: "text"; textValue: string }>,
+    fields: [] as Array<{
+      id: string;
+      name: string;
+      type: "text";
+      textValue: string;
+    }>,
   });
 
   const NIL_UUID = "00000000-0000-0000-0000-000000000000";

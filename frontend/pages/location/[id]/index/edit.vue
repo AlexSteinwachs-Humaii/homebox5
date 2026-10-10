@@ -1,5 +1,7 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { attachmentsExport, draftFieldsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type { ItemAttachment, EntityFieldData, EntityOut, EntityUpdate } from "~~/lib/api/types/data-contracts";
@@ -337,7 +339,9 @@
 
         <FormTextField v-model="editState.title" :label="$t('items.edit.edit_attachment_dialog.attachment_title')" />
         <div>
-          <Label for="attachment-type"> {{ $t("items.edit.edit_attachment_dialog.attachment_type") }} </Label>
+          <Label for="attachment-type">
+            {{ $t("items.edit.edit_attachment_dialog.attachment_type") }}
+          </Label>
           <Select v-model:model-value="editState.type">
             <SelectTrigger id="attachment-type">
               <SelectValue :placeholder="$t('items.edit.edit_attachment_dialog.select_type')" />
@@ -396,7 +400,9 @@
           {{ $t("global.save") }}
         </Button>
       </div>
-      <p v-if="requestPending" role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
+      <p v-if="requestPending" role="status" class="py-4 text-muted-foreground">
+        {{ $t("global.loading") }}
+      </p>
       <div v-if="!requestPending" class="space-y-6">
         <BaseCard class="overflow-visible">
           <template #title> {{ $t("locations.update_location") }} </template>
@@ -462,6 +468,11 @@
         <BaseCard v-if="preferences.editorAdvancedView">
           <template #title> {{ $t("items.custom_fields") }} </template>
           <div class="space-y-4 divide-y border-t px-5">
+            <RecordListExport
+              v-if="item.fields.length <= 1000"
+              :request="draftFieldsExport(item.fields, id => $t(`csv_export.fields.${id}`))"
+            />
+            <p v-else role="alert">{{ $t("csv_export.snapshot_limit") }}</p>
             <div
               v-for="(field, idx) in item.fields"
               :key="`field-${idx}`"
@@ -488,19 +499,34 @@
             </div>
           </div>
           <div class="mt-4 flex justify-end px-5 pb-4">
-            <Button size="sm" @click="addField"> {{ $t("global.add") }} </Button>
+            <Button size="sm" @click="addField">
+              {{ $t("global.add") }}
+            </Button>
           </div>
         </BaseCard>
 
         <Card ref="attDropZone" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
             <h3 class="hb-section-title">{{ $t("items.attachments") }}</h3>
-            <p class="text-xs">{{ $t("items.changes_persisted_immediately") }}</p>
+            <RecordListExport
+              :request="
+                attachmentsExport(
+                  item.id,
+                  item.attachments.map(a => a.id),
+                  id => $t(`csv_export.fields.${id}`)
+                )
+              "
+            />
+            <p class="text-xs">
+              {{ $t("items.changes_persisted_immediately") }}
+            </p>
           </div>
           <div class="border-t p-4">
             <div v-if="attDropZoneActive" class="grid grid-cols-2 gap-4">
               <DropZone @drop="dropPhoto"> {{ $t("items.photos") }} </DropZone>
-              <DropZone @drop="dropAttachment"> {{ $t("items.attachments") }} </DropZone>
+              <DropZone @drop="dropAttachment">
+                {{ $t("items.attachments") }}
+              </DropZone>
             </div>
             <button
               v-else
@@ -588,5 +614,7 @@
       </div>
     </section>
   </div>
-  <p v-else role="status" class="py-4 text-muted-foreground">{{ $t("global.loading") }}</p>
+  <p v-else role="status" class="py-4 text-muted-foreground">
+    {{ $t("global.loading") }}
+  </p>
 </template>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { selectorExport } from "~/lib/exports/auxiliary";
   import { computed } from "vue";
   import type { EntitySummary } from "~/lib/api/types/data-contracts";
   import TagChip from "@/components/Tag/Chip.vue";
@@ -48,6 +50,15 @@
           {{ item.location.name }}
         </NuxtLink>
       </Badge>
+      <RecordListExport
+        :request="
+          selectorExport(
+            'tags',
+            itemTags.map(r => r.id),
+            id => $t(`csv_export.fields.${id}`)
+          )
+        "
+      />
       <div class="flex flex-wrap gap-2">
         <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
       </div>

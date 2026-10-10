@@ -1,5 +1,20 @@
 <template>
   <div v-if="photos.length > 0" class="mt-4 border-t px-4 pb-4">
+    <RecordListExport
+      v-if="photos.length <= 1000"
+      :request="
+        snapshotExport(
+          'draft-photos',
+          photos.map(p => ({
+            name: p.photoName,
+            mimeType: p.file.type,
+            sizeBytes: p.file.size,
+          })),
+          id => $t(`csv_export.fields.${id}`)
+        )
+      "
+    />
+    <p v-else role="alert">{{ $t("csv_export.snapshot_limit") }}</p>
     <div v-for="(photo, index) in photos" :key="index">
       <div class="mt-8 w-full">
         <img
@@ -15,7 +30,9 @@
             <TooltipTrigger as-child>
               <Button size="icon" type="button" variant="destructive" @click.prevent="emit('delete', index)">
                 <MdiDelete />
-                <div class="sr-only">{{ $t("components.entity.create_modal.delete_photo") }}</div>
+                <div class="sr-only">
+                  {{ $t("components.entity.create_modal.delete_photo") }}
+                </div>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -27,7 +44,9 @@
             <TooltipTrigger as-child>
               <Button size="icon" type="button" variant="default" @click.prevent="emit('rotate', index)">
                 <MdiRotateClockwise />
-                <div class="sr-only">{{ $t("components.entity.create_modal.rotate_photo") }}</div>
+                <div class="sr-only">
+                  {{ $t("components.entity.create_modal.rotate_photo") }}
+                </div>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -47,23 +66,37 @@
                 <MdiStar v-if="photo.primary" />
                 <MdiStarOutline v-else />
                 <div class="sr-only">
-                  {{ $t("components.entity.create_modal.set_as_primary_photo", { isPrimary: photo.primary }) }}
+                  {{
+                    $t("components.entity.create_modal.set_as_primary_photo", {
+                      isPrimary: photo.primary,
+                    })
+                  }}
                 </div>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{{ $t("components.entity.create_modal.set_as_primary_photo", { isPrimary: photo.primary }) }}</p>
+              <p>
+                {{
+                  $t("components.entity.create_modal.set_as_primary_photo", {
+                    isPrimary: photo.primary,
+                  })
+                }}
+              </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        <p class="mt-1 text-sm" style="overflow-wrap: anywhere">{{ photo.photoName }}</p>
+        <p class="mt-1 text-sm" style="overflow-wrap: anywhere">
+          {{ photo.photoName }}
+        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { snapshotExport } from "~/lib/exports/auxiliary";
   import { Button } from "~/components/ui/button";
   import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
   import MdiDelete from "~icons/mdi/delete";

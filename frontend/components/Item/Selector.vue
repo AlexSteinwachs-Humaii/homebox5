@@ -29,6 +29,17 @@
       </PopoverTrigger>
       <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
         <Command :ignore-filter="true">
+          <div v-if="exportQuery" class="p-2" @keydown.stop>
+            <RecordListExport
+              :request="
+                itemSelectorExport(
+                  exportQuery(),
+                  (excludeItems ?? []).map(r => String(r.id)),
+                  id => t(`csv_export.fields.${id}`)
+                )
+              "
+            />
+          </div>
           <CommandInput v-model="search" :placeholder="localizedSearchPlaceholder" :display-value="_ => ''" />
           <CommandEmpty>
             <div v-if="isLoading" class="flex items-center justify-center p-4">
@@ -64,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { itemSelectorExport } from "~/lib/exports/auxiliary";
   import { computed, ref, watch } from "vue";
   import { Check, ChevronsUpDown, X } from "lucide-vue-next";
   import fuzzysort from "fuzzysort";
@@ -95,6 +108,7 @@
     isLoading?: boolean;
     triggerSearch?: () => Promise<boolean>;
     itemHeight?: number;
+    exportQuery?: () => import("~/lib/api/classes/items").ItemsQuery;
   }
 
   const emit = defineEmits(["update:modelValue", "update:search"]);
@@ -112,6 +126,7 @@
     isLoading: false,
     triggerSearch: undefined,
     itemHeight: 32,
+    exportQuery: undefined,
   });
 
   const id = useId();

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { fieldOptionsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import { Input } from "~/components/ui/input";
@@ -430,8 +432,13 @@
       </div>
 
       <div class="flex min-w-0 flex-wrap items-center gap-2">
-        <SearchFilter v-model="selectedLocations" :label="$t('global.locations')" :options="locationFlatTree" />
-        <SearchFilter v-model="selectedTags" :label="$t('global.tags')" :options="tags" />
+        <SearchFilter
+          v-model="selectedLocations"
+          :label="$t('global.locations')"
+          :options="locationFlatTree"
+          export-source="locations"
+        />
+        <SearchFilter v-model="selectedTags" :label="$t('global.tags')" :options="tags" export-source="tags" />
         <Popover>
           <PopoverTrigger as-child>
             <Button size="sm" variant="outline" class="h-auto min-h-9 whitespace-normal">
@@ -519,6 +526,7 @@
       </div>
       <div v-if="fieldSelector" class="flex min-w-0 flex-col gap-3 border-t pt-4">
         <p class="hb-section-title">{{ $t("items.custom_fields") }}</p>
+        <RecordListExport :request="fieldOptionsExport('', id => $t(`csv_export.fields.${id}`))" />
         <div v-for="(f, idx) in fieldTuples" :key="idx" class="flex flex-wrap gap-2">
           <div class="flex min-w-0 flex-1 basis-full flex-col gap-1 md:basis-0">
             <Label :for="`inventory-field-${idx}`">
@@ -542,6 +550,7 @@
             <Label :for="`inventory-field-value-${idx}`">
               {{ $t("items.field_value") }}
             </Label>
+            <RecordListExport :request="fieldOptionsExport(f[0], id => $t(`csv_export.fields.${id}`))" />
             <Select v-model="fieldTuples[idx]![1]">
               <SelectTrigger
                 :id="`inventory-field-value-${idx}`"

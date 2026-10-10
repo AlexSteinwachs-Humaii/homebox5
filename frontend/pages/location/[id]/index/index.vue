@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { attachmentsExport, entityRecordsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type { AnyDetail, Details } from "~~/components/global/DetailsSection/types";
@@ -234,6 +235,19 @@
       watch: [locationId],
     }
   );
+  const photoExport = computed(() =>
+    attachmentsExport(
+      location.value?.id ?? "",
+      (location.value?.attachments ?? []).filter(a => a.type === "photo").map(a => a.id),
+      id => t(`csv_export.fields.${id}`)
+    )
+  );
+  const fieldsExport = computed(() =>
+    entityRecordsExport("entity-fields", location.value?.id ?? "", id => t(`csv_export.fields.${id}`))
+  );
+  const tagsExport = computed(() =>
+    entityRecordsExport("entity-tags", location.value?.id ?? "", id => t(`csv_export.fields.${id}`))
+  );
 </script>
 
 <template>
@@ -245,6 +259,7 @@
       <Title>{{ location.name }}</Title>
 
       <!-- Photo gallery. Thumbnails stay letterboxed so real photos are not cropped or scaled. -->
+      <RecordListExport :request="photoExport" />
       <section class="mb-4 min-w-0">
         <p v-if="photos.length === 0" class="rounded-lg border bg-muted p-4 text-sm text-muted-foreground">
           {{ $t("items.no_photos") }}
@@ -341,6 +356,8 @@
       <!-- Details (notes, custom fields) -->
       <BaseCard v-if="locationDetails.length > 0" class="mt-section-gap">
         <template #title> {{ $t("global.details") }} </template>
+        <RecordListExport :request="fieldsExport" />
+        <RecordListExport :request="tagsExport" />
         <DetailsSection :details="locationDetails" />
       </BaseCard>
 

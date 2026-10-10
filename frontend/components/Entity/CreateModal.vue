@@ -41,7 +41,9 @@
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{{ $t("components.entity.create_modal.product_tooltip_scan_barcode") }}</p>
+                <p>
+                  {{ $t("components.entity.create_modal.product_tooltip_scan_barcode") }}
+                </p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>
@@ -58,7 +60,9 @@
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{{ $t("components.entity.create_modal.product_tooltip_input_barcode") }}</p>
+                <p>
+                  {{ $t("components.entity.create_modal.product_tooltip_input_barcode") }}
+                </p>
               </TooltipContent>
             </Tooltip>
           </ButtonGroup>
@@ -80,7 +84,11 @@
               <MdiFileDocumentOutline class="mt-0.5 size-4 shrink-0 text-primary" />
               <div class="min-w-0 flex-1">
                 <h4 class="text-sm font-medium text-foreground">
-                  {{ $t("components.template.using_template", { name: templateData.name }) }}
+                  {{
+                    $t("components.template.using_template", {
+                      name: templateData.name,
+                    })
+                  }}
                 </h4>
                 <button
                   type="button"
@@ -109,13 +117,17 @@
           <!-- Collapsible details section -->
           <div v-if="showTemplateDetails" class="mt-3 border-t border-primary/20 pt-3">
             <div class="flex flex-col gap-2 text-xs text-muted-foreground">
-              <p v-if="templateData.description" class="text-foreground/80">{{ templateData.description }}</p>
+              <p v-if="templateData.description" class="text-foreground/80">
+                {{ templateData.description }}
+              </p>
               <div class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
                 <div v-if="templateData.defaultName">
-                  <span class="font-medium">{{ $t("global.name") }}:</span> {{ templateData.defaultName }}
+                  <span class="font-medium">{{ $t("global.name") }}:</span>
+                  {{ templateData.defaultName }}
                 </div>
                 <div>
-                  <span class="font-medium">{{ $t("global.quantity") }}:</span> {{ templateData.defaultQuantity }}
+                  <span class="font-medium">{{ $t("global.quantity") }}:</span>
+                  {{ templateData.defaultQuantity }}
                 </div>
                 <div>
                   <span class="font-medium">{{ $t("global.insured") }}:</span>
@@ -148,6 +160,10 @@
               </div>
               <div v-if="templateData.fields && templateData.fields.length > 0" class="mt-1">
                 <p class="font-medium">{{ $t("components.template.form.custom_fields") }}:</p>
+                <RecordListExport
+                  v-if="templateData.fields.length <= 1000"
+                  :request="draftFieldsExport(templateData.fields, id => $t(`csv_export.fields.${id}`))"
+                />
                 <ul class="ml-4 flex list-none flex-col gap-1">
                   <li v-for="field in templateData.fields" :key="field.id">
                     <span class="font-medium">{{ field.name }}:</span>
@@ -169,6 +185,7 @@
           :no-results-text="$t('components.entity.create_modal.item_selector_no_results_text')"
           :is-loading="isLoading"
           :trigger-search="triggerSearch"
+          :export-query="() => ({ q: query, includeArchived: false })"
         />
         <FormTextField
           ref="nameInput"
@@ -241,6 +258,8 @@
 </template>
 
 <script setup lang="ts">
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { draftFieldsExport } from "~/lib/exports/auxiliary";
   import { useI18n } from "vue-i18n";
   import { DialogID } from "@/components/ui/dialog-provider/utils";
   import { toast } from "@/components/ui/sonner";
@@ -305,7 +324,9 @@
   const route = useRoute();
 
   const parent = ref();
-  const { query, results, isLoading, triggerSearch } = useItemSearch(api, { immediate: false });
+  const { query, results, isLoading, triggerSearch } = useItemSearch(api, {
+    immediate: false,
+  });
   const subItemCreate = ref();
 
   const tagId = computed(() => {
@@ -459,7 +480,11 @@
 
     // Set the template. A restored template reflects the user's last explicit
     // choice, so treat it as user-selected for override purposes.
-    selectedTemplate.value = { id: data.id, name: data.name, description: data.description } as EntityTemplateSummary;
+    selectedTemplate.value = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+    } as EntityTemplateSummary;
     templateData.value = data;
     templateUserSelected.value = true;
     form.quantity = data.defaultQuantity;
@@ -704,7 +729,11 @@
     }
 
     if (form.photos.length > 0) {
-      toast.info(t("components.entity.create_modal.toast.uploading_photos", { count: form.photos.length }));
+      toast.info(
+        t("components.entity.create_modal.toast.uploading_photos", {
+          count: form.photos.length,
+        })
+      );
       const failedPhotos: PhotoPreview[] = [];
       for (const photo of form.photos) {
         const { error: attachError } = await api.items.attachments.add(
@@ -717,7 +746,11 @@
 
         if (attachError) {
           failedPhotos.push(photo);
-          toast.error(t("components.entity.create_modal.toast.upload_failed", { photoName: photo.photoName }));
+          toast.error(
+            t("components.entity.create_modal.toast.upload_failed", {
+              photoName: photo.photoName,
+            })
+          );
           console.error(attachError);
         }
       }
@@ -725,10 +758,18 @@
         form.photos = failedPhotos;
         pendingCreatedEntity.value = { id: data.id };
         loading.value = false;
-        toast.warning(t("components.entity.create_modal.toast.some_photos_failed", { count: failedPhotos.length }));
+        toast.warning(
+          t("components.entity.create_modal.toast.some_photos_failed", {
+            count: failedPhotos.length,
+          })
+        );
         return;
       } else {
-        toast.success(t("components.entity.create_modal.toast.upload_success", { count: form.photos.length }));
+        toast.success(
+          t("components.entity.create_modal.toast.upload_success", {
+            count: form.photos.length,
+          })
+        );
       }
     }
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { draftFieldsExport } from "~/lib/exports/auxiliary";
   import RecordListExport from "~/components/Export/RecordListExport.vue";
   import { templateFieldsExport, administrationLabelKeys } from "~/lib/exports/administration";
   import { useI18n } from "vue-i18n";
@@ -83,7 +84,12 @@
     includeWarrantyFields: false,
     includePurchaseFields: false,
     includeSoldFields: false,
-    fields: [] as Array<{ id: string; name: string; type: "text"; textValue: string }>,
+    fields: [] as Array<{
+      id: string;
+      name: string;
+      type: "text";
+      textValue: string;
+    }>,
   });
 
   function openUpdate() {
@@ -163,7 +169,9 @@
         />
 
         <Separator class="my-2" />
-        <h3 class="text-sm font-medium">{{ $t("components.template.form.default_item_values") }}</h3>
+        <h3 class="text-sm font-medium">
+          {{ $t("components.template.form.default_item_values") }}
+        </h3>
         <div class="grid gap-2">
           <FormTextField
             v-model="updateData.defaultName"
@@ -213,17 +221,31 @@
 
         <Separator class="my-2" />
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-medium">{{ $t("components.template.form.custom_fields") }}</h3>
+          <h3 class="text-sm font-medium">
+            {{ $t("components.template.form.custom_fields") }}
+          </h3>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            @click="updateData.fields.push({ id: NIL_UUID, name: '', type: 'text', textValue: '' })"
+            @click="
+              updateData.fields.push({
+                id: NIL_UUID,
+                name: '',
+                type: 'text',
+                textValue: '',
+              })
+            "
           >
             <MdiPlus class="mr-1 size-4" />
             {{ $t("global.add") }}
           </Button>
         </div>
+        <RecordListExport
+          v-if="updateData.fields.length <= 1000"
+          :request="draftFieldsExport(updateData.fields, id => $t(`csv_export.fields.${id}`))"
+        />
+        <p v-else role="alert">{{ $t("csv_export.snapshot_limit") }}</p>
         <div v-if="updateData.fields.length > 0" class="flex flex-col gap-2">
           <div
             v-for="(field, idx) in updateData.fields"
@@ -299,47 +321,73 @@
       <Separator class="my-3" />
       <div class="grid gap-4 text-sm md:grid-cols-2">
         <div>
-          <h3 class="mb-2 font-medium">{{ $t("components.template.detail.default_values") }}</h3>
+          <h3 class="mb-2 font-medium">
+            {{ $t("components.template.detail.default_values") }}
+          </h3>
           <dl class="flex flex-col gap-1">
             <div v-if="template.defaultName" class="grid min-w-0 grid-cols-2 gap-3 py-1">
-              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("components.template.form.item_name") }}</dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultName }}</dd>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.item_name") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultName }}
+              </dd>
             </div>
             <div v-if="template.defaultDescription" class="grid min-w-0 grid-cols-2 gap-3 py-1">
               <dt class="min-w-0 break-words text-muted-foreground">
                 {{ $t("components.template.form.item_description") }}
               </dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultDescription }}</dd>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultDescription }}
+              </dd>
             </div>
             <div class="grid min-w-0 grid-cols-2 gap-3 py-1">
-              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.quantity") }}</dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultQuantity }}</dd>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("global.quantity") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultQuantity }}
+              </dd>
             </div>
             <div v-if="template.defaultModelNumber" class="grid min-w-0 grid-cols-2 gap-3 py-1">
               <dt class="min-w-0 break-words text-muted-foreground">
                 {{ $t("components.template.form.model_number") }}
               </dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultModelNumber }}</dd>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultModelNumber }}
+              </dd>
             </div>
             <div v-if="template.defaultManufacturer" class="grid min-w-0 grid-cols-2 gap-3 py-1">
               <dt class="min-w-0 break-words text-muted-foreground">
                 {{ $t("components.template.form.manufacturer") }}
               </dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultManufacturer }}</dd>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultManufacturer }}
+              </dd>
             </div>
             <div v-if="template.defaultLocation" class="grid min-w-0 grid-cols-2 gap-3 py-1">
-              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("components.template.form.location") }}</dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultLocation.name }}</dd>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("components.template.form.location") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultLocation.name }}
+              </dd>
             </div>
             <div
               v-if="template.defaultTags && template.defaultTags.length > 0"
               class="grid min-w-0 grid-cols-2 gap-3 py-1"
             >
-              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.tags") }}</dt>
-              <dd class="min-w-0 break-words text-right">{{ template.defaultTags.map(t => t.name).join(", ") }}</dd>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("global.tags") }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ template.defaultTags.map(t => t.name).join(", ") }}
+              </dd>
             </div>
             <div class="grid min-w-0 grid-cols-2 gap-3 py-1">
-              <dt class="min-w-0 break-words text-muted-foreground">{{ $t("global.insured") }}</dt>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ $t("global.insured") }}
+              </dt>
               <dd class="min-w-0 break-words text-right">
                 {{ template.defaultInsured ? $t("global.yes") : $t("global.no") }}
               </dd>
@@ -355,12 +403,18 @@
           </dl>
         </div>
         <div>
-          <h3 class="mb-2 font-medium">{{ $t("components.template.form.custom_fields") }}</h3>
+          <h3 class="mb-2 font-medium">
+            {{ $t("components.template.form.custom_fields") }}
+          </h3>
           <RecordListExport :request="templateFieldsExport(templateId, exportLabel)" />
           <dl class="flex flex-col gap-1">
             <div v-for="field in template.fields" :key="field.id" class="grid min-w-0 grid-cols-2 gap-3 py-1">
-              <dt class="min-w-0 break-words text-muted-foreground">{{ field.name }}</dt>
-              <dd class="min-w-0 break-words text-right">{{ field.textValue || "—" }}</dd>
+              <dt class="min-w-0 break-words text-muted-foreground">
+                {{ field.name }}
+              </dt>
+              <dd class="min-w-0 break-words text-right">
+                {{ field.textValue || "—" }}
+              </dd>
             </div>
           </dl>
         </div>
