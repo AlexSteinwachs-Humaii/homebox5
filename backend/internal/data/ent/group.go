@@ -22,6 +22,8 @@ type Group struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CsvRetentionDays holds the value of the "csv_retention_days" field.
+	CsvRetentionDays int `json:"csv_retention_days,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Currency holds the value of the "currency" field.
@@ -50,11 +52,13 @@ type GroupEdges struct {
 	EntityTemplates []*EntityTemplate `json:"entity_templates,omitempty"`
 	// Exports holds the value of the exports edge.
 	Exports []*Export `json:"exports,omitempty"`
+	// CsvExports holds the value of the csv_exports edge.
+	CsvExports []*CSVExport `json:"csv_exports,omitempty"`
 	// UserGroups holds the value of the user_groups edge.
 	UserGroups []*UserGroup `json:"user_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [10]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -129,10 +133,19 @@ func (e GroupEdges) ExportsOrErr() ([]*Export, error) {
 	return nil, &NotLoadedError{edge: "exports"}
 }
 
+// CsvExportsOrErr returns the CsvExports value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) CsvExportsOrErr() ([]*CSVExport, error) {
+	if e.loadedTypes[8] {
+		return e.CsvExports, nil
+	}
+	return nil, &NotLoadedError{edge: "csv_exports"}
+}
+
 // UserGroupsOrErr returns the UserGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UserGroupsOrErr() ([]*UserGroup, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[9] {
 		return e.UserGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_groups"}
@@ -143,6 +156,8 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case group.FieldCsvRetentionDays:
+			values[i] = new(sql.NullInt64)
 		case group.FieldName, group.FieldCurrency:
 			values[i] = new(sql.NullString)
 		case group.FieldCreatedAt, group.FieldUpdatedAt:
@@ -181,6 +196,12 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
+			}
+		case group.FieldCsvRetentionDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field csv_retention_days", values[i])
+			} else if value.Valid {
+				_m.CsvRetentionDays = int(value.Int64)
 			}
 		case group.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -247,6 +268,11 @@ func (_m *Group) QueryExports() *ExportQuery {
 	return NewGroupClient(_m.config).QueryExports(_m)
 }
 
+// QueryCsvExports queries the "csv_exports" edge of the Group entity.
+func (_m *Group) QueryCsvExports() *CSVExportQuery {
+	return NewGroupClient(_m.config).QueryCsvExports(_m)
+}
+
 // QueryUserGroups queries the "user_groups" edge of the Group entity.
 func (_m *Group) QueryUserGroups() *UserGroupQuery {
 	return NewGroupClient(_m.config).QueryUserGroups(_m)
@@ -280,6 +306,9 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("csv_retention_days=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CsvRetentionDays))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

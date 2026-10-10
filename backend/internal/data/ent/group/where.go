@@ -66,6 +66,11 @@ func UpdatedAt(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// CsvRetentionDays applies equality check predicate on the "csv_retention_days" field. It's identical to CsvRetentionDaysEQ.
+func CsvRetentionDays(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldCsvRetentionDays, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldName, v))
@@ -154,6 +159,46 @@ func UpdatedAtLT(v time.Time) predicate.Group {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// CsvRetentionDaysEQ applies the EQ predicate on the "csv_retention_days" field.
+func CsvRetentionDaysEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldCsvRetentionDays, v))
+}
+
+// CsvRetentionDaysNEQ applies the NEQ predicate on the "csv_retention_days" field.
+func CsvRetentionDaysNEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldCsvRetentionDays, v))
+}
+
+// CsvRetentionDaysIn applies the In predicate on the "csv_retention_days" field.
+func CsvRetentionDaysIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldCsvRetentionDays, vs...))
+}
+
+// CsvRetentionDaysNotIn applies the NotIn predicate on the "csv_retention_days" field.
+func CsvRetentionDaysNotIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldCsvRetentionDays, vs...))
+}
+
+// CsvRetentionDaysGT applies the GT predicate on the "csv_retention_days" field.
+func CsvRetentionDaysGT(v int) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldCsvRetentionDays, v))
+}
+
+// CsvRetentionDaysGTE applies the GTE predicate on the "csv_retention_days" field.
+func CsvRetentionDaysGTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldCsvRetentionDays, v))
+}
+
+// CsvRetentionDaysLT applies the LT predicate on the "csv_retention_days" field.
+func CsvRetentionDaysLT(v int) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldCsvRetentionDays, v))
+}
+
+// CsvRetentionDaysLTE applies the LTE predicate on the "csv_retention_days" field.
+func CsvRetentionDaysLTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldCsvRetentionDays, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -462,6 +507,29 @@ func HasExports() predicate.Group {
 func HasExportsWith(preds ...predicate.Export) predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
 		step := newExportsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCsvExports applies the HasEdge predicate on the "csv_exports" edge.
+func HasCsvExports() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CsvExportsTable, CsvExportsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCsvExportsWith applies the HasEdge predicate on the "csv_exports" edge with a given conditions (other predicates).
+func HasCsvExportsWith(preds ...predicate.CSVExport) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newCsvExportsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

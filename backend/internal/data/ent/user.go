@@ -23,6 +23,8 @@ type User struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CsvRetentionDays holds the value of the "csv_retention_days" field.
+	CsvRetentionDays int `json:"csv_retention_days,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Email holds the value of the "email" field.
@@ -51,6 +53,8 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
+	// CsvExports holds the value of the csv_exports edge.
+	CsvExports []*CSVExport `json:"csv_exports,omitempty"`
 	// Groups holds the value of the groups edge.
 	Groups []*Group `json:"groups,omitempty"`
 	// AuthTokens holds the value of the auth_tokens edge.
@@ -65,13 +69,22 @@ type UserEdges struct {
 	UserGroups []*UserGroup `json:"user_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
+}
+
+// CsvExportsOrErr returns the CsvExports value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CsvExportsOrErr() ([]*CSVExport, error) {
+	if e.loadedTypes[0] {
+		return e.CsvExports, nil
+	}
+	return nil, &NotLoadedError{edge: "csv_exports"}
 }
 
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
@@ -80,7 +93,7 @@ func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 // AuthTokensOrErr returns the AuthTokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AuthTokensOrErr() ([]*AuthTokens, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.AuthTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "auth_tokens"}
@@ -89,7 +102,7 @@ func (e UserEdges) AuthTokensOrErr() ([]*AuthTokens, error) {
 // PasswordResetTokensOrErr returns the PasswordResetTokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PasswordResetTokensOrErr() ([]*PasswordResetTokens, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.PasswordResetTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "password_reset_tokens"}
@@ -98,7 +111,7 @@ func (e UserEdges) PasswordResetTokensOrErr() ([]*PasswordResetTokens, error) {
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -107,7 +120,7 @@ func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
 // NotifiersOrErr returns the Notifiers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) NotifiersOrErr() ([]*Notifier, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.Notifiers, nil
 	}
 	return nil, &NotLoadedError{edge: "notifiers"}
@@ -116,7 +129,7 @@ func (e UserEdges) NotifiersOrErr() ([]*Notifier, error) {
 // UserGroupsOrErr returns the UserGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserGroupsOrErr() ([]*UserGroup, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.UserGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_groups"}
@@ -133,6 +146,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case user.FieldIsSuperuser, user.FieldSuperuser:
 			values[i] = new(sql.NullBool)
+		case user.FieldCsvRetentionDays:
+			values[i] = new(sql.NullInt64)
 		case user.FieldName, user.FieldEmail, user.FieldPassword, user.FieldOidcIssuer, user.FieldOidcSubject:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldActivatedOn:
@@ -171,6 +186,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				_m.UpdatedAt = value.Time
+			}
+		case user.FieldCsvRetentionDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field csv_retention_days", values[i])
+			} else if value.Valid {
+				_m.CsvRetentionDays = int(value.Int64)
 			}
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -251,6 +272,11 @@ func (_m *User) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
+// QueryCsvExports queries the "csv_exports" edge of the User entity.
+func (_m *User) QueryCsvExports() *CSVExportQuery {
+	return NewUserClient(_m.config).QueryCsvExports(_m)
+}
+
 // QueryGroups queries the "groups" edge of the User entity.
 func (_m *User) QueryGroups() *GroupQuery {
 	return NewUserClient(_m.config).QueryGroups(_m)
@@ -309,6 +335,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("csv_retention_days=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CsvRetentionDays))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

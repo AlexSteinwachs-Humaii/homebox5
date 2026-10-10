@@ -19,6 +19,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldCsvRetentionDays holds the string denoting the csv_retention_days field in the database.
+	FieldCsvRetentionDays = "csv_retention_days"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldCurrency holds the string denoting the currency field in the database.
@@ -39,6 +41,8 @@ const (
 	EdgeEntityTemplates = "entity_templates"
 	// EdgeExports holds the string denoting the exports edge name in mutations.
 	EdgeExports = "exports"
+	// EdgeCsvExports holds the string denoting the csv_exports edge name in mutations.
+	EdgeCsvExports = "csv_exports"
 	// EdgeUserGroups holds the string denoting the user_groups edge name in mutations.
 	EdgeUserGroups = "user_groups"
 	// Table holds the table name of the group in the database.
@@ -97,6 +101,13 @@ const (
 	ExportsInverseTable = "exports"
 	// ExportsColumn is the table column denoting the exports relation/edge.
 	ExportsColumn = "group_id"
+	// CsvExportsTable is the table that holds the csv_exports relation/edge.
+	CsvExportsTable = "csv_exports"
+	// CsvExportsInverseTable is the table name for the CSVExport entity.
+	// It exists in this package in order to avoid circular dependency with the "csvexport" package.
+	CsvExportsInverseTable = "csv_exports"
+	// CsvExportsColumn is the table column denoting the csv_exports relation/edge.
+	CsvExportsColumn = "group_id"
 	// UserGroupsTable is the table that holds the user_groups relation/edge.
 	UserGroupsTable = "user_groups"
 	// UserGroupsInverseTable is the table name for the UserGroup entity.
@@ -111,6 +122,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldCsvRetentionDays,
 	FieldName,
 	FieldCurrency,
 }
@@ -138,6 +150,10 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultCsvRetentionDays holds the default value on creation for the "csv_retention_days" field.
+	DefaultCsvRetentionDays int
+	// CsvRetentionDaysValidator is a validator for the "csv_retention_days" field. It is called by the builders before save.
+	CsvRetentionDaysValidator func(int) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultCurrency holds the default value on creation for the "currency" field.
@@ -162,6 +178,11 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCsvRetentionDays orders the results by the csv_retention_days field.
+func ByCsvRetentionDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCsvRetentionDays, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -286,6 +307,20 @@ func ByExports(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByCsvExportsCount orders the results by csv_exports count.
+func ByCsvExportsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCsvExportsStep(), opts...)
+	}
+}
+
+// ByCsvExports orders the results by csv_exports terms.
+func ByCsvExports(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCsvExportsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserGroupsCount orders the results by user_groups count.
 func ByUserGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -353,6 +388,13 @@ func newExportsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ExportsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ExportsTable, ExportsColumn),
+	)
+}
+func newCsvExportsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CsvExportsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CsvExportsTable, CsvExportsColumn),
 	)
 }
 func newUserGroupsStep() *sqlgraph.Step {

@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -25,6 +26,7 @@ func (User) Mixin() []ent.Mixin {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("csv_retention_days").Default(30).Min(1).Max(106751),
 		field.String("name").
 			MaxLen(255).
 			NotEmpty(),
@@ -59,6 +61,11 @@ func (User) Fields() []ent.Field {
 	}
 }
 
+// The upper bound keeps whole-day duration arithmetic within int64 nanoseconds.
+func (User) Annotations() []schema.Annotation {
+	return []schema.Annotation{entsql.Annotation{Checks: map[string]string{"user_csv_retention": "(csv_retention_days BETWEEN 1 AND 106751 AND csv_retention_days = CAST(csv_retention_days AS BIGINT))"}}}
+}
+
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("oidc_issuer", "oidc_subject").Unique(),
@@ -68,6 +75,7 @@ func (User) Indexes() []ent.Index {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.To("csv_exports", CSVExport.Type),
 		edge.To("groups", Group.Type).
 			Through("user_groups", UserGroup.Type),
 		edge.To("auth_tokens", AuthTokens.Type).

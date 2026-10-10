@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
@@ -24,12 +25,17 @@ func (Group) Mixin() []ent.Mixin {
 // Fields of the Home.
 func (Group) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("csv_retention_days").Default(30).Min(1).Max(106751),
 		field.String("name").
 			MaxLen(255).
 			NotEmpty(),
 		field.String("currency").
 			Default("usd"),
 	}
+}
+
+func (Group) Annotations() []schema.Annotation {
+	return []schema.Annotation{entsql.Annotation{Checks: map[string]string{"group_csv_retention": "(csv_retention_days BETWEEN 1 AND 106751 AND csv_retention_days = CAST(csv_retention_days AS BIGINT))"}}}
 }
 
 // Edges of the Home.
@@ -53,6 +59,7 @@ func (Group) Edges() []ent.Edge {
 		owned("notifiers", Notifier.Type),
 		owned("entity_templates", EntityTemplate.Type),
 		owned("exports", Export.Type),
+		edge.To("csv_exports", CSVExport.Type),
 		// $scaffold_edge
 	}
 }

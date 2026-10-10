@@ -20,6 +20,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authroles"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
@@ -49,6 +50,8 @@ type Client struct {
 	AuthRoles *AuthRolesClient
 	// AuthTokens is the client for interacting with the AuthTokens builders.
 	AuthTokens *AuthTokensClient
+	// CSVExport is the client for interacting with the CSVExport builders.
+	CSVExport *CSVExportClient
 	// Entity is the client for interacting with the Entity builders.
 	Entity *EntityClient
 	// EntityField is the client for interacting with the EntityField builders.
@@ -92,6 +95,7 @@ func (c *Client) init() {
 	c.Attachment = NewAttachmentClient(c.config)
 	c.AuthRoles = NewAuthRolesClient(c.config)
 	c.AuthTokens = NewAuthTokensClient(c.config)
+	c.CSVExport = NewCSVExportClient(c.config)
 	c.Entity = NewEntityClient(c.config)
 	c.EntityField = NewEntityFieldClient(c.config)
 	c.EntityTemplate = NewEntityTemplateClient(c.config)
@@ -202,6 +206,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Attachment:           NewAttachmentClient(cfg),
 		AuthRoles:            NewAuthRolesClient(cfg),
 		AuthTokens:           NewAuthTokensClient(cfg),
+		CSVExport:            NewCSVExportClient(cfg),
 		Entity:               NewEntityClient(cfg),
 		EntityField:          NewEntityFieldClient(cfg),
 		EntityTemplate:       NewEntityTemplateClient(cfg),
@@ -239,6 +244,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Attachment:           NewAttachmentClient(cfg),
 		AuthRoles:            NewAuthRolesClient(cfg),
 		AuthTokens:           NewAuthTokensClient(cfg),
+		CSVExport:            NewCSVExportClient(cfg),
 		Entity:               NewEntityClient(cfg),
 		EntityField:          NewEntityFieldClient(cfg),
 		EntityTemplate:       NewEntityTemplateClient(cfg),
@@ -282,10 +288,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.Attachment, c.AuthRoles, c.AuthTokens, c.Entity, c.EntityField,
-		c.EntityTemplate, c.EntityType, c.Export, c.Group, c.GroupInvitationToken,
-		c.MaintenanceEntry, c.Notifier, c.PasswordResetTokens, c.Tag, c.TemplateField,
-		c.User, c.UserGroup,
+		c.APIKey, c.Attachment, c.AuthRoles, c.AuthTokens, c.CSVExport, c.Entity,
+		c.EntityField, c.EntityTemplate, c.EntityType, c.Export, c.Group,
+		c.GroupInvitationToken, c.MaintenanceEntry, c.Notifier, c.PasswordResetTokens,
+		c.Tag, c.TemplateField, c.User, c.UserGroup,
 	} {
 		n.Use(hooks...)
 	}
@@ -295,10 +301,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.Attachment, c.AuthRoles, c.AuthTokens, c.Entity, c.EntityField,
-		c.EntityTemplate, c.EntityType, c.Export, c.Group, c.GroupInvitationToken,
-		c.MaintenanceEntry, c.Notifier, c.PasswordResetTokens, c.Tag, c.TemplateField,
-		c.User, c.UserGroup,
+		c.APIKey, c.Attachment, c.AuthRoles, c.AuthTokens, c.CSVExport, c.Entity,
+		c.EntityField, c.EntityTemplate, c.EntityType, c.Export, c.Group,
+		c.GroupInvitationToken, c.MaintenanceEntry, c.Notifier, c.PasswordResetTokens,
+		c.Tag, c.TemplateField, c.User, c.UserGroup,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -315,6 +321,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AuthRoles.mutate(ctx, m)
 	case *AuthTokensMutation:
 		return c.AuthTokens.mutate(ctx, m)
+	case *CSVExportMutation:
+		return c.CSVExport.mutate(ctx, m)
 	case *EntityMutation:
 		return c.Entity.mutate(ctx, m)
 	case *EntityFieldMutation:
@@ -973,6 +981,171 @@ func (c *AuthTokensClient) mutate(ctx context.Context, m *AuthTokensMutation) (V
 		return (&AuthTokensDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AuthTokens mutation op: %q", m.Op())
+	}
+}
+
+// CSVExportClient is a client for the CSVExport schema.
+type CSVExportClient struct {
+	config
+}
+
+// NewCSVExportClient returns a client for the CSVExport from the given config.
+func NewCSVExportClient(c config) *CSVExportClient {
+	return &CSVExportClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `csvexport.Hooks(f(g(h())))`.
+func (c *CSVExportClient) Use(hooks ...Hook) {
+	c.hooks.CSVExport = append(c.hooks.CSVExport, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `csvexport.Intercept(f(g(h())))`.
+func (c *CSVExportClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CSVExport = append(c.inters.CSVExport, interceptors...)
+}
+
+// Create returns a builder for creating a CSVExport entity.
+func (c *CSVExportClient) Create() *CSVExportCreate {
+	mutation := newCSVExportMutation(c.config, OpCreate)
+	return &CSVExportCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CSVExport entities.
+func (c *CSVExportClient) CreateBulk(builders ...*CSVExportCreate) *CSVExportCreateBulk {
+	return &CSVExportCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CSVExportClient) MapCreateBulk(slice any, setFunc func(*CSVExportCreate, int)) *CSVExportCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CSVExportCreateBulk{err: fmt.Errorf("calling to CSVExportClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CSVExportCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CSVExportCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CSVExport.
+func (c *CSVExportClient) Update() *CSVExportUpdate {
+	mutation := newCSVExportMutation(c.config, OpUpdate)
+	return &CSVExportUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CSVExportClient) UpdateOne(_m *CSVExport) *CSVExportUpdateOne {
+	mutation := newCSVExportMutation(c.config, OpUpdateOne, withCSVExport(_m))
+	return &CSVExportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CSVExportClient) UpdateOneID(id uuid.UUID) *CSVExportUpdateOne {
+	mutation := newCSVExportMutation(c.config, OpUpdateOne, withCSVExportID(id))
+	return &CSVExportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CSVExport.
+func (c *CSVExportClient) Delete() *CSVExportDelete {
+	mutation := newCSVExportMutation(c.config, OpDelete)
+	return &CSVExportDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CSVExportClient) DeleteOne(_m *CSVExport) *CSVExportDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CSVExportClient) DeleteOneID(id uuid.UUID) *CSVExportDeleteOne {
+	builder := c.Delete().Where(csvexport.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CSVExportDeleteOne{builder}
+}
+
+// Query returns a query builder for CSVExport.
+func (c *CSVExportClient) Query() *CSVExportQuery {
+	return &CSVExportQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCSVExport},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CSVExport entity by its id.
+func (c *CSVExportClient) Get(ctx context.Context, id uuid.UUID) (*CSVExport, error) {
+	return c.Query().Where(csvexport.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CSVExportClient) GetX(ctx context.Context, id uuid.UUID) *CSVExport {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a CSVExport.
+func (c *CSVExportClient) QueryUser(_m *CSVExport) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(csvexport.Table, csvexport.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, csvexport.UserTable, csvexport.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroup queries the group edge of a CSVExport.
+func (c *CSVExportClient) QueryGroup(_m *CSVExport) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(csvexport.Table, csvexport.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, csvexport.GroupTable, csvexport.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CSVExportClient) Hooks() []Hook {
+	return c.hooks.CSVExport
+}
+
+// Interceptors returns the client interceptors.
+func (c *CSVExportClient) Interceptors() []Interceptor {
+	return c.inters.CSVExport
+}
+
+func (c *CSVExportClient) mutate(ctx context.Context, m *CSVExportMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CSVExportCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CSVExportUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CSVExportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CSVExportDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CSVExport mutation op: %q", m.Op())
 	}
 }
 
@@ -2133,6 +2306,22 @@ func (c *GroupClient) QueryExports(_m *Group) *ExportQuery {
 	return query
 }
 
+// QueryCsvExports queries the csv_exports edge of a Group.
+func (c *GroupClient) QueryCsvExports(_m *Group) *CSVExportQuery {
+	query := (&CSVExportClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(csvexport.Table, csvexport.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.CsvExportsTable, group.CsvExportsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserGroups queries the user_groups edge of a Group.
 func (c *GroupClient) QueryUserGroups(_m *Group) *UserGroupQuery {
 	query := (&UserGroupClient{config: c.config}).Query()
@@ -3240,6 +3429,22 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
+// QueryCsvExports queries the csv_exports edge of a User.
+func (c *UserClient) QueryCsvExports(_m *User) *CSVExportQuery {
+	query := (&CSVExportClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(csvexport.Table, csvexport.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CsvExportsTable, user.CsvExportsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryGroups queries the groups edge of a User.
 func (c *UserClient) QueryGroups(_m *User) *GroupQuery {
 	query := (&GroupClient{config: c.config}).Query()
@@ -3480,13 +3685,15 @@ func (c *UserGroupClient) mutate(ctx context.Context, m *UserGroupMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Attachment, AuthRoles, AuthTokens, Entity, EntityField, EntityTemplate,
-		EntityType, Export, Group, GroupInvitationToken, MaintenanceEntry, Notifier,
-		PasswordResetTokens, Tag, TemplateField, User, UserGroup []ent.Hook
+		APIKey, Attachment, AuthRoles, AuthTokens, CSVExport, Entity, EntityField,
+		EntityTemplate, EntityType, Export, Group, GroupInvitationToken,
+		MaintenanceEntry, Notifier, PasswordResetTokens, Tag, TemplateField, User,
+		UserGroup []ent.Hook
 	}
 	inters struct {
-		APIKey, Attachment, AuthRoles, AuthTokens, Entity, EntityField, EntityTemplate,
-		EntityType, Export, Group, GroupInvitationToken, MaintenanceEntry, Notifier,
-		PasswordResetTokens, Tag, TemplateField, User, UserGroup []ent.Interceptor
+		APIKey, Attachment, AuthRoles, AuthTokens, CSVExport, Entity, EntityField,
+		EntityTemplate, EntityType, Export, Group, GroupInvitationToken,
+		MaintenanceEntry, Notifier, PasswordResetTokens, Tag, TemplateField, User,
+		UserGroup []ent.Interceptor
 	}
 )

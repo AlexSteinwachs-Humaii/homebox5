@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/csvexport"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
@@ -53,6 +54,20 @@ func (_c *GroupCreate) SetUpdatedAt(v time.Time) *GroupCreate {
 func (_c *GroupCreate) SetNillableUpdatedAt(v *time.Time) *GroupCreate {
 	if v != nil {
 		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetCsvRetentionDays sets the "csv_retention_days" field.
+func (_c *GroupCreate) SetCsvRetentionDays(v int) *GroupCreate {
+	_c.mutation.SetCsvRetentionDays(v)
+	return _c
+}
+
+// SetNillableCsvRetentionDays sets the "csv_retention_days" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableCsvRetentionDays(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetCsvRetentionDays(*v)
 	}
 	return _c
 }
@@ -211,6 +226,21 @@ func (_c *GroupCreate) AddExports(v ...*Export) *GroupCreate {
 	return _c.AddExportIDs(ids...)
 }
 
+// AddCsvExportIDs adds the "csv_exports" edge to the CSVExport entity by IDs.
+func (_c *GroupCreate) AddCsvExportIDs(ids ...uuid.UUID) *GroupCreate {
+	_c.mutation.AddCsvExportIDs(ids...)
+	return _c
+}
+
+// AddCsvExports adds the "csv_exports" edges to the CSVExport entity.
+func (_c *GroupCreate) AddCsvExports(v ...*CSVExport) *GroupCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCsvExportIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_c *GroupCreate) Mutation() *GroupMutation {
 	return _c.mutation
@@ -254,6 +284,10 @@ func (_c *GroupCreate) defaults() {
 		v := group.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.CsvRetentionDays(); !ok {
+		v := group.DefaultCsvRetentionDays
+		_c.mutation.SetCsvRetentionDays(v)
+	}
 	if _, ok := _c.mutation.Currency(); !ok {
 		v := group.DefaultCurrency
 		_c.mutation.SetCurrency(v)
@@ -271,6 +305,14 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Group.updated_at"`)}
+	}
+	if _, ok := _c.mutation.CsvRetentionDays(); !ok {
+		return &ValidationError{Name: "csv_retention_days", err: errors.New(`ent: missing required field "Group.csv_retention_days"`)}
+	}
+	if v, ok := _c.mutation.CsvRetentionDays(); ok {
+		if err := group.CsvRetentionDaysValidator(v); err != nil {
+			return &ValidationError{Name: "csv_retention_days", err: fmt.Errorf(`ent: validator failed for field "Group.csv_retention_days": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Group.name"`)}
@@ -325,6 +367,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(group.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.CsvRetentionDays(); ok {
+		_spec.SetField(group.FieldCsvRetentionDays, field.TypeInt, value)
+		_node.CsvRetentionDays = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(group.FieldName, field.TypeString, value)
@@ -459,6 +505,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(export.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CsvExportsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.CsvExportsTable,
+			Columns: []string{group.CsvExportsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(csvexport.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
