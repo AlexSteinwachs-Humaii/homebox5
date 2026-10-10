@@ -82,7 +82,21 @@ func (s *CSVInventorySources) Load(ctx context.Context, uid uuid.UUID, r CSVCapt
 		return CSVInventoryRows{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	repos := repo.New(tx.Client(), nil, config.Storage{}, "", config.Thumbnail{})
+	out, err := s.loadSnapshot(ctx, tx.Client(), uid, r, spec)
+	if err != nil {
+		return CSVInventoryRows{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return CSVInventoryRows{}, err
+	}
+	return out, nil
+}
+
+// loadSnapshot is also used to authorize artifact metadata against its captured
+// inventory source without nesting transactions or changing the read snapshot.
+func (s *CSVInventorySources) loadSnapshot(ctx context.Context, db *ent.Client, uid uuid.UUID, r CSVCaptureRequest, spec CSVSourceSpec) (CSVInventoryRows, error) {
+	fail := func() (CSVInventoryRows, error) { return CSVInventoryRows{}, errCSVAccess }
+	repos := repo.New(db, nil, config.Storage{}, "", config.Thumbnail{})
 	gid := *r.CollectionID
 	member, err := repos.Groups.IsMember(ctx, gid, uid)
 	if err != nil {
@@ -305,6 +319,16 @@ func (s *CSVInventorySources) Load(ctx context.Context, uid uuid.UUID, r CSVCapt
 			}
 		}
 	}
+	out, err := csvProjectRecords(r, spec, records)
+	if err != nil {
+		return CSVInventoryRows{}, err
+	}
+
+	return out, nil
+}
+
+// csvProjectRecords applies common validated all-results filtering, ordering and projection.
+func csvProjectRecords(r CSVCaptureRequest, spec CSVSourceSpec, records []csvInventoryRecord) (CSVInventoryRows, error) {
 	eligible, excluded, recent := map[uuid.UUID]bool{}, map[uuid.UUID]bool{}, map[uuid.UUID]bool{}
 	if r.Selector != nil {
 		for _, id := range r.Selector.EligibleIDs {
@@ -322,7 +346,11 @@ func (s *CSVInventorySources) Load(ctx context.Context, uid uuid.UUID, r CSVCapt
 	filtered := records[:0]
 	for _, v := range records {
 		if r.Text != nil && r.Text.Search != "" {
-			text := strings.ToLower(fmt.Sprint(v.values["name"]) + "\n" + fmt.Sprint(v.values["description"]))
+			text := fmt.Sprint(v.values["name"])
+			if spec.Adapter != CSVCollections {
+				text += "\n" + fmt.Sprint(v.values["description"])
+			}
+			text = strings.ToLower(text)
 			if !strings.Contains(text, strings.ToLower(r.Text.Search)) {
 				continue
 			}
@@ -344,7 +372,11 @@ func (s *CSVInventorySources) Load(ctx context.Context, uid uuid.UUID, r CSVCapt
 		case spec.Adapter == CSVMaintenance:
 			order = []CSVOrder{{"scheduledDate", "asc"}}
 		default:
-			order = []CSVOrder{{"name", "asc"}}
+			column := CSVColumn("id")
+			if slices.Contains(spec.Columns, CSVColumn("name")) {
+				column = "name"
+			}
+			order = []CSVOrder{{column, "asc"}}
 		}
 	}
 	rank := map[uuid.UUID]int{}
@@ -379,9 +411,6 @@ func (s *CSVInventorySources) Load(ctx context.Context, uid uuid.UUID, r CSVCapt
 			row[i] = value
 		}
 		out.Rows = append(out.Rows, row)
-	}
-	if err := tx.Commit(); err != nil {
-		return CSVInventoryRows{}, err
 	}
 	return out, nil
 }

@@ -5,7 +5,7 @@
 ID, supported filter families and required context/selector/recent boundary. The
 following table maps that catalogue to verified repository/list consumers. Adapter
 IDs are typed dispatch contracts. Story 3 implements the inventory adapters in
-`csv_sources_inventory.go`; administrative/private adapters remain story 4.
+`csv_sources_inventory.go`; story 4 completes administrative/private adapters through `NewCSVSources`.
 Persistence is implemented separately by story 2. No CSV endpoints or worker are
 introduced by the catalogue or inventory stories. Generated public API contracts
 belong to story 8.
@@ -33,8 +33,8 @@ currently authorized collections, not a caller-supplied arbitrary tenant list.
 | `collection-notifiers` | `notifiers-metadata` / `NotifierOut` projection | Current user's notifiers in selected collection (`GetByUser`) | Collection member **and requesting user**; never group-wide substitution |
 | `entity-attachments`, `entity-media` | `attachments-metadata` / `ItemAttachment` projection | Required entity root; metadata only; media adapter restricts to photo/media types | Collection member with entity access |
 | `backup-history` | `backup-history` / `ExportOut` projection | Existing collection ZIP export/import jobs; omit `ArtifactPath`, raw errors and reusable download paths | Collection member (existing `/group/exports` GET); not a new ZIP exporter |
-| `collection-csv-history` | `csv-history` / future CSV artifact metadata DTO | Collection CSV lifecycle history | Collection member plus captured-source permissions; prerequisite: story 2/6 DTO/repo |
-| `private-csv-history` | `csv-history` / future CSV artifact metadata DTO | User-private CSV lifecycle history; **no selected collection** | Account-private / requesting user; prerequisite: story 2/6 DTO/repo |
+| `collection-csv-history` | `csv-history` / safe `ent.CSVExport` scalar projection | Collection CSV lifecycle history | Collection member plus current captured-source permissions |
+| `private-csv-history` | `csv-history` / safe `ent.CSVExport` scalar projection | User-private CSV lifecycle history; **no selected collection** | Account-private / requesting user |
 | `account-api-keys` | `api-key-metadata` / `APIKeyOut` only | Current user's metadata; ID/name/createdAt/expiresAt/lastUsedAt only | Account-private / requesting user; no collection |
 | `account-collections`, `collection-selector` | `user-collections` / `Group` from `GetAllGroups(userID)` | Name text filter; authorized collection records; selector also requires eligibility/exclusions | Cross-collection / requesting user; private history; no collection |
 | `item-selector`, `location-selector`, `entity-selector` | `entities` / `EntitySummary` | Entity predicates; explicit server-verified eligible membership and exclusions; fixed kind for item/location | Collection member; originating operation/context must be validated |
@@ -190,6 +190,68 @@ Story 3 verification:
   ```
   No notifier validation changes were made. Inventory adapter tests exercised
   SQLite; PostgreSQL adapter execution is not claimed by this story.
+
+## Executable administrative/private adapters (story 4)
+
+`NewCSVSources(db, boundaryAuthority).Load(ctx, authenticatedUserID, request)`
+is the complete catalogue dispatcher and `CSVCaptureAuthority`. Inventory
+sources delegate to the inventory adapter; all remaining 11 surfaces are handled
+in `csv_sources_admin.go`. Both use the same scalar rows, all-results projection,
+ordered columns, ordering/tie-break rules, text search, selector exclusions and
+boundary authority. Unknown adapters/sources fail explicitly. A collection name
+filter searches only the name, not a fabricated description.
+
+Administrative/private reads use one repeatable-read snapshot, with no paging or
+row cap. Every collection query checks current membership. `csvSourceAccess`
+separately enforces `CSVOwner` via per-group `IsOwnerOf`, never a global superuser
+flag; current catalogue members/invitations/backup metadata remain member-visible
+as verified against existing GET permissions (they are not owner-only lists).
+Notifier metadata queries **both** current user and collection; private API keys
+query only the authenticated user. No supplied user ID, default collection or
+arbitrary cross-collection tenant selection exists in capture requests. Account
+collection lists/collection selectors resolve `GetAllGroups(uid)` at the snapshot;
+stale/foreign eligible collections fail, even with trusted boundary provenance.
+Private/cross-collection captures keep their existing collection-free scopes and
+user-only persistence/history; this story does not allocate artifacts.
+
+Explicit projections omit API tokens/hashes, invitation credentials, notifier
+URLs, attachment paths/thumbnails and backup paths/errors. Attachments require a
+currently collection-scoped entity root and query only metadata columns.
+`entity-media` is the photo subset (the schema's media kind); manual, warranty,
+receipt, generic attachments and thumbnail objects are not media rows. Nullable
+key/history timestamps project as empty strings or typed timestamps.
+
+CSV history reads the isolated repository's collection or user-private rows.
+For each artifact it strictly decodes the capture, matches persisted source,
+scope and collection, checks current source-class/user permissions and trusted
+boundaries, and validates referenced source data. Inventory captures reuse the
+inventory snapshot loader to check kind, graphs, filters and selectors without
+nested transactions. User-specific notifier artifacts are visible only to their
+requester, even in a collection history. Unknown/malformed captures, stale
+references or denied source permissions **fail the whole history export**, never
+silently return partial success. This is conservative metadata authorization,
+not a retained-byte download grant: story 6 must still implement artifact/API
+access and byte-serving rechecks, and story 7 expiry enforcement.
+
+`csv_sources_admin_test.go` walks every catalogue entry through the complete
+loader and exercises metadata secret exclusion, user isolation, membership
+revocation, independent owner checks, private operation without membership,
+collection selectors/exclusions/ranking, stale/foreign roots and captures,
+private versus collection history, and 103-row metadata / 111-collection results.
+Tests use SQLite and a trusted boundary fixture; production capture provenance
+remains the API integration prerequisite from story 3. No PostgreSQL adapter run
+is claimed.
+
+Story 4 verification:
+- `go test ./internal/core/services ./internal/data/repo -count=1`: passed.
+- `go test -race ./internal/core/services ./internal/data/repo`: passed.
+- `go vet ./internal/core/services ./internal/data/repo`: passed.
+- `go test ./...`: all changed packages passed; unchanged
+  `internal/sys/validate` failed in the same two notifier URL cases shown above.
+  Reproduced with `go test ./internal/sys/validate -run TestValidateNotifierURL
+  -count=1` in a detached worktree at pre-story commit `6d15c6d`.
+- Existing ZIP backup/import code, migrations, worker/retention registrations and
+  frontend/generated contracts are unchanged by this story.
 
 ## Dependency evidence / prerequisites (not Feature containment)
 
