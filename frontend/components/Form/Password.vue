@@ -12,7 +12,9 @@
         <TooltipTrigger as-child>
           <button
             type="button"
-            class="absolute right-3 top-6 mb-3 ml-1 mt-auto inline-flex justify-center p-1"
+            class="hb-focus absolute bottom-0 right-1 inline-flex size-10 items-center justify-center rounded-md"
+            :aria-label="$t('components.form.password.toggle_show')"
+            :aria-pressed="!hide"
             @click="toggle()"
           >
             <MdiEye name="mdi-eye" class="size-5" />
@@ -65,3 +67,9 @@
 
   const value = useVModel(props, "modelValue");
 </script>
+
+<style scoped>
+  :deep(input) {
+    padding-right: 3rem;
+  }
+</style>

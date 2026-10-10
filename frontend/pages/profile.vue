@@ -39,7 +39,7 @@
   const api = useUserApi();
   const confirm = useConfirm();
 
-  const { openDialog, closeDialog } = useDialog();
+  const { openDialog, closeDialog, activeDialog } = useDialog();
 
   const preferences = useViewPreferences();
   function setDisplayHeader() {
@@ -77,6 +77,7 @@
       toast.success(t("profile.toast.account_deleted"));
       auth.logout(api);
       navigateTo("/");
+      return;
     }
 
     toast.error(t("profile.toast.failed_delete_account"));
@@ -90,6 +91,7 @@
   });
 
   async function changePassword() {
+    passwordError.value = "";
     passwordChange.loading = true;
     if (!passwordChange.isValid) {
       passwordChange.loading = false;
@@ -99,7 +101,8 @@
     const { error } = await api.user.changePassword(passwordChange.current, passwordChange.new);
 
     if (error) {
-      toast.error(t("profile.toast.failed_change_password"));
+      passwordError.value = t("profile.toast.failed_change_password");
+      toast.error(passwordError.value);
       passwordChange.loading = false;
       return;
     }
@@ -135,13 +138,18 @@
 
   const apiKeys = ref<APIKeyOut[]>([]);
   const apiKeysLoading = ref(false);
+  const apiKeysError = ref("");
+  const apiKeyFormError = ref("");
+  const passwordError = ref("");
 
   async function loadApiKeys() {
+    apiKeysError.value = "";
     apiKeysLoading.value = true;
     const { data, error } = await api.user.listApiKeys();
     apiKeysLoading.value = false;
     if (error) {
-      toast.error(t("errors.api_failure") + String(error));
+      apiKeysError.value = t("errors.api_failure");
+      toast.error(apiKeysError.value);
       return;
     }
     apiKeys.value = data ?? [];
@@ -159,6 +167,7 @@
   });
 
   function openCreateApiKey() {
+    apiKeyFormError.value = "";
     apiKeyForm.name = "";
     apiKeyForm.setExpiration = false;
     apiKeyForm.expiresAt = "";
@@ -168,8 +177,14 @@
 
   const newApiKeyToken = ref<string | null>(null);
 
+  // Escape, overlay and close-icon dismissal must clear the one-time secret too.
+  watch(activeDialog, dialog => {
+    if (dialog !== DialogID.CreateApiKeyResult) newApiKeyToken.value = null;
+  });
+
   async function submitCreateApiKey() {
-    if (!apiKeyForm.name.trim()) return;
+    if (apiKeyForm.submitting || !apiKeyForm.name.trim()) return;
+    apiKeyFormError.value = "";
     apiKeyForm.submitting = true;
 
     let expiresAt: string | null = null;
@@ -187,7 +202,8 @@
     apiKeyForm.submitting = false;
 
     if (error || !data) {
-      toast.error(t("profile.toast.failed_api_key_create"));
+      apiKeyFormError.value = t("profile.toast.failed_api_key_create");
+      toast.error(apiKeyFormError.value);
       return;
     }
 
@@ -231,7 +247,7 @@
 <template>
   <div>
     <Dialog :dialog-id="DialogID.DuplicateSettings">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle>{{ $t("items.duplicate.title") }}</DialogTitle>
         </DialogHeader>
@@ -243,12 +259,19 @@
     </Dialog>
 
     <Dialog :dialog-id="DialogID.CreateApiKey">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle>{{ $t("profile.api_key_create") }}</DialogTitle>
         </DialogHeader>
 
-        <form @submit.prevent="submitCreateApiKey">
+        <form class="space-y-4" @submit.prevent="submitCreateApiKey">
+          <p
+            v-if="apiKeyFormError"
+            role="alert"
+            class="rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
+            {{ apiKeyFormError }}
+          </p>
           <FormTextField
             v-model="apiKeyForm.name"
             :label="$t('profile.api_key_name')"
@@ -263,11 +286,14 @@
             {{ $t("profile.api_key_default_expiration") }}
           </p>
           <div v-if="apiKeyForm.setExpiration" class="mb-2">
-            <label class="mb-1 block text-sm font-medium">{{ $t("profile.api_key_expires_at") }}</label>
+            <label for="api-key-expiration" class="mb-1 block text-sm font-medium">{{
+              $t("profile.api_key_expires_at")
+            }}</label>
             <input
+              id="api-key-expiration"
               v-model="apiKeyForm.expiresAt"
               type="date"
-              class="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              class="hb-focus w-full rounded-md border bg-background px-3 py-2 text-sm"
               :required="apiKeyForm.setExpiration"
             />
           </div>
@@ -283,7 +309,7 @@
     </Dialog>
 
     <Dialog :dialog-id="DialogID.CreateApiKeyResult">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle>{{ $t("profile.api_key_token_label") }}</DialogTitle>
         </DialogHeader>
@@ -292,12 +318,19 @@
 
         <div class="flex items-center gap-2">
           <input
+            :aria-label="$t('profile.api_key_token_label')"
             :value="newApiKeyToken ?? ''"
             readonly
-            class="w-full rounded-md border bg-muted px-3 py-2 font-mono text-sm"
+            class="hb-focus min-w-0 flex-1 rounded-md border bg-muted px-3 py-2 font-mono text-sm"
             @focus="($event.target as HTMLInputElement).select()"
           />
-          <Button variant="secondary" size="icon" :aria-label="$t('profile.api_key_copy')" @click="copyApiKey">
+          <Button
+            class="shrink-0"
+            variant="secondary"
+            size="icon"
+            :aria-label="$t('profile.api_key_copy')"
+            @click="copyApiKey"
+          >
             <MdiContentCopy />
           </Button>
         </div>
@@ -309,11 +342,14 @@
     </Dialog>
 
     <Dialog :dialog-id="DialogID.ChangePassword">
-      <DialogContent>
+      <DialogContent class="hb-panel">
         <DialogHeader>
           <DialogTitle> {{ $t("profile.change_password") }} </DialogTitle>
         </DialogHeader>
 
+        <p v-if="passwordError" role="alert" class="rounded-md bg-destructive p-3 text-sm text-destructive-foreground">
+          {{ passwordError }}
+        </p>
         <form id="change-password-form" name="change-password" method="post" @submit.prevent="changePassword">
           <FormPassword
             id="current-password"
@@ -348,7 +384,8 @@
       </DialogContent>
     </Dialog>
 
-    <BaseContainer class="flex flex-col gap-4">
+    <BaseContainer class="flex min-w-0 flex-col gap-6">
+      <h1 class="hb-section-title text-2xl">{{ $t("menu.profile") }}</h1>
       <BaseCard>
         <template #title>
           <BaseSectionHeader>
@@ -361,14 +398,29 @@
         <DetailsSection :details="details" />
 
         <div class="p-4">
-          <div class="flex gap-2">
-            <Button variant="secondary" size="sm" @click="openDialog(DialogID.ChangePassword)">
+          <div class="flex flex-wrap gap-2">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              @click="openDialog(DialogID.ChangePassword)"
+            >
               {{ $t("profile.change_password") }}
             </Button>
-            <Button variant="secondary" size="sm" @click="logoutAllDevices">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              @click="logoutAllDevices"
+            >
               {{ $t("profile.logout_all_devices") }}
             </Button>
-            <Button variant="secondary" size="sm" @click="openDialog(DialogID.DuplicateSettings)">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              @click="openDialog(DialogID.DuplicateSettings)"
+            >
               {{ $t("items.duplicate.title") }}
             </Button>
           </div>
@@ -386,13 +438,23 @@
         </template>
 
         <div class="px-4 pb-4">
+          <p
+            v-if="apiKeysError"
+            role="alert"
+            class="mb-3 rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
+            {{ apiKeysError }}
+          </p>
+          <p v-if="apiKeysLoading" role="status" class="mb-3 text-sm text-muted-foreground">
+            {{ $t("global.loading") }}
+          </p>
           <div class="mx-1 divide-y rounded-md border">
-            <p v-if="!apiKeysLoading && apiKeys.length === 0" class="p-2 text-center text-sm">
+            <p v-if="!apiKeysLoading && !apiKeysError && apiKeys.length === 0" class="p-2 text-center text-sm">
               {{ $t("profile.no_api_keys") }}
             </p>
             <article v-for="k in apiKeys" :key="k.id" class="p-2">
               <div class="flex flex-wrap items-center gap-2">
-                <p class="mr-auto text-lg">{{ k.name }}</p>
+                <p class="mr-auto min-w-0 flex-1 break-words text-lg [overflow-wrap:anywhere]">{{ k.name }}</p>
                 <Button variant="destructive" size="icon" :aria-label="$t('global.delete')" @click="revokeApiKey(k)">
                   <MdiDelete />
                 </Button>
@@ -421,7 +483,12 @@
           </div>
 
           <div class="mt-4">
-            <Button variant="secondary" size="sm" @click="openCreateApiKey">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              @click="openCreateApiKey"
+            >
               {{ $t("profile.api_key_create") }}
             </Button>
           </div>
@@ -468,11 +535,23 @@
         </template>
 
         <div class="px-4 pb-4">
-          <div class="mb-3 flex gap-2">
-            <Button variant="secondary" size="sm" @click="setDisplayHeader">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              :aria-pressed="preferences.displayLegacyHeader"
+              @click="setDisplayHeader"
+            >
               {{ $t("profile.display_legacy_header", { currentValue: preferences.displayLegacyHeader }) }}
             </Button>
-            <Button variant="secondary" size="sm" @click="setLegacyImageFit">
+            <Button
+              class="h-auto min-h-9 max-w-full whitespace-normal break-words text-start"
+              variant="secondary"
+              size="sm"
+              :aria-pressed="preferences.legacyImageFit"
+              @click="setLegacyImageFit"
+            >
               {{ $t("profile.legacy_image_fit", { currentValue: preferences.legacyImageFit }) }}
             </Button>
           </div>

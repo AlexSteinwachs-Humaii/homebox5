@@ -28,30 +28,30 @@
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-2">
+      <div class="flex items-start gap-3">
         <Switch id="copy-maintenance" v-model="settings.copyMaintenance" />
         <Label for="copy-maintenance">
           {{ $t("items.duplicate.copy_maintenance") }}
         </Label>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-start gap-3">
         <Switch id="copy-attachments" v-model="settings.copyAttachments" />
         <Label for="copy-attachments">
           {{ $t("items.duplicate.copy_attachments") }}
         </Label>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-start gap-3">
         <Switch id="copy-custom-fields" v-model="settings.copyCustomFields" />
         <Label for="copy-custom-fields">
           {{ $t("items.duplicate.copy_custom_fields") }}
         </Label>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-start gap-3">
         <Switch
-          id="copy-prefix"
+          id="enable-copy-prefix"
           v-model="enableCustomPrefix"
           @update:model-value="
             v => {
@@ -59,7 +59,7 @@
             }
           "
         />
-        <Label for="copy-prefix">{{ $t("items.duplicate.enable_custom_prefix") }}</Label>
+        <Label for="enable-copy-prefix">{{ $t("items.duplicate.enable_custom_prefix") }}</Label>
       </div>
 
       <div class="flex flex-col gap-2">
@@ -72,7 +72,7 @@
           :disabled="!enableCustomPrefix"
           :placeholder="$t('items.duplicate.prefix')"
           class="w-full"
-          @input="settings.copyPrefixOverride = prefix"
+          @update:model-value="value => (settings.copyPrefixOverride = String(value))"
         />
         <p class="text-sm text-muted-foreground">
           {{ $t("items.duplicate.prefix_instructions") }}
