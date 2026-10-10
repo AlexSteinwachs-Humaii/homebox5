@@ -308,7 +308,8 @@
         },
         "search": {
             "filter": {
-                "search_placeholder": "Search…"
+                "search_placeholder": "Search…",
+                "no_results": "No Results Found"
             }
         },
         "tag": {
