@@ -25,8 +25,8 @@
           v-for="header in headerGroup.headers"
           :key="header.id"
           :class="[
-            'bg-secondary/60 text-sm font-medium text-secondary-foreground',
-            header.column.id === 'select' || header.column.id === 'actions' ? 'w-10 px-3 text-center' : '',
+            'bg-muted text-sm font-medium text-foreground',
+            header.column.id === 'select' || header.column.id === 'actions' ? 'w-10 px-3 text-center' : 'min-w-28',
           ]"
           :aria-sort="ariaSort(header.column)"
         >

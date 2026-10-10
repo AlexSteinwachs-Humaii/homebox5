@@ -13,10 +13,9 @@
     PaginationList,
     PaginationListItem,
   } from "@/components/ui/pagination";
-  import { DialogID, useDialog } from "~/components/ui/dialog-provider/utils";
   import type { Pagination as PaginationType } from "../pagination";
 
-  const { openDialog } = useDialog();
+  defineEmits<{ (e: "openSettings", event: MouseEvent): void }>();
 
   const props = defineProps<{
     table: TableType<EntitySummary>;
@@ -45,7 +44,7 @@
         class="size-10 shrink-0 p-0"
         :aria-label="$t('components.item.view.table.table_settings')"
         variant="outline"
-        @click="openDialog(DialogID.ItemTableSettings)"
+        @click="$emit('openSettings', $event)"
       >
         <MdiTableCog />
       </Button>

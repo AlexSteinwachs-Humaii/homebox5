@@ -14,7 +14,7 @@
   import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
   import Button from "~/components/ui/button/Button.vue";
-  import { DialogID } from "~/components/ui/dialog-provider/utils";
+  import { DialogID, useDialog } from "~/components/ui/dialog-provider/utils";
   import MdiArrowDown from "~icons/mdi/arrow-down";
   import MdiArrowUp from "~icons/mdi/arrow-up";
   import Checkbox from "~/components/ui/checkbox/Checkbox.vue";
@@ -124,9 +124,21 @@
     },
   });
 
+  const { openDialog } = useDialog();
+  const settingsTrigger = ref<HTMLElement | null>(null);
+  const openSettings = (event: MouseEvent) => {
+    settingsTrigger.value = event.currentTarget as HTMLElement;
+    openDialog(DialogID.ItemTableSettings);
+  };
+  const returnSettingsFocus = (event: Event) => {
+    event.preventDefault();
+    settingsTrigger.value?.focus();
+  };
+
   const persistHeaders = () => {
+    // getAllColumns follows definition order, not the user's displayed order.
     const headers = table
-      .getAllColumns()
+      .getAllLeafColumns()
       .filter(column => column.getCanHide())
       .map(h => ({
         value: h.id as keyof EntitySummary,
@@ -174,7 +186,7 @@
 <template>
   <div class="min-w-0">
     <Dialog :dialog-id="DialogID.ItemTableSettings">
-      <DialogContent class="max-h-[85vh] overflow-y-auto">
+      <DialogContent class="max-h-[85vh] overflow-y-auto" @close-auto-focus="returnSettingsFocus">
         <DialogHeader>
           <DialogTitle>{{ $t("components.item.view.table.table_settings") }}</DialogTitle>
         </DialogHeader>
@@ -257,6 +269,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          @open-settings="openSettings"
         />
       </div>
       <div>
@@ -268,6 +281,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          @open-settings="openSettings"
         />
       </div>
     </BaseCard>
@@ -278,6 +292,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          @open-settings="openSettings"
         />
       </div>
       <CardView :table="table" :location-flat-tree="locationFlatTree" @refresh="$emit('refresh')" />
@@ -287,6 +302,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          @open-settings="openSettings"
         />
       </div>
     </div>

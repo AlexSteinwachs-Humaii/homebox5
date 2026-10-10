@@ -73,7 +73,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.asset_id")
@@ -88,7 +88,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.name")
@@ -108,7 +108,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.quantity")
@@ -123,7 +123,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.insured")
@@ -147,7 +147,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.purchase_price")
@@ -163,7 +163,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.location")
@@ -192,7 +192,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.archived")
@@ -216,7 +216,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.created_at")
@@ -236,7 +236,7 @@ export function makeColumns({
           Button,
           {
             variant: "ghost",
-            class: "h-auto min-h-10 whitespace-normal px-2 py-2 text-left",
+            class: "h-auto min-h-10 min-w-max whitespace-normal px-2 py-2 text-left",
             onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
           },
           () => sortable(column, "items.updated_at")
