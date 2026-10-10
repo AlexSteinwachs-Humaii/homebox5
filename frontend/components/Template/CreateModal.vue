@@ -1,6 +1,6 @@
 <template>
-  <BaseModal :dialog-id="DialogID.CreateTemplate" :title="$t('components.template.create_modal.title')">
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
+  <BaseModal :dialog-id="DialogID.CreateTemplate" :title="$t('components.template.create_modal.title')" hide-footer>
+    <form class="flex min-w-0 flex-col gap-4" :aria-busy="loading" @submit.prevent="create()">
       <FormTextField
         v-model="form.name"
         :autofocus="true"
@@ -23,7 +23,7 @@
           :label="$t('components.template.form.item_description')"
           :max-length="1000"
         />
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid gap-4 sm:grid-cols-2">
           <FormTextField
             v-model.number="form.defaultQuantity"
             :label="$t('global.quantity')"
@@ -47,13 +47,13 @@
           :label="$t('components.template.form.default_location')"
         />
         <TagSelector v-model="form.defaultTagIds" :tags="tags ?? []" />
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-start gap-4">
           <div class="flex items-center gap-2">
-            <Switch id="defaultInsured" v-model:checked="form.defaultInsured" />
+            <Switch id="defaultInsured" v-model="form.defaultInsured" />
             <Label for="defaultInsured" class="text-sm">{{ $t("global.insured") }}</Label>
           </div>
           <div class="flex items-center gap-2">
-            <Switch id="defaultLifetimeWarranty" v-model:checked="form.defaultLifetimeWarranty" />
+            <Switch id="defaultLifetimeWarranty" v-model="form.defaultLifetimeWarranty" />
             <Label for="defaultLifetimeWarranty" class="text-sm">{{
               $t("components.template.form.lifetime_warranty")
             }}</Label>
@@ -70,19 +70,25 @@
         </Button>
       </div>
       <div v-if="form.fields.length > 0" class="flex flex-col gap-2">
-        <div v-for="(field, idx) in form.fields" :key="idx" class="flex items-end gap-2">
+        <div v-for="(field, idx) in form.fields" :key="idx" class="hb-panel flex min-w-0 flex-wrap items-end gap-3 p-3">
           <FormTextField
             v-model="field.name"
             :label="$t('components.template.form.field_name')"
             :max-length="255"
-            class="flex-1"
+            class="min-w-0 basis-full sm:flex-1 sm:basis-0"
           />
           <FormTextField
             v-model="field.textValue"
             :label="$t('components.template.form.default_value')"
-            class="flex-1"
+            class="min-w-0 basis-full sm:flex-1 sm:basis-0"
           />
-          <Button type="button" size="icon" variant="ghost" @click="form.fields.splice(idx, 1)">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            :aria-label="$t('global.delete')"
+            @click="form.fields.splice(idx, 1)"
+          >
             <MdiDelete class="size-4" />
           </Button>
         </div>
@@ -90,7 +96,9 @@
       <p v-else class="text-sm text-muted-foreground">{{ $t("components.template.form.no_custom_fields") }}</p>
 
       <div class="mt-4 flex justify-end">
-        <Button type="submit" :loading="loading">{{ $t("global.create") }}</Button>
+        <Button type="submit" :disabled="loading">
+          {{ loading ? $t("global.loading") : $t("global.create") }}
+        </Button>
       </div>
     </form>
   </BaseModal>

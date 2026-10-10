@@ -83,16 +83,16 @@
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle class="truncate">{{ template.name }}</CardTitle>
-      <CardDescription v-if="template.description" class="line-clamp-2">
+  <Card class="hb-panel flex min-w-0 flex-col">
+    <CardHeader class="min-w-0 gap-2 p-4 sm:p-5">
+      <CardTitle class="hb-section-title break-words">{{ template.name }}</CardTitle>
+      <CardDescription v-if="template.description" class="line-clamp-2 break-words">
         {{ template.description }}
       </CardDescription>
     </CardHeader>
-    <CardFooter class="flex justify-end gap-1">
+    <CardFooter class="mt-auto flex flex-wrap justify-end gap-2 p-4 pt-0 sm:p-5 sm:pt-0">
       <Button size="icon" variant="outline" class="size-8" as-child :title="$t('components.template.card.edit')">
-        <NuxtLink :to="`/template/${template.id}`">
+        <NuxtLink :to="`/template/${template.id}`" :aria-label="$t('components.template.card.edit')">
           <MdiPencil class="size-4" />
         </NuxtLink>
       </Button>
@@ -101,6 +101,7 @@
         variant="outline"
         class="size-8"
         :title="$t('components.template.card.duplicate')"
+        :aria-label="$t('components.template.card.duplicate')"
         @click="handleDuplicate"
       >
         <MdiContentCopy class="size-4" />
@@ -110,6 +111,7 @@
         variant="destructive"
         class="size-8"
         :title="$t('components.template.card.delete')"
+        :aria-label="$t('components.template.card.delete')"
         @click="handleDelete"
       >
         <MdiDelete class="size-4" />
