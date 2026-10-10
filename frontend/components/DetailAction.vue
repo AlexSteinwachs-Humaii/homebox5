@@ -1,23 +1,32 @@
 <template>
-  <div class="flex flex-col gap-10 py-6 md:flex-row">
-    <div class="flex-1">
+  <div class="flex min-w-0 flex-col gap-4 py-6 md:flex-row md:gap-10">
+    <div class="min-w-0 flex-1">
       <h4 class="mb-1 text-lg font-semibold">
         <slot name="title" />
       </h4>
-      <p class="text-sm">
+      <div class="text-sm text-muted-foreground">
         <slot />
-      </p>
+      </div>
     </div>
-    <div class="flex items-center">
-      <template v-if="to">
-        <NuxtLink :to="to" :class="buttonVariants({ size: 'lg' })" class="min-w-52 grow">
+    <div class="flex min-w-0 items-center md:max-w-sm">
+      <slot v-if="$slots.control" name="control" />
+      <template v-else-if="to">
+        <NuxtLink
+          :to="to"
+          :class="buttonVariants({ size: 'lg' })"
+          class="h-auto min-h-11 w-full min-w-0 grow whitespace-normal md:min-w-52"
+        >
           <slot name="button">
             <slot name="title" />
           </slot>
         </NuxtLink>
       </template>
       <template v-else>
-        <Button class="min-w-52 grow" size="lg" @click="$emit('action')">
+        <Button
+          class="h-auto min-h-11 w-full min-w-0 grow whitespace-normal md:min-w-52"
+          size="lg"
+          @click="$emit('action')"
+        >
           <slot name="button">
             <slot name="title" />
           </slot>

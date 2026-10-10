@@ -64,7 +64,7 @@
             {{ $t("tools.backups_set.create_sub") }}
             <template #button> {{ $t("tools.backups_set.create_button") }} </template>
           </DetailAction>
-          <div class="py-3">
+          <div class="overflow-x-auto py-3">
             <table v-if="backups.length > 0" class="w-full text-sm">
               <thead>
                 <tr class="text-left text-muted-foreground">
@@ -93,14 +93,14 @@
                     <a
                       v-if="b.status === 'completed'"
                       :href="downloadUrl(b.id)"
-                      class="text-primary underline"
+                      class="hb-focus inline-flex min-h-11 items-center text-primary underline"
                       :download="`homebox-export-${b.id}.zip`"
                     >
                       {{ $t("tools.backups_set.download") }}
                     </a>
-                    <button class="text-destructive underline" @click="deleteBackup(b.id)">
+                    <Button variant="destructive" size="sm" @click="deleteBackup(b.id)">
                       {{ $t("global.delete") }}
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               </tbody>
@@ -112,11 +112,22 @@
           <DetailAction>
             <template #title>{{ $t("tools.backups_set.restore") }}</template>
             {{ $t("tools.backups_set.restore_sub") }}
-            <template #button>
-              <input ref="restoreInput" type="file" accept=".zip" class="hidden" @change="onRestoreFile" />
-              <button class="rounded bg-primary px-3 py-1 text-primary-foreground" @click="restoreInput?.click()">
+            <template #control>
+              <input
+                ref="restoreInput"
+                type="file"
+                accept=".zip"
+                class="hidden"
+                :aria-label="$t('tools.backups_set.restore_button')"
+                @change="onRestoreFile"
+              />
+              <Button
+                class="h-auto min-h-11 w-full whitespace-normal md:min-w-52"
+                size="lg"
+                @click="restoreInput?.click()"
+              >
                 {{ $t("tools.backups_set.restore_button") }}
-              </button>
+              </Button>
             </template>
           </DetailAction>
         </div>
@@ -191,6 +202,7 @@
   import BaseCard from "@/components/Base/Card.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import DetailAction from "@/components/DetailAction.vue";
+  import { Button } from "@/components/ui/button";
 
   const { t } = useI18n();
   const prefs = useViewPreferences();

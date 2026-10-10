@@ -1149,3 +1149,34 @@ h6 {
   word-break: normal;
   hyphens: auto;
 }
+
+/* Screen decoration never enters the printable label tree. */
+.hb-label-settings a:not(.hb-focus) {
+  text-decoration: underline;
+}
+.hb-label-output {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: black;
+}
+@media screen {
+  .hb-label-preview {
+    overflow-x: auto;
+    padding: 1rem;
+  }
+  .hb-label-output {
+    min-width: max-content;
+  }
+}
+@media print {
+  html:has(.hb-label-output),
+  body:has(.hb-label-output) {
+    background: white !important;
+    color: black !important;
+  }
+}
