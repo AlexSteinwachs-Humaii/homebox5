@@ -37,6 +37,18 @@
     if (opener.value?.isConnected) opener.value.focus();
   }
 
+  function resetImage() {
+    image.originalSrc = "";
+    image.originalType = undefined;
+    image.thumbnailSrc = "";
+    failed.value = false;
+  }
+
+  function closeImage() {
+    closeDialog(DialogID.ItemImage);
+    resetImage();
+  }
+
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.ItemImage, params => {
       opener.value = document.activeElement as HTMLElement;
@@ -77,6 +89,7 @@
       action: "delete",
       id: image.attachmentId,
     });
+    resetImage();
     toast.success(t("items.toast.attachment_deleted"));
   }
 </script>
@@ -103,7 +116,7 @@
           >
             <MdiDownload />
           </a>
-          <Button size="icon" :aria-label="$t('global.close')" @click="closeDialog(DialogID.ItemImage)">
+          <Button size="icon" :aria-label="$t('global.close')" @click="closeImage">
             <MdiClose />
           </Button>
         </div>

@@ -64,6 +64,30 @@ describe("record media", () => {
     expect(c.editState.loading).toBe(false);
   });
 
+  it("retains location attachment edits on failure instead of reporting a deletion", async () => {
+    const c = {
+      editState: { id: "manual", title: "Draft title", type: "receipt", primary: false, loading: false },
+      locationId: { value: "room" },
+      item: { value: { attachments: [{ id: "manual" }] } },
+      api: { items: { attachments: { update: vi.fn().mockResolvedValue({ error: new Error("offline") }) } } },
+      toast: { error: vi.fn(), success: vi.fn() },
+      t: (s: string) => s,
+      closeDialog: vi.fn(),
+      DialogID: { AttachmentEdit: "attachment-edit" },
+    };
+    const update = handler(read("pages/location/[id]/index/edit.vue"), "updateAttachment", c);
+    await update();
+    expect(c.editState.loading).toBe(false);
+    expect(c.editState.title).toBe("Draft title");
+    expect(c.closeDialog).not.toHaveBeenCalled();
+    expect(c.toast.error).toHaveBeenCalledWith("items.toast.failed_update_attachment");
+    expect(c.api.items.attachments.update).toHaveBeenCalledWith("room", "manual", {
+      title: "Draft title",
+      type: "receipt",
+      primary: false,
+    });
+  });
+
   it("changes only primary metadata or the selected deletion, never image bytes", () => {
     const photos = [
       { photoName: "one.png", fileBase64: "original-one", primary: true },

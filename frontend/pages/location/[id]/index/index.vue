@@ -224,19 +224,22 @@
       <!-- set page title -->
       <Title>{{ location.name }}</Title>
 
-      <!-- Photo gallery -->
-      <section v-if="photos.length > 0" class="mb-4">
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+      <!-- Photo gallery. Thumbnails stay letterboxed so real photos are not cropped or scaled. -->
+      <section class="mb-4 min-w-0">
+        <p v-if="photos.length === 0" class="rounded-lg border bg-muted p-4 text-sm text-muted-foreground">
+          {{ $t("items.no_photos") }}
+        </p>
+        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           <button
             v-for="(photo, i) in photos"
             :key="i"
-            class="group relative aspect-1 h-32 overflow-hidden rounded-lg border bg-muted"
+            class="relative aspect-1 h-32 overflow-hidden rounded-lg border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             @click="openImageDialog(photo, location.id)"
           >
             <img
               :src="photo.thumbnailSrc || photo.originalSrc"
               :alt="location.name"
-              class="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+              class="size-full object-contain"
             />
           </button>
         </div>

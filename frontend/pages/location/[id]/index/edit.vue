@@ -257,7 +257,15 @@
     value,
   }));
 
+  const attachmentEditorOpener = ref<HTMLElement | null>(null);
+
+  function restoreAttachmentEditorFocus(event: Event) {
+    event.preventDefault();
+    if (attachmentEditorOpener.value?.isConnected) attachmentEditorOpener.value.focus();
+  }
+
   function openAttachmentEditDialog(attachment: ItemAttachment) {
+    attachmentEditorOpener.value = document.activeElement as HTMLElement;
     editState.id = attachment.id;
     editState.title = attachment.title;
     editState.type = attachment.type;
@@ -275,7 +283,8 @@
     });
 
     if (error) {
-      toast.error(t("items.toast.failed_delete_attachment"));
+      editState.loading = false;
+      toast.error(t("items.toast.failed_update_attachment"));
       return;
     }
 
@@ -321,7 +330,7 @@
 <template>
   <div v-if="item" class="min-w-0 pb-8" :aria-busy="saving || !!requestPending">
     <Dialog :dialog-id="DialogID.AttachmentEdit">
-      <DialogContent>
+      <DialogContent @close-auto-focus="restoreAttachmentEditorFocus">
         <DialogHeader>
           <DialogTitle>{{ $t("items.edit.edit_attachment_dialog.title") }}</DialogTitle>
         </DialogHeader>
@@ -329,8 +338,8 @@
         <FormTextField v-model="editState.title" :label="$t('items.edit.edit_attachment_dialog.attachment_title')" />
         <div>
           <Label for="attachment-type"> {{ $t("items.edit.edit_attachment_dialog.attachment_type") }} </Label>
-          <Select id="attachment-type" v-model:model-value="editState.type">
-            <SelectTrigger>
+          <Select v-model:model-value="editState.type">
+            <SelectTrigger id="attachment-type">
               <SelectValue :placeholder="$t('items.edit.edit_attachment_dialog.select_type')" />
             </SelectTrigger>
             <SelectContent>
@@ -483,7 +492,7 @@
           </div>
         </BaseCard>
 
-        <Card ref="attDropZone" class="overflow-visible shadow-xl">
+        <Card ref="attDropZone" class="hb-panel overflow-visible">
           <div class="px-4 py-5 sm:px-6">
             <h3 class="hb-section-title">{{ $t("items.attachments") }}</h3>
             <p class="text-xs">{{ $t("items.changes_persisted_immediately") }}</p>
@@ -495,7 +504,8 @@
             </div>
             <button
               v-else
-              class="grid h-24 w-full place-content-center border-2 border-dashed border-primary"
+              type="button"
+              class="grid min-h-24 w-full place-content-center rounded-md border-2 border-dashed border-primary p-3 text-center [overflow-wrap:anywhere]"
               @click="clickUpload"
             >
               <input ref="refAttachmentInput" hidden type="file" @change="uploadImage" />
@@ -508,12 +518,12 @@
               <li
                 v-for="attachment in item.attachments"
                 :key="attachment.id"
-                class="grid grid-cols-6 justify-between py-3 pl-3 pr-4 text-sm"
+                class="flex min-w-0 flex-wrap items-center gap-3 p-3 text-sm"
               >
-                <p class="col-span-4 my-auto">
+                <p class="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                   {{ attachment.title }}
                 </p>
-                <p class="my-auto">
+                <p class="text-muted-foreground">
                   {{ $t(`items.${attachment.type}`) }}
                 </p>
                 <div class="flex justify-end gap-2">
@@ -522,6 +532,7 @@
                       <Button
                         variant="outline"
                         size="icon"
+                        :aria-label="$t('items.photo') + ': ' + attachment.title"
                         @click="
                           openDialog(DialogID.ItemImage, {
                             params: {
@@ -546,7 +557,12 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button variant="destructive" size="icon" @click="deleteAttachment(attachment.id)">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        :aria-label="$t('global.delete') + ': ' + attachment.title"
+                        @click="deleteAttachment(attachment.id)"
+                      >
                         <MdiDelete />
                       </Button>
                     </TooltipTrigger>
@@ -554,7 +570,11 @@
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" @click="openAttachmentEditDialog(attachment)">
+                      <Button
+                        size="icon"
+                        :aria-label="$t('global.edit') + ': ' + attachment.title"
+                        @click="openAttachmentEditDialog(attachment)"
+                      >
                         <MdiPencil />
                       </Button>
                     </TooltipTrigger>
