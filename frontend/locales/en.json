@@ -285,6 +285,8 @@
                     "rows_per_page": "Rows per page",
                     "selected_rows": "{selected} of {total} rows selected.",
                     "table_settings": "Table Settings",
+                    "move_column_up": "Move {column} up",
+                    "move_column_down": "Move {column} down",
                     "view_item": "View Item"
                 }
             }

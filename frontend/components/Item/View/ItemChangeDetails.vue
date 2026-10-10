@@ -140,26 +140,28 @@
 
 <template>
   <Dialog :dialog-id="DialogID.ItemChangeDetails">
-    <DialogContent>
+    <DialogContent class="max-h-[85vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{{ $t("components.item.view.change_details.title") }}</DialogTitle>
       </DialogHeader>
-      <LocationSelector v-if="enabled.changeLocation" v-model="newLocation" />
-      <TagSelector
-        v-if="enabled.addTags"
-        v-model="addTags"
-        :tags="availableToAddTags"
-        :name="$t('components.item.view.change_details.add_tags')"
-      />
-      <TagSelector
-        v-if="enabled.removeTags"
-        v-model="removeTags"
-        :tags="availableToRemoveTags"
-        :name="$t('components.item.view.change_details.remove_tags')"
-      />
+      <div class="hb-panel flex min-w-0 flex-col gap-4 p-4">
+        <LocationSelector v-if="enabled.changeLocation" v-model="newLocation" />
+        <TagSelector
+          v-if="enabled.addTags"
+          v-model="addTags"
+          :tags="availableToAddTags"
+          :name="$t('components.item.view.change_details.add_tags')"
+        />
+        <TagSelector
+          v-if="enabled.removeTags"
+          v-model="removeTags"
+          :tags="availableToRemoveTags"
+          :name="$t('components.item.view.change_details.remove_tags')"
+        />
+      </div>
       <DialogFooter>
         <Button type="submit" :disabled="saving || (enabled.changeLocation && !newLocation)" @click="save">
-          <span v-if="!saving">{{ $t("global.save") }}</span>
+          <span v-if="!saving" class="whitespace-normal break-words">{{ $t("global.save") }}</span>
           <MdiLoading v-else class="animate-spin" />
         </Button>
       </DialogFooter>

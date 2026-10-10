@@ -25,6 +25,7 @@
 
   const props = defineProps<{
     item?: EntitySummary;
+    disabled?: boolean;
     multi?: {
       items: Row<EntitySummary>[];
       columns: Column<EntitySummary>[];
@@ -158,6 +159,7 @@
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
       <Button
+        :disabled="disabled"
         :variant="view === 'table' ? 'ghost' : 'outline'"
         class="size-8 p-0 hover:bg-primary hover:text-primary-foreground"
       >
@@ -165,7 +167,10 @@
         <MoreHorizontal class="size-4" />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
+    <DropdownMenuContent
+      align="end"
+      class="max-h-[min(80vh,36rem)] max-w-[calc(100vw-2rem)] overflow-y-auto [&_[role=menuitem]]:whitespace-normal [&_[role=menuitem]]:break-words"
+    >
       <DropdownMenuLabel>{{ t("components.item.view.table.dropdown.actions") }}</DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem v-if="item" as-child>

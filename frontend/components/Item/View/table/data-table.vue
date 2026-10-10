@@ -41,6 +41,7 @@
   }>();
 
   const preferences = useViewPreferences();
+  const settingsId = useId();
   const defaultPageSize = preferences.value.itemsPerTablePage;
   const tableHeadersData = preferences.value.tableHeaders;
   const defaultVisible = ["name", "quantity", "insured", "purchasePrice"];
@@ -171,9 +172,9 @@
 </script>
 
 <template>
-  <div>
+  <div class="min-w-0">
     <Dialog :dialog-id="DialogID.ItemTableSettings">
-      <DialogContent>
+      <DialogContent class="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{{ $t("components.item.view.table.table_settings") }}</DialogTitle>
         </DialogHeader>
@@ -185,34 +186,50 @@
               <div
                 v-for="(colId, i) in columnOrder.slice(1, columnOrder.length - 1)"
                 :key="colId"
-                class="flex flex-row items-center gap-1"
+                class="flex min-w-0 flex-row items-center gap-2 rounded-md border-b py-2"
               >
-                <Button size="icon" class="size-6" variant="ghost" :disabled="i === 0" @click="moveHeader(i + 1, i)">
+                <Button
+                  size="icon"
+                  class="size-8 shrink-0"
+                  variant="ghost"
+                  :aria-label="
+                    $t('components.item.view.table.move_column_up', { column: $t(`items.${camelToSnakeCase(colId)}`) })
+                  "
+                  :disabled="i === 0"
+                  @click="moveHeader(i + 1, i)"
+                >
                   <MdiArrowUp />
                 </Button>
                 <Button
                   size="icon"
-                  class="size-6"
+                  class="size-8 shrink-0"
                   variant="ghost"
+                  :aria-label="
+                    $t('components.item.view.table.move_column_down', {
+                      column: $t(`items.${camelToSnakeCase(colId)}`),
+                    })
+                  "
                   :disabled="i === columnOrder.length - 3"
                   @click="moveHeader(i + 1, i + 2)"
                 >
                   <MdiArrowDown />
                 </Button>
                 <Checkbox
-                  :id="colId"
+                  :id="`${settingsId}-${colId}`"
                   :model-value="table.getColumn(colId)?.getIsVisible()"
                   @update:model-value="toggleHeader(colId)"
                 />
-                <label class="text-sm" :for="colId"> {{ $t(`items.${camelToSnakeCase(colId)}`) }} </label>
+                <label class="min-w-0 cursor-pointer break-words text-sm" :for="`${settingsId}-${colId}`">
+                  {{ $t(`items.${camelToSnakeCase(colId)}`) }}
+                </label>
               </div>
             </div>
           </div>
 
           <div class="flex flex-col gap-2">
-            <Label> {{ $t("components.item.view.table.rows_per_page") }} </Label>
+            <Label :for="`${settingsId}-page-size`"> {{ $t("components.item.view.table.rows_per_page") }} </Label>
             <Select :model-value="pagination.pageSize" @update:model-value="val => table.setPageSize(Number(val))">
-              <SelectTrigger>
+              <SelectTrigger :id="`${settingsId}-page-size`">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -225,8 +242,10 @@
           </div>
 
           <div class="flex flex-col gap-2">
-            <Label class="text-sm"> {{ $t("components.item.view.table.quick_actions") }} </Label>
-            <Switch v-model="preferences.quickActions.enabled" />
+            <Label :for="`${settingsId}-quick-actions`" class="text-sm">
+              {{ $t("components.item.view.table.quick_actions") }}
+            </Label>
+            <Switch :id="`${settingsId}-quick-actions`" v-model="preferences.quickActions.enabled" />
           </div>
         </div>
       </DialogContent>
@@ -253,7 +272,7 @@
       </div>
     </BaseCard>
     <div v-else>
-      <div v-if="!props.disableControls" class="pb-2">
+      <div v-if="!props.disableControls" class="hb-panel mb-4 p-3">
         <DataTableControls
           :table="table"
           :pagination="pagination"
@@ -262,7 +281,7 @@
         />
       </div>
       <CardView :table="table" :location-flat-tree="locationFlatTree" @refresh="$emit('refresh')" />
-      <div v-if="!props.disableControls" class="pt-2">
+      <div v-if="!props.disableControls" class="hb-panel mt-4 p-3">
         <DataTableControls
           :table="table"
           :pagination="pagination"

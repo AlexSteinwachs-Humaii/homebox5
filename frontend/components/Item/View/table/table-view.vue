@@ -25,7 +25,7 @@
           v-for="header in headerGroup.headers"
           :key="header.id"
           :class="[
-            'text-no-transform cursor-pointer bg-secondary text-sm text-secondary-foreground hover:bg-secondary/90',
+            'bg-secondary/60 text-sm font-medium text-secondary-foreground',
             header.column.id === 'select' || header.column.id === 'actions' ? 'w-10 px-3 text-center' : '',
           ]"
           :aria-sort="ariaSort(header.column)"
@@ -50,7 +50,9 @@
                   ? `/item/${row.original.id}`
                   : undefined
               "
-              :class="cell.column.id === 'select' || cell.column.id === 'actions' ? 'w-10 px-3' : ''"
+              :class="
+                cell.column.id === 'select' || cell.column.id === 'actions' ? 'w-10 px-3' : 'max-w-sm break-words'
+              "
               :compact="cell.column.id === 'select' || cell.column.id === 'actions'"
             >
               <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
@@ -73,3 +75,10 @@
     </TableBody>
   </Table>
 </template>
+
+<style scoped>
+  :deep(td a:focus-visible) {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: -2px;
+  }
+</style>

@@ -1,10 +1,10 @@
 <template>
-  <Card class="relative overflow-hidden">
+  <Card class="relative min-w-0 overflow-hidden" :class="{ 'ring-2 ring-primary': tableRow?.getIsSelected() }">
     <div v-if="tableRow" class="absolute left-1 top-1 z-10">
       <Checkbox
         class="size-5 bg-accent hover:bg-background-accent"
         :model-value="tableRow.getIsSelected()"
-        :aria-label="$t('components.item.view.selectable.select_card')"
+        :aria-label="`${$t('components.item.view.selectable.select_card')}: ${item.name}`"
         @update:model-value="tableRow.toggleSelected()"
       />
     </div>
