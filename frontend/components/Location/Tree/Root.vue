@@ -1,6 +1,10 @@
 <script setup lang="ts">
+  import { useI18n } from "vue-i18n";
   import type { TreeItem } from "~~/lib/api/types/data-contracts";
   import LocationTreeNode from "./Node.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { exportColumns, treeFields } from "~/lib/exports/inventory";
+  import type { CsvSourceRequest } from "~/lib/exports/source-registry";
   import { Button } from "~~/components/ui/button";
   import { useDialog } from "~/components/ui/dialog-provider";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
@@ -15,7 +19,20 @@
 
   const props = defineProps<Props>();
 
-  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  const { t } = useI18n();
+  const exportRequest = computed<CsvSourceRequest<"locations">>(() => ({
+    source: "locations",
+    scope: "collection",
+    filters: { showItems: props.showItems ?? true },
+    boundary: { kind: "hierarchy" },
+    sort: [],
+    columns: exportColumns(treeFields, id => t(`csv_export.fields.${id}`)),
+  }));
+
+  const collator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 
   const sortedLocs = computed(() => {
     const list = props.locs ?? [];
@@ -25,6 +42,7 @@
 
 <template>
   <div>
+    <RecordListExport class="mb-3" :request="exportRequest" :scope-label="$t('csv_export.hierarchy')" />
     <div
       v-if="sortedLocs.length === 0"
       class="py-6 text-center text-sm text-muted-foreground"
@@ -40,7 +58,11 @@
         size="sm"
         type="button"
         :aria-label="$t('global.create')"
-        @click="openDialog(DialogID.CreateEntity, { params: { baseType: 'location' } })"
+        @click="
+          openDialog(DialogID.CreateEntity, {
+            params: { baseType: 'location' },
+          })
+        "
       >
         {{ $t("global.create") }}
       </Button>

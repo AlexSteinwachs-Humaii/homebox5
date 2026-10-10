@@ -13,6 +13,9 @@
   import TagChip from "~/components/Tag/Chip.vue";
   import Table from "~/components/Item/View/Table.vue";
   import DashboardHero from "~/components/App/DashboardHero.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { inventoryExport, captureInventoryView, exportColumns, locationCardFields } from "~/lib/exports/inventory";
+  import type { CsvSourceRequest } from "~/lib/exports/source-registry";
 
   const { t } = useI18n();
 
@@ -34,6 +37,29 @@
 
   const itemTable = itemsTable(api);
   const stats = statCardData(api);
+  const recentExport = computed<CsvSourceRequest<"entities">>(() => ({
+    ...inventoryExport({ orderBy: "createdAt" }),
+    boundary: { kind: "recent", limit: 5 },
+  }));
+  const recentCardsExport = computed(() =>
+    captureInventoryView(recentExport.value, [], [], "card", id => t(`csv_export.fields.${id}`))
+  );
+  const locationsExport = computed<CsvSourceRequest<"locations">>(() => ({
+    source: "locations",
+    scope: "collection",
+    filters: {},
+    boundary: { kind: "roots" },
+    sort: [{ column: "name", direction: "asc" }],
+    columns: exportColumns(locationCardFields, id => t(`csv_export.fields.${id}`)),
+  }));
+  const tagsExport = computed<CsvSourceRequest<"tags">>(() => ({
+    source: "tags",
+    scope: "collection",
+    filters: {},
+    boundary: { kind: "all" },
+    sort: [],
+    columns: exportColumns(["name"], () => t("items.name")),
+  }));
 </script>
 
 <template>
@@ -50,11 +76,21 @@
       <section>
         <Subtitle> {{ $t("home.recently_added") }} </Subtitle>
 
+        <RecordListExport
+          v-if="!breakpoints.lg"
+          class="mb-3"
+          :request="recentCardsExport"
+          :scope-label="$t('csv_export.recent', { limit: 5 })"
+        />
         <p v-if="itemTable.items.length === 0" class="ml-2 text-sm">
           {{ $t("items.no_results") }}
         </p>
-        <BaseCard v-else-if="breakpoints.lg">
-          <Table :items="itemTable.items" />
+        <BaseCard v-if="breakpoints.lg">
+          <Table
+            :items="itemTable.items"
+            :export-request="recentExport"
+            :export-scope-label="$t('csv_export.recent', { limit: 5 })"
+          />
         </BaseCard>
         <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <ItemCard v-for="item in itemTable.items" :key="item.id" :item="item" compact />
@@ -63,6 +99,7 @@
 
       <section>
         <Subtitle> {{ $t("home.storage_locations") }} </Subtitle>
+        <RecordListExport class="mb-3" :request="locationsExport" />
         <p v-if="locations.length === 0" class="ml-2 text-sm">
           {{ $t("locations.no_results") }}
         </p>
@@ -73,6 +110,7 @@
 
       <section>
         <Subtitle> {{ $t("home.tags") }} </Subtitle>
+        <RecordListExport class="mb-3" :request="tagsExport" />
         <p v-if="tags.length === 0" class="ml-2 text-sm">
           {{ $t("tags.no_results") }}
         </p>

@@ -29,6 +29,9 @@
   import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { inventoryExport, exportColumns, locationCardFields } from "~/lib/exports/inventory";
+  import type { CsvSourceRequest } from "~/lib/exports/source-registry";
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemImageDialog from "~/components/Item/ImageDialog.vue";
   import LocationCard from "~/components/Location/Card.vue";
@@ -192,6 +195,23 @@
     return ret;
   });
 
+  const childExport = computed(() => ({
+    ...inventoryExport(),
+    filters: { ...inventoryExport().filters, entityId: locationId.value },
+    boundary: { kind: "children" as const },
+  }));
+  const locationExport = computed<CsvSourceRequest<"locations">>(() => ({
+    source: "locations",
+    scope: "collection",
+    filters: { entityId: locationId.value },
+    boundary: { kind: "children" },
+    sort: [{ column: "name", direction: "asc" }],
+    columns: exportColumns(
+      location.value?.children?.some(child => child.itemCount != null) ? locationCardFields : ["name"],
+      id => t(`csv_export.fields.${id}`)
+    ),
+  }));
+
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
@@ -236,11 +256,7 @@
             class="relative aspect-1 h-32 overflow-hidden rounded-lg border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             @click="openImageDialog(photo, location.id)"
           >
-            <img
-              :src="photo.thumbnailSrc || photo.originalSrc"
-              :alt="location.name"
-              class="size-full object-contain"
-            />
+            <img :src="photo.thumbnailSrc || photo.originalSrc" :alt="location.name" class="size-full object-contain" />
           </button>
         </div>
       </section>
@@ -357,14 +373,15 @@
 
       <!-- Items in this location -->
       <section v-if="location && items" class="mt-section-gap min-w-0">
-        <ItemViewSelectable :items="items" @refresh="refreshItemList" />
+        <ItemViewSelectable :items="items" :export-request="childExport" @refresh="refreshItemList" />
       </section>
 
       <!-- Child locations -->
-      <section v-if="location && location.children && location.children.length > 0" class="mt-section-gap">
+      <section v-if="location" class="mt-section-gap">
         <BaseSectionHeader class="mb-5">
           {{ $t("locations.child_locations") }}
         </BaseSectionHeader>
+        <RecordListExport class="mb-3" :request="locationExport" />
         <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <LocationCard v-for="child in location.children" :key="child.id" :location="child" />
         </div>

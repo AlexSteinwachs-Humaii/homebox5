@@ -12,6 +12,7 @@
   import type { Pagination } from "./pagination";
   import MaintenanceEditModal from "@/components/Maintenance/EditModal.vue";
   import ItemChangeDetails from "./ItemChangeDetails.vue";
+  import type { InventoryExport } from "~/lib/exports/inventory";
 
   const props = defineProps<{
     view?: ViewType;
@@ -19,6 +20,7 @@
     locationFlatTree?: FlatTreeItem[];
     pagination?: Pagination;
     disableSort?: boolean;
+    exportRequest?: InventoryExport;
   }>();
 
   const emit = defineEmits<{
@@ -119,6 +121,7 @@
       :data="items"
       :location-flat-tree="locationFlatTree"
       :external-pagination="pagination"
+      :export-request="exportRequest"
       @refresh="$emit('refresh')"
     />
   </section>

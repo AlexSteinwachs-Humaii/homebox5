@@ -4,9 +4,12 @@
   import DataTable from "./table/data-table.vue";
   import { makeColumns } from "./table/columns";
   import { useI18n } from "vue-i18n";
+  import type { InventoryExport } from "~/lib/exports/inventory";
 
   defineProps<{
     items: EntitySummary[];
+    exportRequest?: InventoryExport;
+    exportScopeLabel?: string;
   }>();
 
   const { t } = useI18n();
@@ -15,7 +18,15 @@
 </script>
 
 <template>
-  <DataTable data-recent-table view="table" :data="items" :columns="columns" disable-controls />
+  <DataTable
+    data-recent-table
+    view="table"
+    :data="items"
+    :columns="columns"
+    :export-request="exportRequest"
+    :export-scope-label="exportScopeLabel"
+    disable-controls
+  />
 </template>
 
 <style scoped>

@@ -17,6 +17,7 @@
   import BaseContainer from "@/components/Base/Container.vue";
   import SearchFilter from "~/components/Search/Filter.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
+  import { inventoryExport } from "~/lib/exports/inventory";
   import type { LocationQueryRaw } from "vue-router";
 
   const { t } = useI18n();
@@ -257,6 +258,20 @@
     return data;
   }
 
+  const exportRequest = computed(() =>
+    inventoryExport({
+      q: query.value,
+      parentIds: locIDs.value,
+      tags: tagIDs.value,
+      negateTags: negateTags.value,
+      onlyWithoutPhoto: onlyWithoutPhoto.value,
+      onlyWithPhoto: onlyWithPhoto.value,
+      includeArchived: includeArchived.value,
+      orderBy: orderBy.value,
+      fields: fieldTuples.value.filter(([name, value]) => name && value).map(([name, value]) => `${name}=${value}`),
+    })
+  );
+
   async function search() {
     if (searchLocked.value) {
       return;
@@ -461,13 +476,19 @@
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name"> {{ $t("items.name") }} </SelectItem>
-                  <SelectItem value="createdAt"> {{ $t("items.created_at") }} </SelectItem>
-                  <SelectItem value="updatedAt"> {{ $t("items.updated_at") }} </SelectItem>
+                  <SelectItem value="createdAt">
+                    {{ $t("items.created_at") }}
+                  </SelectItem>
+                  <SelectItem value="updatedAt">
+                    {{ $t("items.updated_at") }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </Label>
             <Separator />
-            <Button class="h-auto min-h-9 whitespace-normal" @click="reset"> {{ $t("items.reset_search") }} </Button>
+            <Button class="h-auto min-h-9 whitespace-normal" @click="reset">
+              {{ $t("items.reset_search") }}
+            </Button>
           </PopoverContent>
         </Popover>
         <div class="grow" />
@@ -500,7 +521,9 @@
         <p class="hb-section-title">{{ $t("items.custom_fields") }}</p>
         <div v-for="(f, idx) in fieldTuples" :key="idx" class="flex flex-wrap gap-2">
           <div class="flex min-w-0 flex-1 basis-full flex-col gap-1 md:basis-0">
-            <Label :for="`inventory-field-${idx}`"> {{ $t("items.field") }} </Label>
+            <Label :for="`inventory-field-${idx}`">
+              {{ $t("items.field") }}
+            </Label>
             <Select v-model="fieldTuples[idx]![0]" @update:model-value="fetchValues(f[0])">
               <SelectTrigger
                 :id="`inventory-field-${idx}`"
@@ -509,12 +532,16 @@
                 <SelectValue :placeholder="$t('items.select_field')" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="field in allFields" :key="field" :value="field"> {{ field }} </SelectItem>
+                <SelectItem v-for="field in allFields" :key="field" :value="field">
+                  {{ field }}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div class="flex min-w-0 flex-1 basis-full flex-col gap-1 md:basis-0">
-            <Label :for="`inventory-field-value-${idx}`"> {{ $t("items.field_value") }} </Label>
+            <Label :for="`inventory-field-value-${idx}`">
+              {{ $t("items.field_value") }}
+            </Label>
             <Select v-model="fieldTuples[idx]![1]">
               <SelectTrigger
                 :id="`inventory-field-value-${idx}`"
@@ -562,6 +589,7 @@
       <ItemViewSelectable
         v-show="items.length > 0 || (!loading && !searchFailed)"
         :items="items"
+        :export-request="exportRequest"
         :location-flat-tree="locationFlatTree"
         :pagination="pagination"
         disable-sort

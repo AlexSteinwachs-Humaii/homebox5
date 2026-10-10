@@ -1,5 +1,8 @@
 <script setup lang="ts" generic="TData, TValue">
+  import { useI18n } from "vue-i18n";
   import BaseCard from "@/components/Base/Card.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { captureInventoryView, type InventoryExport } from "~/lib/exports/inventory";
   import type { ColumnDef, SortingState, VisibilityState, ExpandedState } from "@tanstack/vue-table";
   import {
     getCoreRowModel,
@@ -34,6 +37,8 @@
     view: "table" | "card";
     locationFlatTree?: FlatTreeItem[];
     externalPagination?: Pagination;
+    exportRequest?: InventoryExport;
+    exportScopeLabel?: string;
   }>();
 
   defineEmits<{
@@ -124,6 +129,19 @@
     },
   });
 
+  const { t } = useI18n();
+  const exportView = computed(
+    () =>
+      props.exportRequest &&
+      captureInventoryView(
+        props.exportRequest,
+        table.getVisibleLeafColumns().map(column => column.id),
+        sorting.value,
+        props.view,
+        id => t(props.view === "card" ? `csv_export.fields.${id}` : `items.${camelToSnakeCase(id)}`)
+      )
+  );
+
   const { openDialog } = useDialog();
   const settingsTrigger = ref<HTMLElement | null>(null);
   const openSettings = (event: MouseEvent) => {
@@ -185,6 +203,7 @@
 
 <template>
   <div class="min-w-0">
+    <RecordListExport v-if="exportView" class="mb-3" :request="exportView" :scope-label="exportScopeLabel" />
     <Dialog :dialog-id="DialogID.ItemTableSettings">
       <DialogContent class="max-h-[85vh] overflow-y-auto" @close-auto-focus="returnSettingsFocus">
         <DialogHeader>
@@ -205,7 +224,9 @@
                   class="size-8 shrink-0"
                   variant="ghost"
                   :aria-label="
-                    $t('components.item.view.table.move_column_up', { column: $t(`items.${camelToSnakeCase(colId)}`) })
+                    $t('components.item.view.table.move_column_up', {
+                      column: $t(`items.${camelToSnakeCase(colId)}`),
+                    })
                   "
                   :disabled="i === 0"
                   @click="moveHeader(i + 1, i)"
@@ -239,7 +260,9 @@
           </div>
 
           <div class="flex flex-col gap-2">
-            <Label :for="`${settingsId}-page-size`"> {{ $t("components.item.view.table.rows_per_page") }} </Label>
+            <Label :for="`${settingsId}-page-size`">
+              {{ $t("components.item.view.table.rows_per_page") }}
+            </Label>
             <Select :model-value="pagination.pageSize" @update:model-value="val => table.setPageSize(Number(val))">
               <SelectTrigger :id="`${settingsId}-page-size`">
                 <SelectValue />

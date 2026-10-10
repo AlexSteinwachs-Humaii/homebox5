@@ -45,6 +45,7 @@
   import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
+  import { inventoryExport } from "~/lib/exports/inventory";
 
   const { t } = useI18n();
 
@@ -492,6 +493,12 @@
     return resp.data;
   });
 
+  const childExport = computed(() => ({
+    ...inventoryExport(),
+    filters: { ...inventoryExport().filters, entityId: itemId.value },
+    boundary: { kind: "children" as const },
+  }));
+
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => itemId.value + "_item_list",
     async () => {
@@ -817,7 +824,9 @@
         <template v-if="!hasNested">
           <BaseCard>
             <template #title> {{ $t("items.photos") }} </template>
-            <p v-if="!photos.length" class="border-t p-4 text-muted-foreground">{{ $t("items.no_photos") }}</p>
+            <p v-if="!photos.length" class="border-t p-4 text-muted-foreground">
+              {{ $t("items.no_photos") }}
+            </p>
             <div
               v-else
               class="scroll-bg container mx-auto flex max-h-[500px] flex-wrap gap-2 overflow-y-auto border-t p-4"
@@ -895,8 +904,8 @@
       </div>
     </section>
 
-    <section v-if="items && items.length > 0" class="mt-6">
-      <ItemViewSelectable :items="items" @refresh="refreshItemList" />
+    <section v-if="item && items" class="mt-6">
+      <ItemViewSelectable :items="items" :export-request="childExport" @refresh="refreshItemList" />
     </section>
   </BaseContainer>
 </template>

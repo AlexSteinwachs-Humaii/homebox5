@@ -1,9 +1,13 @@
 <script setup lang="ts">
+  import { useI18n } from "vue-i18n";
   import { Button } from "~~/components/ui/button";
   import { useDialog } from "~/components/ui/dialog-provider";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
   import type { TagTreeItem } from "./types";
   import TagTreeNode from "./Node.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { exportColumns, treeFields } from "~/lib/exports/inventory";
+  import type { CsvSourceRequest } from "~/lib/exports/source-registry";
 
   type Props = {
     tags: TagTreeItem[];
@@ -14,7 +18,20 @@
 
   const props = defineProps<Props>();
 
-  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  const { t } = useI18n();
+  const exportRequest = computed<CsvSourceRequest<"tags">>(() => ({
+    source: "tags",
+    scope: "collection",
+    filters: { showItems: false },
+    boundary: { kind: "hierarchy" },
+    sort: [],
+    columns: exportColumns(treeFields, id => t(`csv_export.fields.${id}`)),
+  }));
+
+  const collator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 
   const sortedTags = computed(() => {
     const list = props.tags ?? [];
@@ -24,6 +41,7 @@
 
 <template>
   <div>
+    <RecordListExport class="mb-3" :request="exportRequest" :scope-label="$t('csv_export.hierarchy')" />
     <div
       v-if="sortedTags.length === 0"
       class="py-6 text-center text-sm text-muted-foreground"

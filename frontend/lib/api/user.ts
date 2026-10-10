@@ -1,4 +1,5 @@
 import { BaseAPI } from "./base";
+import { CsvExportsAPI } from "./classes/csv-exports";
 import { ItemsApi } from "./classes/items";
 import { TagsApi } from "./classes/tags";
 import { EntityTypesApi } from "./classes/entity-types";
@@ -30,6 +31,7 @@ export class UserClient extends BaseAPI {
   notifiers: NotifiersAPI;
   products: ProductAPI;
   backups: BackupsAPI;
+  csvExports: CsvExportsAPI;
 
   /** Backward-compat shim that delegates to the entities (items) API. */
   locations: {
@@ -58,6 +60,7 @@ export class UserClient extends BaseAPI {
     this.notifiers = new NotifiersAPI(requests);
     this.products = new ProductAPI(requests);
     this.backups = new BackupsAPI(requests);
+    this.csvExports = new CsvExportsAPI(requests);
 
     // Backward-compat shim: api.locations.* delegates to api.items.*
     this.locations = {

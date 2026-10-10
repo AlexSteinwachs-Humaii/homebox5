@@ -193,6 +193,12 @@ func (r csvSourceReader) read(ctx context.Context, req csvexports.Request) ([]cs
 			if err != nil {
 				return nil, err
 			}
+			// Inventory summaries display the direct parent, not the detail
+			// view's resolved nearest-location ancestor.
+			row["location"] = ""
+			if e.Parent != nil {
+				row["location"] = e.Parent.Name
+			}
 			rows = append(rows, row)
 		}
 		return rows, nil
@@ -210,7 +216,9 @@ func (r csvSourceReader) read(ctx context.Context, req csvexports.Request) ([]cs
 		if req.Source == "locations" {
 			yes := true
 			q.IsLocation = &yes
-			q.IncludeArchived = true
+			// Home's root-location cards use the ordinary non-archived list;
+			// detail children and complete hierarchies include archived locations.
+			q.IncludeArchived = req.Boundary.Kind != "roots"
 		}
 		if f.EntityID != nil {
 			if _, err := r.entityRepo().GetOneByGroup(ctx, gid, *f.EntityID); err != nil {
@@ -249,6 +257,10 @@ func (r csvSourceReader) read(ctx context.Context, req csvexports.Request) ([]cs
 				return nil, err
 			}
 			row["itemCount"] = e.ItemCount
+			row["location"] = ""
+			if e.Parent != nil {
+				row["location"] = e.Parent.Name
+			}
 			rows = append(rows, row)
 		}
 		if req.Source == "locations" && truth(f.ShowItems) {

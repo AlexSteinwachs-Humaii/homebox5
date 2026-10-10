@@ -86,7 +86,7 @@
     "sources": [
       "entities"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Item/View/table/data-table-controls.vue",
@@ -105,14 +105,14 @@
     "sources": [
       "entities"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Item/View/table/table-view.vue",
     "sources": [
       "entities"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Location/Selector.vue",
@@ -126,14 +126,14 @@
     "sources": [
       "locations"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Location/Tree/Root.vue",
     "sources": [
       "locations"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Maintenance/ListView.vue",
@@ -182,14 +182,14 @@
     "sources": [
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Tag/Tree/Root.vue",
     "sources": [
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "components/Template/CreateModal.vue",
@@ -219,7 +219,7 @@
     "sources": [
       "asset-results"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "pages/collection/index/entity-types.vue",
@@ -274,7 +274,7 @@
       "locations",
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "pages/item/[id]/index/edit.vue",
@@ -296,7 +296,7 @@
       "entity-tags",
       "entity-path"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 child inventory; attachments/tags/path remain S6"
   },
   {
     "path": "pages/items.vue",
@@ -304,7 +304,7 @@
       "entities",
       "entity-fields"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 inventory via Item/View/Selectable; field-option records remain S6"
   },
   {
     "path": "pages/location/[id]/index/edit.vue",
@@ -325,14 +325,14 @@
       "attachments",
       "entity-tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 child items and locations; attachments/tags remain S6"
   },
   {
     "path": "pages/locations.vue",
     "sources": [
       "locations"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "pages/profile.vue",
@@ -355,14 +355,14 @@
       "entities",
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 tag inventory; ancestor context remains S6"
   },
   {
     "path": "pages/tags.vue",
     "sources": [
       "tags"
     ],
-    "integration": "pending; see coverage.md"
+    "integration": "S4 integrated through explicit page/root descriptor and RecordListExport; no rendered-row slice"
   },
   {
     "path": "pages/template/[id].vue",

@@ -22,6 +22,7 @@
   import PageQRCode from "~/components/global/PageQRCode.vue";
   import Markdown from "~/components/global/Markdown.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
+  import { inventoryExport } from "~/lib/exports/inventory";
   import TagSingleSelector from "~/components/Tag/SingleSelector.vue";
   import TagChip from "~/components/Tag/Chip.vue";
   import type { TagOut } from "~~/lib/api/types/data-contracts";
@@ -272,8 +273,14 @@
             class="mb-auto flex size-12 shrink-0 items-center justify-center rounded-full"
             :style="
               tag.color
-                ? { backgroundColor: tag.color, color: getContrastTextColor(tag.color) }
-                : { backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }
+                ? {
+                    backgroundColor: tag.color,
+                    color: getContrastTextColor(tag.color),
+                  }
+                : {
+                    backgroundColor: 'hsl(var(--secondary))',
+                    color: 'hsl(var(--secondary-foreground))',
+                  }
             "
           >
             <component :is="tagIcon" class="size-7" />
@@ -322,7 +329,11 @@
       />
     </Card>
     <section v-if="tag && items">
-      <ItemViewSelectable :items="items.items" @refresh="refreshItemList" />
+      <ItemViewSelectable
+        :items="items.items"
+        :export-request="inventoryExport({ tags: [tagId] })"
+        @refresh="refreshItemList"
+      />
     </section>
   </BaseContainer>
 </template>

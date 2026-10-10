@@ -4,6 +4,9 @@
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import ItemCard from "~/components/Item/Card.vue";
+  import RecordListExport from "~/components/Export/RecordListExport.vue";
+  import { exportColumns, fullCardFields } from "~/lib/exports/inventory";
+  import type { CsvSourceRequest } from "~/lib/exports/source-registry";
 
   const { t } = useI18n();
 
@@ -15,6 +18,15 @@
   const api = useUserApi();
 
   const assetId = computed<string>(() => route.params.id as string);
+
+  const exportRequest = computed<CsvSourceRequest<"asset-results">>(() => ({
+    source: "asset-results",
+    scope: "collection",
+    filters: { assetId: Number(assetId.value.replace(/-/g, "")) },
+    boundary: { kind: "all" },
+    sort: [{ column: "name", direction: "asc" }],
+    columns: exportColumns(fullCardFields, id => t(`csv_export.fields.${id}`)),
+  }));
 
   const { pending, data: items } = useLazyAsyncData(`asset/${assetId.value}`, async () => {
     const { data, error } = await api.assets.get(assetId.value);
@@ -29,7 +41,10 @@
         navigateTo("/home");
         break;
       case 1:
-        navigateTo(`/item/${data.items[0]!.id}`, { replace: true, redirectCode: 302 });
+        navigateTo(`/item/${data.items[0]!.id}`, {
+          replace: true,
+          redirectCode: 302,
+        });
         break;
       default:
         return data.items;
@@ -40,7 +55,10 @@
 <template>
   <BaseContainer>
     <section v-if="!pending">
-      <BaseSectionHeader class="mb-5"> {{ $t("items.associated_with_multiple") }} </BaseSectionHeader>
+      <BaseSectionHeader class="mb-5">
+        {{ $t("items.associated_with_multiple") }}
+      </BaseSectionHeader>
+      <RecordListExport class="mb-3" :request="exportRequest" />
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <ItemCard v-for="item in items" :key="item.id" :item="item" />
       </div>

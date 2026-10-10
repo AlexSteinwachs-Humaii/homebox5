@@ -1062,5 +1062,35 @@
             "restore_started": "Restore started — refresh shortly to see imported items.",
             "wipe_inventory_success": "Successfully wiped inventory. { results } items deleted."
         }
+    },
+  "csv_export": {
+    "action": "Export CSV",
+    "all_matching": "Export all matching records, not just the current page or selected rows.",
+    "recent": "Export the latest {limit} records in this section (not the entire inventory).",
+    "hierarchy": "Export the complete hierarchy, including collapsed branches and the current show-items choice.",
+    "retained": "The CSV is retained under the current collection or private retention policy. Its fixed expiry starts when generation completes. Your browser controls the download destination.",
+    "expires": "Expires: {date}",
+    "generate": "Generate CSV",
+    "download": "Download CSV",
+    "processing": "Generating and retaining CSV…",
+    "ready": "CSV ready. Download the retained file below.",
+    "generation_failed": "CSV generation or storage failed. No local download was started.",
+    "status_failed": "Could not check export status. Retry checking this same export.",
+    "unavailable": "The server rejected the download. It may have expired or your access may have changed.",
+    "download_started": "Download requested. Check your browser downloads.",
+    "download_failed": "Local download failed. Retry downloading this same retained CSV.",
+    "fields": {
+      "name": "Name",
+      "itemCount": "Items",
+      "location": "Location",
+      "parentId": "Parent ID",
+      "path": "Hierarchy path",
+      "insured": "Insured",
+      "archived": "Archived",
+      "quantity": "Quantity",
+      "purchasePrice": "Purchase price",
+      "description": "Description",
+      "tags": "Tags"
     }
+  }
 }

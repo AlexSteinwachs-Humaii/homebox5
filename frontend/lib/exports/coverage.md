@@ -1,6 +1,6 @@
 # CSV record-list coverage contract
 
-Audited against `frontend/pages` and `frontend/components` (including every `v-for`, selector, tree and shared Item/View consumer). This is the **foundation inventory**, not a claim that buttons/adapters already exist. “UI integration” identifies the insertion point and the implementation story (S4–S8); all are pending. S2 implements source adapters, S3 authorization/lifecycle. No reporting dashboard is introduced.
+Audited against `frontend/pages` and `frontend/components` (including every `v-for`, selector, tree and shared Item/View consumer). This is the **foundation inventory**, not a claim that buttons/adapters already exist. “UI integration” identifies the insertion point and the implementation story (S4–S8); S4 inventory integrations are implemented; S5–S8 remain pending. S2 implements source adapters, S3 authorization/lifecycle. No reporting dashboard is introduced.
 
 `backend/internal/core/services/csvexports/registry.json` is the authoritative source/column/filter/access allowlist. `source-registry.generated.ts` and `../api/types/csv-contracts.generated.ts` are generated with `cd backend && go run ./app/tools/csvcontractgen` (also run by `task typescript-types`). `source-registry.ts` narrows UI descriptors to the source's scope, columns and boundary kinds. Changes require updating this matrix, regeneration and contract tests.
 
@@ -19,7 +19,7 @@ These are **eligible** columns, not instructions to export every field. Exact or
 
 | Set | IDs |
 | --- | --- |
-| E (entity table) | assetId, name, quantity, insured, purchasePrice, location, archived, createdAt, updatedAt; cards use name, description, quantity, location, tags; trees add parentId/path |
+| E (entity table) | assetId, name, quantity, insured, purchasePrice, location, archived, createdAt, updatedAt; cards use name, location, insured, archived, quantity, purchasePrice, tags for compact cards; full cards substitute description for price; trees add parentId/path |
 | L (location) | name, itemCount; trees add parentId/path, description when displayed |
 | T (tag) | name; hierarchy adds parentId/path and displayed counts |
 | F (custom/template field) | name, type, value (id only if displayed) |
@@ -37,7 +37,7 @@ Each path is relative to `frontend/`. Shared component rows cover **every** call
 | `pages/items.vue` | entities / all | EntityQuery search, location/item/tag/parent IDs, field predicates, asset ID, photo/archived/root flags; capture effective multi-sort | E visible table order or card fields | member / collection | Item/View/Selectable section header, S4 |
 | `pages/home/index.vue` recent table and mobile cards | entities / recent | Existing recent query is **five** records; capture sort and explicit limit 5 | E visible recent table or compact card fields | member / collection | Recent section header, S4 |
 | Home location cards | locations / roots | Root-location set, not recent-item query | L | member / collection | Location section header, S4 |
-| Home tag chips | tags / roots | Actual root/tag set; no inherited item pagination | T | member / collection | Tag section header, S4 |
+| Home tag chips | tags / all | Actual complete tag set; no inherited item pagination | T | member / collection | Tag section header, S4 |
 | `pages/locations.vue`, `components/Location/Tree/{Root,Node}.vue` | locations / hierarchy | Search, show-items state; entire hierarchy independent of collapse; parent/path | L and displayed entity fields | member / collection | Root tree header, S4 |
 | `pages/tags.vue`, `components/Tag/Tree/{Root,Node}.vue` | tags / hierarchy | Search, show-items state; whole hierarchy independent of collapse | T and displayed entity fields | member / collection | Root tree header, S4 |
 | `pages/item/[id]/index.vue` child inventory | entities / children | entityId and parentItemIds; all children in captured order | E | member + entity access / collection | Child inventory header, S4 |
@@ -130,3 +130,11 @@ Invitation-visible private snapshots now recover their originating collection th
 - `cd frontend && pnpm run lint:ci`: fails on two unchanged prettier warnings, `locales/zh-TW.test.ts:12` and `pages/location/[id]/index/index.vue:239`: `ESLint found too many warnings (maximum: 1)`.
 - `cd frontend && pnpm run typecheck`: exit 2; existing errors include missing `ItemSummary`/`ItemOut`, EntitySummary.location, Vue Ref/template mismatches and `nuxt.config.ts:60` analytics script crossorigin (not the new caching rule). No controls or API-client UI integration are part of S3.
 - SQLite lifecycle tests cover canonical byte equality, pending/running/completed/failed/deleting, captured retention, exact expiry/no storage read, cross-scope/user/member access, requester-member history filtering, permission revocation before generation and download, storage/database completion failures, stale-pointer-safe deletion, abandoned job recovery, identity cleanup failures, no-collection routes and unchanged portable ZIP table selection. Live PostgreSQL and native save-picker/browser UI tests remain later verification work.
+
+## S4 inventory integration handoff
+
+- `Export/RecordListExport.vue` is the shared section action. It captures a detached typed request on opening, confirms all-matching/recent/hierarchy scope, creates and observes a retained artifact and offers an explicit normal download of its canonical bytes. It does not set list state, preferences or routes. Existing button/panel tokens and print exclusion are used; no design canvas changes. S7 owns the save picker, full dialog/progress/retry workflow and native device checks; S8 owns history/settings.
+- `lib/exports/inventory.ts` maps `ItemsQuery` predicates to the CSV contract (including valid asset-ID search and field values containing `=`), deliberately dropping pagination. `Item/View/{Selectable,Table}` carry the page-owned descriptor to `table/data-table.vue`, which captures ordered visible leaf columns, excludes action/selection columns, uses local sorting when set or the page's effective server sort otherwise. Card fields are explicit, not table visibility or DOM scraping; `path` retains full parent context even when the on-screen location label is abbreviated.
+- Items exports use current search/location/tag/field/photo/archive predicates. Item and location inventories use `children.entityId`; tag inventory uses its descendant-aware tag query. Asset cards use `asset-results.assetId`. Recent is explicitly limited to five before presentation sorting. Home locations export non-archived roots with name/count; home tags export **all** tags (the store does not restrict them to roots). Empty recent/child/location lists still offer export.
+- Tree roots use `hierarchy` with parent/path and current show-items state, without expansion IDs or a virtualized slice. Hierarchy traversal/order is provided by the existing server adapter; no client page limit is sent.
+- Tests: `inventory.test.ts` (captured predicates/order/immutability), `csv-exports.test.ts` (typed routes/canonical download), `csv-inventory.browser.spec.ts` (all S4 surfaces, empty/populated home, mobile cards, table state). Browser route fixtures must block service workers so the NetworkOnly rule does not bypass interception. `repo_csv_inventory_views_test.go` checks serialized embedded requests against 55 seeded children and actual CSV header/byte order plus root/archive, direct-parent labels and show-items boundaries. Native picker checks are not part of S4.
