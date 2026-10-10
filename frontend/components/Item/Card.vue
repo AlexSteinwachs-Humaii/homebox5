@@ -8,34 +8,49 @@
         @update:model-value="tableRow.toggleSelected()"
       />
     </div>
-    <NuxtLink :to="`/item/${item.id}`">
+    <div>
       <div class="relative bg-muted" :class="compact ? 'h-24' : 'h-[200px]'">
-        <img
-          v-if="imageUrl"
-          class="absolute size-full"
-          :class="objectContain ? 'object-contain' : 'object-cover'"
-          loading="lazy"
-          :src="imageUrl"
-          :alt="item.name"
-        />
-        <div v-else class="flex h-full items-center justify-center text-muted-foreground" aria-hidden="true">
-          <MdiImageOffOutline class="size-8" />
-        </div>
-        <div v-if="item.parent" class="absolute inset-x-1 bottom-1">
+        <NuxtLink
+          :to="`/item/${item.id}`"
+          :aria-label="item.name"
+          class="hb-focus absolute inset-0 block focus-visible:ring-inset focus-visible:after:absolute focus-visible:after:inset-0 focus-visible:after:rounded-sm focus-visible:after:border-4 focus-visible:after:border-background focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+        >
+          <img
+            v-if="imageUrl"
+            class="absolute size-full"
+            :class="objectContain ? 'object-contain' : 'object-cover'"
+            loading="lazy"
+            :src="imageUrl"
+            :alt="item.name"
+          />
+          <div v-else class="flex h-full items-center justify-center text-muted-foreground" aria-hidden="true">
+            <MdiImageOffOutline class="size-8" />
+          </div>
+        </NuxtLink>
+        <div v-if="item.parent && !compact" class="absolute inset-x-1 bottom-1">
           <Badge class="text-wrap bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:underline">
-            <NuxtLink v-if="item.parent" :to="`/location/${item.parent.id}`">
+            <NuxtLink v-if="item.parent" :to="`/location/${item.parent.id}`" class="hb-focus">
               {{ locationString }}
             </NuxtLink>
           </Badge>
         </div>
       </div>
       <div class="col-span-4 flex grow flex-col gap-y-1 p-4 pt-2">
-        <h2 class="text-wrap break-words text-lg font-bold">{{ item.name }}</h2>
+        <h2 class="text-wrap break-words text-lg font-bold">
+          <NuxtLink :to="`/item/${item.id}`" class="hb-focus">{{ item.name }}</NuxtLink>
+        </h2>
+        <NuxtLink
+          v-if="compact && item.parent"
+          :to="`/location/${item.parent.id}`"
+          class="hb-focus text-sm text-muted-foreground"
+        >
+          {{ locationString }}
+        </NuxtLink>
         <Separator class="mb-1" />
         <TooltipProvider :delay-duration="0">
           <div class="flex items-center gap-2">
             <Tooltip v-if="item.insured">
-              <TooltipTrigger>
+              <TooltipTrigger as-child>
                 <MdiShieldCheck class="size-5 text-primary" />
               </TooltipTrigger>
               <TooltipContent>
@@ -43,7 +58,7 @@
               </TooltipContent>
             </Tooltip>
             <Tooltip v-if="item.archived">
-              <TooltipTrigger>
+              <TooltipTrigger as-child>
                 <MdiArchive class="size-5 text-destructive" />
               </TooltipTrigger>
               <TooltipContent>
@@ -52,7 +67,7 @@
             </Tooltip>
             <div class="grow" />
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger as-child>
                 <Badge>
                   {{ item.quantity }}
                 </Badge>
@@ -84,7 +99,7 @@
           <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
         </div>
       </div>
-    </NuxtLink>
+    </div>
   </Card>
 </template>
 

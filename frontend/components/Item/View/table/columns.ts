@@ -121,8 +121,10 @@ export function makeColumns({
         const val = row.getValue("insured");
         return h(
           "div",
-          { class: "block mx-auto w-min" },
-          val ? h(Check, { class: "h-4 w-4 text-green-500" }) : h(X, { class: "h-4 w-4 text-destructive" })
+          { class: "block mx-auto w-min", role: "img", "aria-label": t(val ? "global.yes" : "global.no") },
+          val
+            ? h(Check, { class: "h-4 w-4 text-primary", "aria-hidden": "true" })
+            : h(X, { class: "h-4 w-4 text-foreground", "aria-hidden": "true" })
         );
       },
     },

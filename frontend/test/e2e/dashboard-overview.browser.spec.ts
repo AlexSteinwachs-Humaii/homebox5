@@ -1,83 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
-
-const longName = "Inventory identification " + "VeryLongUnbrokenName".repeat(6);
-const locationName = "Storage " + "LongLocationName".repeat(6);
-const tagName = "Tag " + "LongTagName".repeat(6);
-const itemId = "overview-item";
-const photoId = "overview-photo";
-const tag = { id: "overview-tag", name: tagName, color: "", icon: "", parentId: null };
-const record = {
-  id: itemId,
-  name: longName,
-  quantity: 7,
-  insured: true,
-  purchasePrice: 1234.56,
-  description: "",
-  tags: [tag],
-  parent: null,
-  imageId: null,
-  thumbnailId: null,
-};
-
-async function fixture(page: Page, empty: boolean) {
-  // Response fixtures test presentation without modifying the shared demo inventory.
-  await page.route("**/api/v1/entities?*", route => {
-    const locations = new URL(route.request().url()).searchParams.get("isLocation") === "true";
-    const items = empty
-      ? []
-      : locations
-        ? [{ ...record, id: "overview-location", name: locationName, itemCount: 0 }]
-        : [
-            record,
-            {
-              ...record,
-              id: photoId,
-              name: "Real photo record",
-              quantity: 2,
-              insured: false,
-              purchasePrice: 0,
-              imageId: "original",
-            },
-          ];
-    return route.fulfill({ json: { items, page: 1, pageSize: 5, total: items.length } });
-  });
-  await page.route("**/api/v1/groups/statistics", route =>
-    route.fulfill({
-      json: {
-        totalItemPrice: empty ? 0 : 1234.56,
-        totalItems: empty ? 0 : 9,
-        totalLocations: empty ? 0 : 1,
-        totalTags: empty ? 0 : 1,
-      },
-    })
-  );
-  await page.route("**/api/v1/tags", route => route.fulfill({ json: empty ? [] : [tag] }));
-  await page.route("**/api/v1/entities/overview-photo/attachments/original?*", route =>
-    route.fulfill({
-      contentType: "image/svg+xml",
-      body: "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='80'><rect width='120' height='80' fill='blue'/></svg>",
-    })
-  );
-  await page.route("**/api/v1/users/self/settings", route =>
-    route.fulfill({
-      json: {
-        item: { displayLegacyHeader: false, theme: "cinematic" },
-      },
-    })
-  );
-  await page.goto("/");
-  await page.waitForLoadState("networkidle");
-  await page.locator("input[type='text']").fill("demo@example.com");
-  await page.locator("input[type='password']").fill("demodemo");
-  await page.locator("button[type='submit']").click();
-  await expect(page).toHaveURL("/home");
-}
+import { expect, test } from "@playwright/test";
+import { dashboardFixture, longName, locationName, tagName, itemId } from "./dashboard-fixture";
 
 for (const width of [390, 834, 1440]) {
   for (const empty of [false, true]) {
     test(`overview ${width}px ${empty ? "empty" : "populated"}`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 1000 });
-      await fixture(page, empty);
+      await dashboardFixture(page, empty);
       await expect(page.getByRole("searchbox", { name: "Search", exact: true })).toBeVisible();
       const sections = page.locator("section");
       const stats = sections.filter({ hasText: "Quick Statistics" });
@@ -118,7 +46,10 @@ for (const width of [390, 834, 1440]) {
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       const screenshot = testInfo.outputPath("dashboard.png");
       await page.screenshot({ path: screenshot, fullPage: true });
-      await testInfo.attach("dashboard", { path: screenshot, contentType: "image/png" });
+      await testInfo.attach("dashboard", {
+        path: screenshot,
+        contentType: "image/png",
+      });
       expect(
         await recent
           .locator("table")

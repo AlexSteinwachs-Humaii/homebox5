@@ -37,7 +37,7 @@
 </script>
 
 <template>
-  <div>
+  <div data-dashboard>
     <BaseContainer class="flex flex-col gap-6">
       <DashboardHero />
       <section>
@@ -83,3 +83,10 @@
     </BaseContainer>
   </div>
 </template>
+
+<style scoped>
+  /* Table cell links use the same keyboard treatment as cards and chips. */
+  section :deep(a:focus-visible) {
+    @apply rounded-sm outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+</style>

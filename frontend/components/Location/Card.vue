@@ -1,6 +1,6 @@
 <template>
   <Card>
-    <NuxtLink :to="`/location/${location.id}`" class="group/location-card transition duration-300">
+    <NuxtLink :to="`/location/${location.id}`" class="hb-focus group/location-card block transition duration-300">
       <div
         :class="{
           'p-4': !dense,
