@@ -4,9 +4,11 @@
 **every permitted column and order column**, scope, authorization class, adapter
 ID, supported filter families and required context/selector/recent boundary. The
 following table maps that catalogue to verified repository/list consumers. Adapter
-IDs are typed dispatch contracts, **not yet executable row implementations**;
-stories 3–4 provide those. No CSV endpoints, persistence or worker are introduced
-by this story. Generated public API contracts belong to story 8.
+IDs are typed dispatch contracts. Story 3 implements the inventory adapters in
+`csv_sources_inventory.go`; administrative/private adapters remain story 4.
+Persistence is implemented separately by story 2. No CSV endpoints or worker are
+introduced by the catalogue or inventory stories. Generated public API contracts
+belong to story 8.
 
 ## Coverage
 
@@ -115,6 +117,79 @@ valid empty sets) and exclusions must be a subset; the supported eligibility
 policy is `explicit-set`, not an unchecked caller expression. Server-verified
 capture provenance for recent/selector sets is an explicit upstream prerequisite
 for the API/adapter stories (e.g. server resolution or signed capture handles).
+
+## Executable inventory adapters (story 3)
+
+`NewCSVInventorySources(db, boundaryAuthority).Load(ctx, authenticatedUserID,
+request)` dispatches all 18 inventory surfaces in the matrix: entities, tags,
+entity types, templates, maintenance, their embedded/hierarchy variants and
+record selectors. It also implements `CSVCaptureAuthority` for these sources;
+other adapter families fail explicitly rather than returning empty success.
+`CSVInventoryRows` contains captured columns in order and scalar rows: numbers,
+booleans, timestamps and strings, with absent dates/parents as empty strings.
+Canonical CSV encoding and formula protection are still the writer story's job.
+
+The adapter creates a repeatable-read transaction (SQLite read snapshot /
+PostgreSQL repeatable read), checks collection membership, validates collection-
+scoped entity/tag graphs, and materializes all matching results before returning.
+It uses `EntityRepository.QueryAllForCSV`, which shares `QueryByGroup` predicates
+without pagination and fails rather than falling back on incomplete tag/count
+results. Tag expansion is collection-scoped. Combined entity surfaces explicitly
+query both item and location kinds in the same snapshot; there is no separate
+item/location table. Location item counts use a transaction-compatible Ent query.
+No UI page/virtual window, recursion depth limit or arbitrary row cap applies.
+Memory grows with the collection and result set; this is materialized snapshot
+traversal, not a streaming claim. Query/transaction failures return no rows.
+
+Graph validation rejects cycles, missing parents and cross-collection edges.
+Parent IDs refer to validated direct parents; `location` is the nearest location
+ancestor, including through nested items. Tags flatten in deterministic name
+order. Entity/tag hierarchy false means direct children, true means descendants
+(excluding the root); tag inventories include the root tag's own attachments
+plus descendant tags when requested. Ordinary entity filters are intersected
+with context, never replaced by it. Sorting implements every permitted scalar
+order column, defaults per the matrix, and adds ID as the final tie-breaker.
+
+Recent and selector surfaces additionally require `CSVBoundaryAuthority`, which
+must verify trusted capture provenance / originating-operation eligibility.
+There is intentionally **no default accepting raw client eligible/recent IDs**:
+without a supplied implementation these surfaces fail closed. The adapter checks
+all captured IDs for current existence, collection and source kind, intersects
+current source predicates with the explicit set, applies exclusions, and keeps
+selector eligible-ID ranking when no ordering is supplied. A valid empty set
+returns zero rows. Deleted or inaccessible references fail rather than expanding
+or silently disappearing. New collection records never enter a recent set.
+The API integration must supply trusted boundary verification before enabling
+selector/recent capture; its capture-handle protocol is not invented here.
+Authorization is valid at the read snapshot only: download/lifecycle operations
+must re-evaluate current permissions independently.
+
+Tests: `csv_sources_inventory_test.go` and
+`csv_sources_inventory_filters_test.go` cover all 18 dispatch surfaces, 121-row
+results, all entity predicates against source queries, every entity sort column,
+hierarchy depth/cycles, maintenance status and dates, ordered columns, text
+search, frozen/empty sets, wrong-kind selectors, foreign/stale references and
+revoked membership. Tests use a trusted boundary fixture, not a production
+provenance implementation.
+
+Story 3 verification:
+- `go test ./internal/core/services -run TestCSVInventory -count=1`: passed.
+- `go test ./internal/core/services ./internal/data/repo -count=1`: passed,
+  including existing ZIP service regressions.
+- `go test -race ./internal/core/services ./internal/data/repo`: passed.
+- `go vet ./internal/core/services ./internal/data/repo`: passed.
+- `go test ./...`: CSV/service/repository packages passed; the full run failed
+  in unchanged `internal/sys/validate` tests. The same failure was reproduced in
+  a detached worktree at pre-story commit `f21f36a`:
+  ```text
+  --- FAIL: TestValidateNotifierURL
+      --- FAIL: TestValidateNotifierURL/generic_notifier_with_public_IP_passes
+          notifier_url_test.go:428: expected no error but got: bogon/reserved network addresses are blocked
+      --- FAIL: TestValidateNotifierURL/generic_notifier_shorthand_host/path_passes
+          notifier_url_test.go:428: expected no error but got: bogon/reserved network addresses are blocked
+  ```
+  No notifier validation changes were made. Inventory adapter tests exercised
+  SQLite; PostgreSQL adapter execution is not claimed by this story.
 
 ## Dependency evidence / prerequisites (not Feature containment)
 

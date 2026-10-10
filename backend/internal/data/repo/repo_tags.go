@@ -490,3 +490,35 @@ func (r *TagRepository) DeleteByGroup(ctx context.Context, gid, id uuid.UUID) er
 
 	return nil
 }
+
+// GetDescendantTagIDsByGroup never follows edges outside the source tenant.
+func (r *TagRepository) GetDescendantTagIDsByGroup(ctx context.Context, gid uuid.UUID, roots []uuid.UUID) ([]uuid.UUID, error) {
+	if err := assertTagsInGroup(ctx, r.db.Tag, gid, roots); err != nil {
+		return nil, err
+	}
+	tags, err := r.GetAll(ctx, gid)
+	if err != nil {
+		return nil, err
+	}
+	children := map[uuid.UUID][]uuid.UUID{}
+	for _, t := range tags {
+		children[t.ParentID] = append(children[t.ParentID], t.ID)
+	}
+	selected := map[uuid.UUID]bool{}
+	queue := append([]uuid.UUID(nil), roots...)
+	for i := 0; i < len(queue); i++ {
+		id := queue[i]
+		if selected[id] {
+			continue
+		}
+		selected[id] = true
+		queue = append(queue, children[id]...)
+	}
+	out := make([]uuid.UUID, 0, len(selected))
+	for _, t := range tags {
+		if selected[t.ID] {
+			out = append(out, t.ID)
+		}
+	}
+	return out, nil
+}

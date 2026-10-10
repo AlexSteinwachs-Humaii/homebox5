@@ -595,6 +595,18 @@ func entityQuerySpanAttrs(gid uuid.UUID, q EntityQuery) []attribute.KeyValue {
 
 // QueryByGroup returns a list of entities that belong to a specific group based on the provided query.
 func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q EntityQuery) (PaginationResult[EntitySummary], error) {
+	return r.queryByGroup(ctx, gid, q, false)
+}
+
+// QueryAllForCSV shares the list predicates but fails rather than substituting
+// partial tag/count data. Call inside the adapter's authorized read snapshot.
+func (r *EntityRepository) QueryAllForCSV(ctx context.Context, gid uuid.UUID, q EntityQuery) ([]EntitySummary, error) {
+	q.Page, q.PageSize = -1, -1
+	out, err := r.queryByGroup(ctx, gid, q, true)
+	return out.Items, err
+}
+
+func (r *EntityRepository) queryByGroup(ctx context.Context, gid uuid.UUID, q EntityQuery, strict bool) (PaginationResult[EntitySummary], error) {
 	ctx, span := entityTracer().Start(ctx, "repo.EntityRepository.QueryByGroup",
 		trace.WithAttributes(entityQuerySpanAttrs(gid, q)...))
 	defer span.End()
@@ -656,7 +668,17 @@ func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q En
 			tagRepo := &TagRepository{r.db, r.bus}
 			ctxDescendants, descSpan := entityTracer().Start(ctx, "repo.EntityRepository.QueryByGroup.tagDescendants",
 				trace.WithAttributes(attribute.Int("query.tag_ids.count", len(q.TagIDs))))
-			descendants, err := tagRepo.GetDescendantTagIDs(ctxDescendants, q.TagIDs)
+			var descendants []uuid.UUID
+			var err error
+			if strict {
+				descendants, err = tagRepo.GetDescendantTagIDsByGroup(ctxDescendants, gid, q.TagIDs)
+			} else {
+				descendants, err = tagRepo.GetDescendantTagIDs(ctxDescendants, q.TagIDs)
+			}
+			if strict && err != nil {
+				descSpan.End()
+				return PaginationResult[EntitySummary]{}, err
+			}
 			if err != nil {
 				recordSpanError(descSpan, err)
 				log.Warn().Err(err).Msg("failed to get descendant tags, using only direct tags")
@@ -788,9 +810,19 @@ func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q En
 		childCtx, childSpan := entityTracer().Start(ctx, "repo.EntityRepository.QueryByGroup.childItemCounts",
 			trace.WithAttributes(attribute.Int("locations.count", len(entities))))
 		ids := lo.Map(entities, func(e EntitySummary, _ int) uuid.UUID { return e.ID })
-		counts, cErr := r.getChildItemCounts(childCtx, gid, ids)
+		var counts map[uuid.UUID]float64
+		var cErr error
+		if strict {
+			counts, cErr = r.getChildItemCountsSnapshot(childCtx, gid, ids)
+		} else {
+			counts, cErr = r.getChildItemCounts(childCtx, gid, ids)
+		}
 		if cErr != nil {
 			recordSpanError(childSpan, cErr)
+			if strict {
+				childSpan.End()
+				return PaginationResult[EntitySummary]{}, cErr
+			}
 		} else {
 			for i := range entities {
 				if c, ok := counts[entities[i].ID]; ok {
@@ -812,6 +844,25 @@ func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q En
 		Total:    count,
 		Items:    entities,
 	}, nil
+}
+
+// getChildItemCountsSnapshot uses the transaction's Ent driver, not Client.Sql
+// (which exposes the non-transactional connection and cannot run on tx clients).
+func (r *EntityRepository) getChildItemCountsSnapshot(ctx context.Context, gid uuid.UUID, ids []uuid.UUID) (map[uuid.UUID]float64, error) {
+	children, err := r.db.Entity.Query().Where(
+		entity.HasGroupWith(group.ID(gid)),
+		entity.HasEntityTypeWith(entitytype.IsLocation(false)),
+		entity.Archived(false),
+		entity.HasParentWith(entity.IDIn(ids...)),
+	).WithParent().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	counts := map[uuid.UUID]float64{}
+	for _, child := range children {
+		counts[child.Edges.Parent.ID] += child.Quantity
+	}
+	return counts, nil
 }
 
 // getChildItemCounts returns a map of entity ID → sum of child item quantities for the given location IDs.
