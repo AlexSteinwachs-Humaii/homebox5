@@ -164,7 +164,11 @@
               <FormCheckbox v-model="notifier.isActive" :label="$t('profile.enabled')" />
             </div>
           </template>
-          <p v-if="formError" role="alert" class="break-words text-sm text-destructive">
+          <p
+            v-if="formError"
+            role="alert"
+            class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
             {{ formError }}
           </p>
           <div class="mt-4 flex flex-wrap gap-2">
@@ -199,7 +203,11 @@
       <p v-if="notifiers.status.value === 'pending'" role="status" class="py-4 text-sm text-muted-foreground">
         {{ $t("global.loading") }}
       </p>
-      <p v-else-if="notifiers.error.value" role="alert" class="break-words py-4 text-sm text-destructive">
+      <p
+        v-else-if="notifiers.error.value"
+        role="alert"
+        class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+      >
         {{ $t("errors.api_failure") }}
       </p>
       <div v-else-if="notifiers.data.value" class="mt-4 divide-y rounded-lg border">

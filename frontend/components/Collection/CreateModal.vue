@@ -31,7 +31,11 @@
           </Button>
         </div>
       </div>
-      <p v-if="errorMessage" role="alert" class="break-words text-sm text-destructive">
+      <p
+        v-if="errorMessage"
+        role="alert"
+        class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+      >
         {{ errorMessage }}
       </p>
     </form>

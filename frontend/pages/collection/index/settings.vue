@@ -158,7 +158,11 @@
           </p>
         </div>
 
-        <p v-if="error" role="alert" class="break-words text-sm text-destructive">
+        <p
+          v-if="error"
+          role="alert"
+          class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+        >
           {{ error }}
         </p>
 

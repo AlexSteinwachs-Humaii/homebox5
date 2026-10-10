@@ -92,7 +92,7 @@
 <template>
   <div class="min-w-0 space-y-4">
     <h2 class="hb-section-title">{{ $t("collection.tabs.members") }}</h2>
-    <p v-if="error" role="alert" class="hb-panel break-words p-4 text-sm text-destructive">
+    <p v-if="error" role="alert" class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground">
       {{ error }}
     </p>
     <div v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">

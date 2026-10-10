@@ -194,7 +194,11 @@
           />
           <TemplateSelector v-if="!createForm.isLocation" v-model="createTemplate" />
 
-          <p v-if="formError" role="alert" class="break-words text-sm text-destructive">
+          <p
+            v-if="formError"
+            role="alert"
+            class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
             {{ formError }}
           </p>
           <DialogFooter>
@@ -224,7 +228,11 @@
           />
           <TemplateSelector v-if="!updateForm.isLocation" v-model="updateTemplate" />
 
-          <p v-if="formError" role="alert" class="break-words text-sm text-destructive">
+          <p
+            v-if="formError"
+            role="alert"
+            class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+          >
             {{ formError }}
           </p>
           <DialogFooter>
@@ -255,7 +263,11 @@
     <p v-if="loading" role="status" class="hb-panel p-4 text-sm text-muted-foreground">
       {{ t("global.loading") }}
     </p>
-    <p v-else-if="loadError" role="alert" class="hb-panel p-4 text-sm text-destructive">
+    <p
+      v-else-if="loadError"
+      role="alert"
+      class="break-words rounded-md bg-destructive p-3 text-sm text-destructive-foreground"
+    >
       {{ loadError }}
     </p>
     <div v-else-if="entityTypes && entityTypes.length > 0" class="flex flex-col gap-2">
