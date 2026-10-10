@@ -35,6 +35,7 @@ type CSVExportService struct {
 	sources csvRowSource
 	now     func() time.Time
 	upload  func(context.Context, string, io.Reader) error
+	read    func(context.Context, string) ([]byte, error)
 }
 
 func NewCSVExportService(db *ent.Client, repos *repo.AllRepos, boundaries CSVBoundaryAuthority) *CSVExportService {

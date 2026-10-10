@@ -132,6 +132,24 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			a.mwGroupOwner,
 		}
 
+		// Private CSV APIs need authentication, but no selected/default collection.
+		csvPrivateMW := []errchain.Middleware{a.mwAuthToken, a.mwRoles(RoleModeOr, authroles.RoleUser.String())}
+		for _, scope := range []struct {
+			prefix     string
+			private    bool
+			middleware []errchain.Middleware
+		}{
+			{"/group/csv-exports", false, userMW},
+			{"/users/self/csv-exports", true, csvPrivateMW},
+		} {
+			r.Post(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "create"), scope.middleware...))
+			r.Get(scope.prefix, chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "history"), scope.middleware...))
+			r.Get(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "status"), scope.middleware...))
+			r.Get(scope.prefix+"/{id}/download", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "download"), scope.middleware...))
+			r.Post(scope.prefix+"/{id}/retry", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "retry"), scope.middleware...))
+			r.Delete(scope.prefix+"/{id}", chain.ToHandlerFunc(v1Ctrl.HandleCSV(scope.private, "delete"), scope.middleware...))
+		}
+
 		r.Get("/ws/events", chain.ToHandlerFunc(v1Ctrl.HandleCacheWS(), userMW...))
 
 		// User management endpoints
